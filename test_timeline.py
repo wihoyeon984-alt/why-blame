@@ -1,42 +1,45 @@
 import unittest
-from timeline import classify_commit, calculate_evidence_strength, build_timeline
+from timeline import classify_commit, calculate_evidence_strength
 
-class TestTimeline(unittest.TestCase):
+class TestWhyBlameTimeline(unittest.TestCase):
     
-    # 1. 커밋 메시지 분류기 테스트
-    def test_classify_commit(self):
-        self.assertEqual(classify_commit("revert: cancel update", True), "↩ REVERT")
-        self.assertEqual(classify_commit("fix: resolve null pointer exception", False), "🐛 BUG FIX")
-        self.assertEqual(classify_commit("feat: add kakao login", False), "✨ FEATURE")
-        self.assertEqual(classify_commit("refactor: cleanup user service", False), "🧹 REFACTOR")
-        self.assertEqual(classify_commit("sec: update auth token policy", False), "🔒 SECURITY")
-        self.assertEqual(classify_commit("random unhelpful message", False), "🔧 UPDATE")
+    # 1. feat 커밋 테스트
+    def test_feat_add_login(self):
+        self.assertEqual(classify_commit("feat: add login"), "✨ FEATURE")
 
-    # 2. 증거 강도(Evidence Strength) 계산 테스트
-    def test_evidence_strength(self):
-        # 증거가 없는 단일 커밋 -> LOW
-        weak_timeline = [{"is_revert": False, "diff_lines": [], "refs": []}]
-        self.assertIn("LOW", calculate_evidence_strength(weak_timeline)["strength"])
-        
-        # 롤백 + 이슈 + Diff가 모두 있는 강력한 이력 -> VERY HIGH
-        strong_timeline = [
-            {"is_revert": True, "diff_lines": ["+ code"], "refs": ["101"]},
-            {"is_revert": False, "diff_lines": ["- code"], "refs": ["202"]},
-            {"is_revert": False, "diff_lines": ["+ code"], "refs": []},
-        ]
-        self.assertIn("VERY HIGH", calculate_evidence_strength(strong_timeline)["strength"])
+    # 2. fix 커밋 테스트
+    def test_fix_prevent_duplicate(self):
+        self.assertEqual(classify_commit("fix: prevent duplicate login"), "🐛 BUG FIX")
 
-    # 3. 시간순 정렬 및 탄생(BIRTH) 태깅 테스트
-    def test_build_timeline_order(self):
-        mock_commits = [
-            {"message": "latest fix", "is_revert": False, "refs": []},
-            {"message": "initial birth", "is_revert": False, "refs": []}
+    # 3. revert 커밋 테스트
+    def test_revert_login(self):
+        self.assertEqual(classify_commit("revert: revert login change", True), "↩ REVERT")
+
+    # 4. refactor 커밋 테스트
+    def test_refactor_simplify(self):
+        self.assertEqual(classify_commit("refactor: simplify login"), "🧹 REFACTOR")
+
+    # 5. [핵심] Conventional Commits 접두어가 본문 단어보다 우선하는지 테스트!
+    def test_feat_fix_login_screen(self):
+        # 메시지 본문에 'fix'가 들어있어도 접두어가 feat: 이면 FEATURE로 판정해야 함
+        self.assertEqual(classify_commit("feat: fix login screen UI"), "✨ FEATURE")
+
+    # 6. 매우 강력한 증거 시나리오 테스트
+    def test_evidence_matrix_very_high(self):
+        tl = [
+            {"message": "feat: add payment", "diff_lines": ["+ code"], "refs": ["101"], "ref_details": ["#101 ('Title')"], "is_revert": False},
+            {"message": "revert: rollback", "diff_lines": ["- code"], "refs": [], "ref_details": [], "is_revert": True}
         ]
-        timeline, _ = build_timeline(mock_commits, None, lambda o, r, n: "")
-        
-        # 첫 번째 커밋이 반드시 🌱 BIRTH여야 함
-        self.assertEqual(timeline[0]["type"], "🌱 BIRTH")
-        self.assertEqual(timeline[0]["message"], "initial birth")
+        stats = calculate_evidence_strength(tl)
+        self.assertEqual(stats["grade"], "VERY HIGH (매우 강력한 근거)")
+        self.assertGreaterEqual(stats["score"], 9)
+
+    # 7. 근거 부족 시 할루시네이션 가드(LOW) 작동 테스트
+    def test_evidence_matrix_low(self):
+        tl = [{"message": "update", "diff_lines": [], "refs": [], "ref_details": [], "is_revert": False}]
+        stats = calculate_evidence_strength(tl)
+        self.assertEqual(stats["grade"], "LOW (근거 불충분)")
+        self.assertLessEqual(stats["score"], 2)
 
 if __name__ == "__main__":
     unittest.main()

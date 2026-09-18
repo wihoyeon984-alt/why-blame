@@ -1,92 +1,91 @@
-def classify_commit(message, is_revert):
-    """커밋 메시지와 롤백 여부를 분석하여 정확한 카테고리를 분류합니다."""
-    m = message.lower()
-    
-    # 1. 롤백 감지
-    if is_revert or "rollback" in m:
+def classify_commit(message, is_revert=False):
+    """
+    Conventional Commits 프리픽스(feat:, fix: 등)를 최우선으로 인식합니다.
+    예: 'feat: fix login UI' -> 'fix' 단어가 있어도 접두어가 feat이므로 FEATURE로 분류
+    """
+    m_low = message.strip().lower()
+    if is_revert or m_low.startswith("revert"):
         return "↩ REVERT"
-    
-    # 2. 보안 감지
-    if any(k in m for k in ["sec", "security", "vuln", "cve", "auth", "token"]):
-        return "🔒 SECURITY"
-        
-    # 3. 버그 수정 감지 (단어 확장)
-    if any(k in m for k in ["fix", "bug", "hotfix", "patch", "resolve", "correct", "prevent", "issue"]):
-        return "🐛 BUG FIX"
-        
-    # 4. 기능 추가 감지
-    if any(k in m for k in ["feat", "feature", "add", "implement", "introduce", "support"]):
+
+    prefix = m_low.split(":")[0].strip() if ":" in m_low else ""
+    if prefix in ["feat", "feature"]:
         return "✨ FEATURE"
-        
-    # 5. 성능 개선 감지
-    if any(k in m for k in ["perf", "performance", "optimize", "speed", "fast"]):
-        return "⚡ PERF"
-        
-    # 6. 리팩터링 감지
-    if any(k in m for k in ["refactor", "cleanup", "clean up", "restructure", "rename", "style"]):
+    if prefix in ["fix", "bug", "hotfix", "patch"]:
+        return "🐛 BUG FIX"
+    if prefix in ["revert", "rollback"]:
+        return "↩ REVERT"
+    if prefix in ["refactor", "cleanup"]:
         return "🧹 REFACTOR"
-        
-    # 7. 문서 및 테스트
-    if any(k in m for k in ["docs", "readme", "comment"]):
-        return "📝 DOCS"
-    if any(k in m for k in ["test", "tests"]):
+    if prefix in ["test", "tests"]:
         return "🧪 TEST"
-        
+    if prefix in ["docs"]:
+        return "📝 DOCS"
+    if prefix in ["perf"]:
+        return "⚡ PERF"
+    if prefix in ["sec", "security"]:
+        return "🔒 SECURITY"
+
+    # 접두어가 없는 일반 커밋용 키워드 폴백
+    if any(k in m_low for k in ["fix", "bug", "patch", "resolve", "prevent"]):
+        return "🐛 BUG FIX"
+    if any(k in m_low for k in ["feat", "add", "implement"]):
+        return "✨ FEATURE"
+    if any(k in m_low for k in ["refactor", "cleanup"]):
+        return "🧹 REFACTOR"
+
     return "🔧 UPDATE"
 
 
 def calculate_evidence_strength(timeline):
     """
-    증거 가중치 매트릭스에 따라 합리적인 점수를 계산합니다.
-    - Commit 기본 증거: +1점
-    - 실제 Code Diff 존재: +2점
-    - Revert(롤백) 이력 존재: +3점
-    - Linked Issue/PR 참조 존재: +3점
+    리뷰어 권장 8개 항목 가중치 매트릭스 (총점 12점 만점)
+    - Commit 메시지 (+1)
+    - 코드 Diff 존재 (+2)
+    - Issue/PR 참조 번호 (+3)
+    - GitHub 실제 제목 확인 (+2)
+    - Revert 이력 (+3)
     """
     score = 0
-    total_events = len(timeline)
-    reverts_count = sum(1 for item in timeline if item["is_revert"])
-    
-    # 기본 커밋 증거 점수
-    if total_events > 0:
+    total = len(timeline)
+    reverts = sum(1 for t in timeline if t.get("is_revert"))
+    has_diff = any(len(t.get("diff_lines", [])) > 0 for t in timeline)
+    has_refs = any(len(t.get("refs", [])) > 0 for t in timeline)
+    has_fetched = any(any("'" in r for r in t.get("ref_details", [])) for t in timeline)
+
+    if total > 0 and any(len(t.get("message", "")) > 5 for t in timeline):
         score += 1
-    if total_events >= 3:
-        score += 1
-        
-    # Diff 증거 점수
-    has_diff = any(len(item.get("diff_lines", [])) > 0 for item in timeline)
     if has_diff:
         score += 2
-        
-    # 롤백 증거 점수 (롤백은 코드의 필요성을 증명하는 매우 강력한 팩트)
-    if reverts_count > 0:
-        score += 3
-        
-    # 이슈/PR 참조 증거 점수
-    has_refs = any(len(item.get("refs", [])) > 0 for item in timeline)
     if has_refs:
         score += 3
+    if has_fetched:
+        score += 2
+    if reverts > 0:
+        score += 3
 
-    # 점수대별 등급 산출
-    if score >= 8:
-        strength = "VERY HIGH (매우 강력한 근거)"
-    elif score >= 5:
-        strength = "HIGH (명확한 근거)"
-    elif score >= 3:
-        strength = "MEDIUM (보통)"
+    if score >= 9:
+        grade = "VERY HIGH (매우 강력한 근거)"
+    elif score >= 6:
+        grade = "HIGH (명확한 근거)"
+    elif score >= 4:
+        grade = "MODERATE (보통)"
+    elif score >= 2:
+        grade = "WEAK (약한 근거)"
     else:
-        strength = "LOW (증거 불충분)"
-        
+        grade = "LOW (근거 불충분)"
+
     return {
-        "total_events": total_events,
-        "reverts_count": reverts_count,
-        "strength": strength,
-        "score": score
+        "score": score,
+        "grade": grade,
+        "total_events": total,
+        "reverts_count": reverts,
+        "has_diff": has_diff,
+        "has_refs": has_refs,
+        "strength": f"{grade} [{score}/12점]"
     }
 
 
 def build_timeline(commits, repo_info, fetch_title_func):
-    """커밋들을 시간순으로 정렬하고, 각 이벤트의 성격과 GitHub 맥락을 결합합니다."""
     timeline = list(reversed(commits))
 
     for idx, item in enumerate(timeline):
