@@ -20,13 +20,23 @@ def get_current_code_lines(file_name, start_line, end_line):
         s = max(0, start_line - 1)
         e = min(len(lines), end_line)
         return [l.rstrip("\r\n") for l in lines[s:e]]
-    except Exception:
+    except FileNotFoundError:
+        print(f"오류: 파일을 찾을 수 없습니다: {file_name}")
+        return []
+    except Exception as e:
+        print(f"오류: 파일 읽기 실패: {e}")
         return []
 
 def extract_git_history(file_name, start_line, end_line):
-    """지정된 범위(start_line, end_line)의 Git 변경 이력을 추출합니다."""
+    """git log -L을 실행해 커밋 정보와 실제 코드 변경 Diff(-/+)를 추출합니다."""
     cmd = ["git", "log", "-L", f"{start_line},{end_line}:{file_name}", "--no-merges", "--date=short"]
     result = subprocess.run(cmd, capture_output=True, text=True)
+    
+    if result.returncode != 0:
+        print("❌ Git history 추적 실패:")
+        print(result.stderr.strip())
+        return []
+
     raw_log = result.stdout
     if not raw_log.strip():
         return []
@@ -46,6 +56,19 @@ def extract_git_history(file_name, start_line, end_line):
         messages = [l.strip() for l in lines if l.startswith("    ")]
         full_msg = " ".join(messages)
         
+        # [v2.0 신규] 실제 코드 Diff (-와 +) 추출
+        diff_lines = []
+        in_diff = False
+        for l in lines:
+            if l.startswith("diff --git"):
+                in_diff = True
+                continue
+            if in_diff:
+                if l.startswith("+") and not l.startswith("+++"):
+                    diff_lines.append("+ " + l[1:].strip())
+                elif l.startswith("-") and not l.startswith("---"):
+                    diff_lines.append("- " + l[1:].strip())
+
         numbers = re.findall(r"#(\d+)", full_msg)
         is_revert = "revert" in full_msg.lower()
         
@@ -53,6 +76,7 @@ def extract_git_history(file_name, start_line, end_line):
             "hash": commit_hash,
             "date": date_str,
             "message": full_msg,
+            "diff_lines": diff_lines,
             "refs": numbers,
             "is_revert": is_revert
         })
