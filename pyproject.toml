@@ -15,3 +15,6 @@ dependencies = []
 
 [project.scripts]
 why-blame = "main:main"
+
+[tool.setuptools]
+py-modules = ["main", "git_tracker", "github_client", "timeline", "viewer", "narrative"]
