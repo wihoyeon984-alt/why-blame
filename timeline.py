@@ -1,7 +1,4 @@
 def classify_commit(message, is_revert=False):
-    """
-    Conventional Commits 프리픽스(feat:, fix: 등)를 최우선으로 인식합니다.
-    """
     m_low = message.strip().lower()
     if is_revert or m_low.startswith("revert"):
         return "↩ REVERT"
@@ -24,7 +21,6 @@ def classify_commit(message, is_revert=False):
     if prefix in ["sec", "security"]:
         return "🔒 SECURITY"
 
-    # 일반 키워드 폴백
     if any(k in m_low for k in ["fix", "bug", "patch", "resolve", "prevent"]):
         return "🐛 BUG FIX"
     if any(k in m_low for k in ["feat", "add", "implement"]):
@@ -36,20 +32,11 @@ def classify_commit(message, is_revert=False):
 
 
 def calculate_evidence_strength(timeline):
-    """
-    가중치 매트릭스 (총점 12점 만점)
-    - 커밋 메시지 (+2)
-    - 코드 Diff (-/+) 존재 (+2)
-    - Issue/PR 참조 번호 (+3)
-    - GitHub 실제 메타데이터 확인 (+2)
-    - Revert 이력 (+3)
-    합계: 2 + 2 + 3 + 2 + 3 = 12점 만점
-    """
     score = 0
     total = len(timeline)
     reverts = sum(1 for t in timeline if t.get("is_revert"))
     has_diff = any(len(t.get("diff_lines", [])) > 0 for t in timeline)
-    has_refs = any(len(t.get("refs", [])) > 0 for t in timeline)
+    has_refs = any(len(t.get("refs", [])) > 0 or len(t.get("ref_items", [])) > 0 for t in timeline)
     has_fetched = any(
         any(ref.get("title") for ref in t.get("ref_items", []))
         or any("'" in r for r in t.get("ref_details", []))
@@ -91,7 +78,7 @@ def calculate_evidence_strength(timeline):
     }
 
 
-def build_timeline(commits, repo_info, fetch_ref_func):
+def build_timeline(commits, repo_info, fetch_ref_func, fetch_commit_prs_func=None):
     timeline = list(reversed(commits))
 
     for idx, item in enumerate(timeline):
@@ -102,11 +89,25 @@ def build_timeline(commits, repo_info, fetch_ref_func):
 
         ref_details = []
         ref_items = []
-        for num in item["refs"]:
-            if repo_info:
-                owner, repo_name = repo_info
+        found_by_sha = False
+
+        # 1. 커밋 해시(SHA)로 실제 연결된 GitHub PR 우선 탐색
+        if repo_info and fetch_commit_prs_func and item.get("hash"):
+            owner, repo_name = repo_info
+            prs = fetch_commit_prs_func(owner, repo_name, item["hash"])
+            if prs:
+                for pr in prs:
+                    ref_items.append(pr)
+                    p_title = pr.get("title", "")
+                    title_part = f" ('{p_title}')" if p_title else ""
+                    ref_details.append(f"PR #{pr.get('number')}{title_part}")
+                found_by_sha = True
+
+        # 2. SHA 탐색 결과가 없을 경우 커밋 메시지의 #번호로 폴백 조회
+        if not found_by_sha and repo_info:
+            owner, repo_name = repo_info
+            for num in item.get("refs", []):
                 res = fetch_ref_func(owner, repo_name, num)
-                
                 if isinstance(res, dict) and res.get("status") == "SUCCESS":
                     ref_type = res.get("type", "REF")
                     title = res.get("title", "")
@@ -119,15 +120,9 @@ def build_timeline(commits, repo_info, fetch_ref_func):
                 elif isinstance(res, dict) and res.get("title"):
                     ref_details.append(f"#{num} ('{res['title']}')")
                     ref_items.append(res)
-                elif isinstance(res, str) and res:
-                    ref_details.append(f"#{num} ('{res}')")
-                    ref_items.append({"number": num, "title": res, "type": "REF", "url": "", "body_summary": "", "labels": []})
                 else:
                     ref_details.append(f"#{num}")
                     ref_items.append({"number": num, "title": "", "type": "REF", "url": "", "body_summary": "", "labels": []})
-            else:
-                ref_details.append(f"#{num}")
-                ref_items.append({"number": num, "title": "", "type": "REF", "url": "", "body_summary": "", "labels": []})
 
         item["ref_details"] = ref_details
         item["ref_items"] = ref_items

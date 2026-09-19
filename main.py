@@ -1,6 +1,6 @@
 import sys
 from git_tracker import extract_git_history, get_repo_info, get_current_code_lines
-from github_client import fetch_ref_info
+from github_client import fetch_ref_info, fetch_commit_prs
 from timeline import build_timeline
 from viewer import render_card
 
@@ -49,7 +49,8 @@ def main():
     if not commits:
         sys.exit(1)
 
-    timeline, stats = build_timeline(commits, repo_info, fetch_ref_info)
+    # SHA 기반 PR 탐색 함수와 번호 기반 이슈 탐색 함수를 함께 전달
+    timeline, stats = build_timeline(commits, repo_info, fetch_ref_info, fetch_commit_prs)
     render_card(file_name, line_range_str, repo_info, current_lines, timeline, stats)
 
 if __name__ == "__main__":

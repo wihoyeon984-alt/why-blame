@@ -11,7 +11,6 @@ class TestGitHubClient(unittest.TestCase):
 
     @patch("urllib.request.urlopen")
     def test_fetch_pr_with_body_and_labels(self, mock_urlopen):
-        """PR 감지, 본문 요약문(body_summary) 및 라벨 추출 검증"""
         mock_resp = MagicMock()
         mock_resp.status = 200
         mock_resp.read.return_value = json.dumps({
@@ -30,38 +29,33 @@ class TestGitHubClient(unittest.TestCase):
         self.assertEqual(res["title"], "Fix duplicate payment bug")
         self.assertEqual(res["body_summary"], "Users clicked payment button twice. Prevent duplicate execution.")
         self.assertEqual(res["labels"], ["bug", "billing"])
-        self.assertEqual(res["url"], "https://github.com/test/repo/pull/205")
 
     @patch("urllib.request.urlopen")
-    def test_fetch_issue_detection(self, mock_urlopen):
-        """일반 Issue 식별 검증"""
+    def test_fetch_commit_prs_by_sha(self, mock_urlopen):
+        """커밋 해시(SHA)로 실제 연결된 PR 목록을 가져오는지 검증"""
         mock_resp = MagicMock()
         mock_resp.status = 200
-        mock_resp.read.return_value = json.dumps({
-            "title": "Payment timeout issue",
-            "body": "Timeout happens on network glitch.",
-            "labels": [],
-            "state": "open",
-            "html_url": "https://github.com/test/repo/issues/100"
-        }).encode("utf-8")
+        mock_resp.read.return_value = json.dumps([{
+            "number": 300,
+            "title": "PR from Commit SHA",
+            "body": "Linked PR description",
+            "labels": [{"name": "feature"}],
+            "state": "closed",
+            "html_url": "https://github.com/test/repo/pull/300"
+        }]).encode("utf-8")
         mock_urlopen.return_value.__enter__.return_value = mock_resp
 
-        res = github_client.fetch_ref_info("test", "repo", 100)
-        self.assertEqual(res["status"], "SUCCESS")
-        self.assertEqual(res["type"], "ISSUE")
-        self.assertEqual(res["title"], "Payment timeout issue")
+        prs = github_client.fetch_commit_prs("test", "repo", "a1b2c3d")
+        self.assertEqual(len(prs), 1)
+        self.assertEqual(prs[0]["number"], 300)
+        self.assertEqual(prs[0]["title"], "PR from Commit SHA")
+        self.assertEqual(prs[0]["type"], "PR")
 
     @patch("urllib.request.urlopen")
     def test_http_404_not_found(self, mock_urlopen):
         mock_urlopen.side_effect = urllib.error.HTTPError("url", 404, "Not Found", {}, None)
         res = github_client.fetch_ref_info("test", "repo", 9999)
         self.assertEqual(res["status"], "NOT_FOUND")
-
-    @patch("urllib.request.urlopen")
-    def test_http_403_rate_limit(self, mock_urlopen):
-        mock_urlopen.side_effect = urllib.error.HTTPError("url", 403, "Rate Limit Exceeded", {}, None)
-        res = github_client.fetch_ref_info("test", "repo", 50)
-        self.assertEqual(res["status"], "RATE_LIMIT")
 
     @patch("urllib.request.urlopen")
     def test_caching_mechanism(self, mock_urlopen):

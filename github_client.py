@@ -22,31 +22,26 @@ def _save_cache():
     except Exception:
         pass
 
-# 모듈 로드 시 기존 파일 캐시 자동 적재
 _load_cache()
 
+def _make_request(url):
+    headers = {
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "Why-Blame-Client"
+    }
+    token = os.getenv("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return urllib.request.Request(url, headers=headers)
+
 def fetch_ref_info(owner, repo, number):
-    """
-    GitHub Issue 또는 Pull Request 메타데이터를 구조화하여 반환합니다.
-    - 로컬 파일 영속 캐시(.why_blame_cache.json) 지원
-    - PR과 Issue 구분 ('type': 'PR' | 'ISSUE')
-    - GITHUB_TOKEN 인증 지원
-    """
+    """이슈 또는 PR 번호 기반 메타데이터 조회 (캐싱 지원)"""
     cache_key = f"{owner}/{repo}#{number}"
     if cache_key in _cache:
         return _cache[cache_key]
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/{number}"
-    headers = {
-        "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "Why-Blame-Client"
-    }
-
-    token = os.getenv("GITHUB_TOKEN")
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-
-    req = urllib.request.Request(url, headers=headers)
+    req = _make_request(url)
     try:
         with urllib.request.urlopen(req, timeout=3.0) as response:
             if response.status == 200:
@@ -56,7 +51,6 @@ def fetch_ref_info(owner, repo, number):
                 body = data.get("body") or ""
                 summary_lines = [l.strip() for l in body.splitlines() if l.strip() and not l.startswith("#")]
                 body_summary = " ".join(summary_lines[:2])[:120] if summary_lines else ""
-                
                 labels = [lbl.get("name", "") for lbl in data.get("labels", []) if isinstance(lbl, dict)]
 
                 result = {
@@ -74,20 +68,50 @@ def fetch_ref_info(owner, repo, number):
                 return result
 
     except urllib.error.HTTPError as e:
-        if e.code == 404:
-            result = {"status": "NOT_FOUND", "number": number, "type": "UNKNOWN", "title": "", "body_summary": "", "labels": [], "state": None, "url": None}
-        elif e.code == 403:
-            result = {"status": "RATE_LIMIT", "number": number, "type": "UNKNOWN", "title": "", "body_summary": "", "labels": [], "state": None, "url": None}
-        else:
-            result = {"status": f"HTTP_ERROR_{e.code}", "number": number, "type": "UNKNOWN", "title": "", "body_summary": "", "labels": [], "state": None, "url": None}
+        status = "NOT_FOUND" if e.code == 404 else ("RATE_LIMIT" if e.code == 403 else f"HTTP_ERROR_{e.code}")
+        result = {"status": status, "number": number, "type": "UNKNOWN", "title": "", "body_summary": "", "labels": [], "state": None, "url": None}
         _cache[cache_key] = result
         _save_cache()
         return result
-
-    except (urllib.error.URLError, TimeoutError):
-        return {"status": "NETWORK_ERROR", "number": number, "type": "UNKNOWN", "title": "", "body_summary": "", "labels": [], "state": None, "url": None}
     except Exception:
-        return {"status": "UNKNOWN_ERROR", "number": number, "type": "UNKNOWN", "title": "", "body_summary": "", "labels": [], "state": None, "url": None}
+        return {"status": "NETWORK_ERROR", "number": number, "type": "UNKNOWN", "title": "", "body_summary": "", "labels": [], "state": None, "url": None}
+
+def fetch_commit_prs(owner, repo, commit_sha):
+    """
+    [핵심 신규 기능] 커밋 SHA를 기반으로 GitHub API를 호출해 실제 머지된 PR을 탐색합니다.
+    GET /repos/{owner}/{repo}/commits/{sha}/pulls
+    """
+    cache_key = f"sha_prs:{owner}/{repo}#{commit_sha}"
+    if cache_key in _cache:
+        return _cache[cache_key]
+
+    url = f"https://api.github.com/repos/{owner}/{repo}/commits/{commit_sha}/pulls"
+    req = _make_request(url)
+    try:
+        with urllib.request.urlopen(req, timeout=3.0) as response:
+            if response.status == 200:
+                prs_data = json.loads(response.read().decode("utf-8"))
+                results = []
+                for p in prs_data:
+                    body = p.get("body") or ""
+                    summary_lines = [l.strip() for l in body.splitlines() if l.strip() and not l.startswith("#")]
+                    body_summary = " ".join(summary_lines[:2])[:120] if summary_lines else ""
+                    labels = [lbl.get("name", "") for lbl in p.get("labels", []) if isinstance(lbl, dict)]
+                    results.append({
+                        "status": "SUCCESS",
+                        "number": p.get("number"),
+                        "type": "PR",
+                        "title": p.get("title", ""),
+                        "body_summary": body_summary,
+                        "labels": labels,
+                        "state": p.get("state", "closed"),
+                        "url": p.get("html_url", "")
+                    })
+                _cache[cache_key] = results
+                _save_cache()
+                return results
+    except Exception:
+        return []
 
 fetch_reference = fetch_ref_info
 fetch_title = lambda owner, repo, num: fetch_ref_info(owner, repo, num).get("title", "")

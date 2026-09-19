@@ -11,3 +11,5 @@ __pycache__/
 *.pyc
 
 .why_blame_cache.json
+
+*.egg-info/
