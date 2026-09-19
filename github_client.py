@@ -3,9 +3,35 @@ import urllib.error
 import json
 import os
 
+CACHE_FILE = ".why_blame_cache.json"
 _cache = {}
 
+def _load_cache():
+    global _cache
+    if os.path.exists(CACHE_FILE):
+        try:
+            with open(CACHE_FILE, "r", encoding="utf-8") as f:
+                _cache = json.load(f)
+        except Exception:
+            _cache = {}
+
+def _save_cache():
+    try:
+        with open(CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(_cache, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+# 모듈 로드 시 기존 파일 캐시 자동 적재
+_load_cache()
+
 def fetch_ref_info(owner, repo, number):
+    """
+    GitHub Issue 또는 Pull Request 메타데이터를 구조화하여 반환합니다.
+    - 로컬 파일 영속 캐시(.why_blame_cache.json) 지원
+    - PR과 Issue 구분 ('type': 'PR' | 'ISSUE')
+    - GITHUB_TOKEN 인증 지원
+    """
     cache_key = f"{owner}/{repo}#{number}"
     if cache_key in _cache:
         return _cache[cache_key]
@@ -15,8 +41,7 @@ def fetch_ref_info(owner, repo, number):
         "Accept": "application/vnd.github.v3+json",
         "User-Agent": "Why-Blame-Client"
     }
-    
-    # [핵심 수정] GITHUB_TOKEN이 있으면 인증 헤더 추가 (Rate Limit 60회 -> 5,000회 확장)
+
     token = os.getenv("GITHUB_TOKEN")
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -45,6 +70,7 @@ def fetch_ref_info(owner, repo, number):
                     "url": data.get("html_url", "")
                 }
                 _cache[cache_key] = result
+                _save_cache()
                 return result
 
     except urllib.error.HTTPError as e:
@@ -55,6 +81,7 @@ def fetch_ref_info(owner, repo, number):
         else:
             result = {"status": f"HTTP_ERROR_{e.code}", "number": number, "type": "UNKNOWN", "title": "", "body_summary": "", "labels": [], "state": None, "url": None}
         _cache[cache_key] = result
+        _save_cache()
         return result
 
     except (urllib.error.URLError, TimeoutError):

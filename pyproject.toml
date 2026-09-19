@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "why-blame"
+version = "0.2.3"
+description = "Git blame tells you who. Why-blame tells you why."
+authors = [
+    { name = "Wi Ho-yeon" }
+]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = []
+
+[project.scripts]
+why-blame = "main:main"

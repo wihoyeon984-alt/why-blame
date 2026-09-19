@@ -8,7 +8,8 @@ class TestNarrative(unittest.TestCase):
         timeline = [{"date": "2026-09-01", "hash": "c1a2b3c", "message": "feat: initial service", "ref_items": []}]
         headline, body = synthesize_narrative(timeline, {})
         self.assertIn("원형", headline)
-        self.assertIn("원형 그대로 유지", body)
+        self.assertIn("처음 관찰되었으며", body)
+        self.assertIn("추가적인 수정 이력은 확인되지 않았습니다", body)
         self.assertIn("c1a2b3c", body)
 
     def test_revert_recovery_narrative(self):
