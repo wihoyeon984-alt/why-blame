@@ -1,8 +1,9 @@
 # 📜 Why-blame: 코드 한 줄의 전기(傳記)
 
 > **"Git blame tells you WHO. Why-blame tells you WHY."**  
-> `git blame`은 "누가 썼는지"만 알려줄 뿐 "왜 이렇게 되었는지"는 알려주지 않습니다.  
-> **Why-blame**은 코드 한 줄의 탄생, 결함 수정, 롤백, 정착까지의 Git 이력과 실제 GitHub PR/Issue 본문 맥락을 추적하여 **신뢰성 있는 코드의 일대기(Biography)**를 복원하는 개발자 생산성 CLI 도구입니다.
+> `git blame`은 "누가 썼는지"만 알려줄 뿐 "왜 그렇게 되었는지"는 알려주지 않습니다.  
+> **Why-blame은 WHY를 억지로 지어내는 도구가 아니라, 증거가 충분할 때만 WHY를 주장하는 도구입니다.**  
+> 코드 한 줄의 탄생, 결함 수정, 롤백, 정착까지의 Git 이력과 실제 GitHub PR/Issue 본문 맥락을 추적하여 **검증 가능한 코드의 일대기(Biography)**를 복원합니다.
 
 ---
 
