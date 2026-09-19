@@ -1,3 +1,32 @@
+import subprocess
+import re
+
+def get_repo_info():
+    """원격 저장소 URL에서 (소유자, 저장소명)을 추출합니다."""
+    res = subprocess.run(["git", "config", "--get", "remote.origin.url"], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    remote_url = res.stdout.strip()
+    if not remote_url:
+        return None
+    m = re.search(r"github\.com[:/]([^/]+)/([^/.]+)", remote_url)
+    if m:
+        return m.group(1), m.group(2)
+    return None
+
+def get_current_code_lines(file_name, start_line, end_line):
+    """지정된 범위의 현재 코드 줄들을 리스트로 읽어옵니다."""
+    try:
+        with open(file_name, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        s = max(0, start_line - 1)
+        e = min(len(lines), end_line)
+        return [l.rstrip("\r\n") for l in lines[s:e]]
+    except FileNotFoundError:
+        print(f"오류: 파일을 찾을 수 없습니다: {file_name}")
+        return []
+    except Exception as e:
+        print(f"오류: 파일 읽기 실패: {e}")
+        return []
+
 def extract_git_history(file_name, start_line, end_line):
     """git log -L을 실행해 커밋 정보와 실제 코드 변경 Diff(-/+)를 추출합니다."""
     cmd = ["git", "log", "-L", f"{start_line},{end_line}:{file_name}", "--no-merges", "--date=short"]
@@ -17,7 +46,7 @@ def extract_git_history(file_name, start_line, end_line):
         if not block.strip():
             continue
 
-        # [핵심 수정] diff --git을 기준으로 커밋 메타데이터 영역과 Diff 영역을 엄격히 분리!
+        # diff --git을 기준으로 커밋 메타데이터 영역과 Diff 영역을 엄격히 분리!
         if "diff --git" in block:
             header_part, diff_part = block.split("diff --git", 1)
         else:
@@ -31,11 +60,11 @@ def extract_git_history(file_name, start_line, end_line):
             if l.startswith("Date:"):
                 date_str = l.replace("Date:", "").strip()
 
-        # 커밋 메시지는 반드시 diff --git 이전 줄(4칸 들여쓰기)에서만 수집!
+        # 커밋 메시지는 반드시 diff --git 이전 줄(4칸 들여쓰기)에서만 수집
         messages = [l.strip() for l in header_lines if l.startswith("    ")]
         full_msg = " ".join(messages)
 
-        # 실제 코드 Diff는 diff_part에서만 추출! (코드 주석 #123 등이 메시지에 섞이지 않음)
+        # 실제 코드 Diff는 diff_part에서만 추출 (코드 주석 #123 등이 메시지에 섞이지 않음)
         diff_lines = []
         for l in diff_part.splitlines():
             if l.startswith("+") and not l.startswith("+++"):
