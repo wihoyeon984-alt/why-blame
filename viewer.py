@@ -13,7 +13,8 @@ def render_card(file_name, line_range_str, repo_info, current_lines, timeline, s
     print("├" + "─" * w + "┤")
     print("│ CURRENT (현재 코드 라인)                                 │")
     for c_line in current_lines[:4]:
-        print(f"│ > {c_line[:54]:<56}│")
+        disp_code = (c_line[:51] + "...") if len(c_line) > 54 else c_line
+        print(f"│ > {disp_code:<54}│")
     print("├" + "─" * w + "┤")
 
     # [Evidence Sufficiency Guard] 증거 점수 부족 시 거절 카드 출력
@@ -33,7 +34,7 @@ def render_card(file_name, line_range_str, repo_info, current_lines, timeline, s
         print("└" + "─" * w + "┘")
         return
 
-    # 📖 BIOGRAPHY: 코드의 전기 및 변경 사유 서사 요약문
+    # 📖 BIOGRAPHY: 코드의 전기 및 정착 사유 서사 요약문
     headline, narrative_body = synthesize_narrative(timeline, stats)
     print("│ 📖 BIOGRAPHY (코드의 전기 및 정착 사유)                 │")
     print(f"│  * {headline:<54}│")
@@ -52,11 +53,9 @@ def render_card(file_name, line_range_str, repo_info, current_lines, timeline, s
         msg_disp = item["message"][:54]
         print(f"│   {msg_disp:<56}│")
 
-        # 실제 Diff (- / +) 출력
         for d in item.get("diff_lines", [])[:2]:
             print(f"│   {d[:54]:<56}│")
 
-        # 구조화된 PR / Issue 정보 및 링크
         if item.get("ref_items"):
             for ref in item["ref_items"]:
                 r_type = ref.get("type", "REF")
