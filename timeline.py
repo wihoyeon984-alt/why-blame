@@ -36,7 +36,7 @@ def classify_commit(message, is_revert=False):
 def calculate_evidence_strength(timeline):
     """
     [4차원 신뢰도 모델]
-    1. Coverage: Commit(2) + Diff(2) + Valid PR/Issue(3) + Metadata(2) + PR Context(3) = 12점
+    1. Coverage: Commit(2) + Diff(2) + Valid PR/Issue(3) + Metadata(2) + Context/Revert(3) = 12점
     2. Consistency: HIGH / MODERATE / INCONSISTENT
     3. Ambiguity: Revert 발생 여부를 독립된 복잡도 신호로 분리
     4. Confidence: Coverage + Consistency 종합 판정
@@ -68,7 +68,7 @@ def calculate_evidence_strength(timeline):
     )
     has_message = total > 0 and any(len(t.get("message", "")) > 5 for t in timeline)
 
-    # 배점 계산 (Revert 가산점 +3 제거 -> 실제 PR 본문 Context 확인 시 +3 부여)
+    # 배점 계산 (PR 본문 맥락 또는 검증 이력이 있으면 증거 가용성 +3 부여)
     if has_message:
         score += 2
     if has_diff:
@@ -77,8 +77,11 @@ def calculate_evidence_strength(timeline):
         score += 3
     if has_fetched:
         score += 2
-    if has_context:
+    if has_context or reverts > 0:
         score += 3
+
+    # 12점 만점 상한
+    score = min(12, score)
 
     if score >= 11:
         grade = "VERY HIGH"
