@@ -1,3 +1,5 @@
+from consistency import check_evidence_consistency
+
 def classify_commit(message, is_revert=False):
     m_low = message.strip().lower()
     if is_revert or m_low.startswith("revert"):
@@ -36,7 +38,18 @@ def calculate_evidence_strength(timeline):
     total = len(timeline)
     reverts = sum(1 for t in timeline if t.get("is_revert"))
     has_diff = any(len(t.get("diff_lines", [])) > 0 for t in timeline)
-    has_refs = any(len(t.get("refs", [])) > 0 or len(t.get("ref_items", [])) > 0 for t in timeline)
+    
+    # [핵심] NOT_FOUND로 판명된 가짜 참조는 증거(has_refs)로 인정하지 않음!
+    valid_refs_exist = False
+    for t in timeline:
+        if t.get("ref_items"):
+            if any(r.get("status") == "SUCCESS" or (r.get("title") and r.get("status") != "NOT_FOUND") for r in t.get("ref_items", [])):
+                valid_refs_exist = True
+        elif t.get("refs"):
+            valid_refs_exist = True
+
+    has_refs = valid_refs_exist
+
     has_fetched = any(
         any(ref.get("title") for ref in t.get("ref_items", []))
         or any("'" in r for r in t.get("ref_details", []))
@@ -66,9 +79,38 @@ def calculate_evidence_strength(timeline):
     else:
         grade = "LOW"
 
+    # 3축 모델: 커밋과 PR 간의 Evidence Consistency 종합 평가
+    has_inconsistent = False
+    has_consistent = False
+    inconsistent_pairs = []
+
+    for t in timeline:
+        c_msg = t.get("message", "")
+        for ref in t.get("ref_items", []):
+            if ref.get("title") and ref.get("type") == "PR":
+                chk = check_evidence_consistency(c_msg, ref.get("title", ""), ref.get("body_summary", ""))
+                if chk["level"] == "INCONSISTENT":
+                    has_inconsistent = True
+                    inconsistent_pairs.append(f"Commit '{c_msg[:25]}' ↔ PR #{ref.get('number')} '{ref.get('title')[:25]}'")
+                elif chk["level"] == "HIGH":
+                    has_consistent = True
+
+    if has_inconsistent:
+        consistency = "INCONSISTENT"
+        confidence = "LOW (증거 불일치)"
+    elif has_consistent:
+        consistency = "HIGH"
+        confidence = grade
+    else:
+        consistency = "UNLINKED" if not has_refs else "MODERATE"
+        confidence = grade
+
     return {
         "score": score,
         "grade": grade,
+        "consistency": consistency,
+        "confidence": confidence,
+        "inconsistent_pairs": inconsistent_pairs,
         "total_events": total,
         "reverts_count": reverts,
         "has_diff": has_diff,
@@ -91,7 +133,6 @@ def build_timeline(commits, repo_info, fetch_ref_func, fetch_commit_prs_func=Non
         ref_items = []
         found_by_sha = False
 
-        # 1. 커밋 해시(SHA)로 실제 연결된 GitHub PR 우선 탐색
         if repo_info and fetch_commit_prs_func and item.get("hash"):
             owner, repo_name = repo_info
             prs = fetch_commit_prs_func(owner, repo_name, item["hash"])
@@ -103,7 +144,6 @@ def build_timeline(commits, repo_info, fetch_ref_func, fetch_commit_prs_func=Non
                     ref_details.append(f"PR #{pr.get('number')}{title_part}")
                 found_by_sha = True
 
-        # 2. SHA 탐색 결과가 없을 경우 커밋 메시지의 #번호로 폴백 조회
         if not found_by_sha and repo_info:
             owner, repo_name = repo_info
             for num in item.get("refs", []):
@@ -116,6 +156,10 @@ def build_timeline(commits, repo_info, fetch_ref_func, fetch_commit_prs_func=Non
                         ref_details.append(f"{label} ('{title}')")
                     else:
                         ref_details.append(label)
+                    ref_items.append(res)
+                elif isinstance(res, dict) and res.get("status") == "NOT_FOUND":
+                    # [핵심] 존재하지 않는 404 참조는 [NOT FOUND]로 명확히 표시!
+                    ref_details.append(f"REF #{num} [NOT FOUND]")
                     ref_items.append(res)
                 elif isinstance(res, dict) and res.get("title"):
                     ref_details.append(f"#{num} ('{res['title']}')")

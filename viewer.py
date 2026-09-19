@@ -2,99 +2,108 @@ import textwrap
 from narrative import synthesize_narrative
 
 def render_card(file_name, line_range_str, repo_info, current_lines, timeline, stats):
-    w = 60
-    print("┌" + "─" * w + "┐")
-    print("│ WHY-BLAME v2.3 (Biography & Evidence Architecture)       │")
-    print(f"│ Target: {file_name}:{line_range_str:<49}│")
+    w = 64
+    print("\nWHY-BLAME")
+    print("━" * w)
+    print(f"TARGET: {file_name}:{line_range_str}")
     if repo_info:
         owner, repo_name = repo_info
-        repo_display = f"{owner}/{repo_name}"
-        print(f"│ GitHub: {repo_display:<51}│")
-    print("├" + "─" * w + "┤")
-    print("│ CURRENT (현재 코드 라인)                                 │")
-    for c_line in current_lines[:4]:
-        print(f"│ > {c_line[:54]:<56}│")
-    print("├" + "─" * w + "┤")
+        print(f"REPO:   {owner}/{repo_name}")
+    print("─" * w)
 
-    # [Evidence Sufficiency Guard] 증거 점수 부족 시 거절 카드 출력
-    if stats["score"] <= 2:
-        print("│ WHY?                                                     │")
-        print("│ No reliable historical explanation found.                │")
-        print("│ (신뢰할 만한 근거가 부족하여 변경 사유를 확정할 수 없습니다.)   │")
-        print("│                                                          │")
-        print("│ Evidence Status:                                         │")
-        print(f"│ [{'x' if stats.get('has_message') else ' '}] commit message                                     │")
-        print(f"│ [{'x' if stats['has_diff'] else ' '}] code diff                                        │")
-        print(f"│ [{'x' if stats['has_refs'] else ' '}] linked issue / PR                                 │")
-        print("│ [ ] design discussion                                    │")
-        print("│                                                          │")
-        print(f"│ Evidence Strength: {stats['strength']:<38}│")
-        print("│ * Evidence score is a heuristic, not a certainty.        │")
-        print("└" + "─" * w + "┘")
+    # 1. CURRENT CODE
+    print("CURRENT CODE")
+    print("─" * w)
+    for c_line in current_lines[:4]:
+        disp = (c_line[:58] + "...") if len(c_line) > 61 else c_line
+        print(f"> {disp}")
+    print("─" * w)
+
+    # 2. Evidence Sufficiency Guard
+    if stats.get("score", 0) <= 2:
+        print("WHY (변경 사유)")
+        print("─" * w)
+        print("⚠️  No reliable historical explanation found.")
+        print("   (수집된 역사적 근거가 부족하여 변경 사유를 확정할 수 없습니다.)\n")
+        print("EVIDENCE")
+        print("─" * w)
+        print(f"[{'✓' if stats.get('has_message') else '✗'}] Commit message")
+        print(f"[{'✓' if stats.get('has_diff') else '✗'}] Code diff (-/+)")
+        print(f"[{'✓' if stats.get('has_refs') else '✗'}] Linked Issue / PR")
+        print("─" * w)
+        print(f"CONFIDENCE: LOW ({stats.get('strength', 'LOW')})")
+        print("━" * w + "\n")
         return
 
-    # 📖 BIOGRAPHY: 코드의 전기 및 변경 사유 서사 요약문
+    # 3. WHY (코드의 전기 및 정착 결론)
     headline, narrative_body = synthesize_narrative(timeline, stats)
-    print("│ 📖 BIOGRAPHY (코드의 전기 및 정착 사유)                 │")
-    print(f"│  * {headline:<54}│")
-    print("│                                                          │")
-    for line in textwrap.wrap(narrative_body, width=54):
-        print(f"│  {line:<56}│")
-    print("├" + "─" * w + "┤")
+    print("WHY (코드의 전기 및 정착 결론)")
+    print("─" * w)
+    print(f"* {headline}\n")
+    for line in textwrap.wrap(narrative_body, width=62):
+        print(f"  {line}")
+    print("─" * w)
 
-    # 타임라인 상세 출력
-    print("│ TIMELINE (변경 이력 & Diff & GitHub 참조)               │")
-    print("│                                                          │")
-
+    # 4. HISTORY (타임라인 상세)
+    print("HISTORY (타임라인 상세)")
+    print("─" * w)
     for idx, item in enumerate(timeline):
-        header = f"{item['date']} {item['type']} ({item['hash']})"
-        print(f"│ {header:<58}│")
-        msg_disp = item["message"][:54]
-        print(f"│   {msg_disp:<56}│")
+        commit_short = item.get("hash", "")[:7]
+        print(f"● {item.get('date', 'Unknown')}  {item.get('type', '')} ({commit_short})")
+        print(f"  {item.get('message', '')[:60]}")
 
-        # 실제 Diff (- / +) 출력
         for d in item.get("diff_lines", [])[:2]:
-            print(f"│   {d[:54]:<56}│")
+            print(f"  {d[:60]}")
 
-        # 구조화된 PR / Issue 정보 및 링크
         if item.get("ref_items"):
             for ref in item["ref_items"]:
                 r_type = ref.get("type", "REF")
                 r_num = ref.get("number", "")
                 r_title = ref.get("title", "")
                 r_context = ref.get("body_summary", "")
-                r_labels = ref.get("labels", [])
                 r_url = ref.get("url", "")
 
                 title_disp = f" ('{r_title[:28]}...')" if len(r_title) > 28 else (f" ('{r_title}')" if r_title else "")
-                ref_line = f"   ↳ {r_type} #{r_num}{title_disp}"
-                print(f"│ {ref_line:<58}│")
+                print(f"  ↳ {r_type} #{r_num}{title_disp}")
 
                 if r_context:
-                    ctx_line = f"     💬 Context: \"{r_context[:44]}...\""
-                    print(f"│ {ctx_line:<58}│")
-
-                if r_labels:
-                    lbl_str = ", ".join(r_labels[:3])
-                    lbl_line = f"     🏷️ Labels: [{lbl_str}]"
-                    print(f"│ {lbl_line:<58}│")
-
+                    print(f"    💬 Context: \"{r_context[:52]}...\"")
                 if r_url:
-                    url_line = f"     🔗 {r_url}"
-                    print(f"│ {url_line[:58]:<58}│")
+                    print(f"    🔗 {r_url}")
+        print()
 
-        elif item.get("ref_details"):
-            ref_line = "   ↳ " + ", ".join(item["ref_details"])
-            print(f"│ {ref_line:<58}│")
+    # 5. EVIDENCE CHECKLIST & CONSISTENCY
+    print("─" * w)
+    print("EVIDENCE (수집된 근거 체크리스트)")
+    print("─" * w)
+    has_pr = any(any(r.get("type") == "PR" for r in t.get("ref_items", [])) for t in timeline)
+    has_context = any(any(r.get("body_summary") for r in t.get("ref_items", [])) for t in timeline)
+    has_issue = any(any(r.get("type") == "ISSUE" for r in t.get("ref_items", [])) for t in timeline)
+    has_revert = stats.get("reverts_count", 0) > 0
 
-        if idx < len(timeline) - 1:
-            print("│                                                          │")
+    print(f"[{'✓' if stats.get('has_message') else '✗'}] Commit message (유의미한 커밋 메시지)")
+    print(f"[{'✓' if stats.get('has_diff') else '✗'}] Code diff (물리적 코드 변경 증명)")
+    print(f"[{'✓' if has_pr else '✗'}] Linked PR (GitHub 실제 머지 PR)")
+    print(f"[{'✓' if has_context else '✗'}] PR / Issue Context (본문 상세 맥락)")
+    if has_issue:
+        print("[✓] Linked Issue (연관 이슈)")
+    if has_revert:
+        print(f"[✓] Revert History ({stats.get('reverts_count')}회 롤백 이력)")
 
-    print("│                                                          │")
-    print("├" + "─" * w + "┤")
-    print("│ EVIDENCE STRENGTH (증거 종합 평가)                       │")
-    print(f"│ Total Events: {stats['total_events']:<45}│")
-    print(f"│ Reverts: {stats['reverts_count']:<50}│")
-    print(f"│ Evidence Strength: {stats['strength']:<38}│")
-    print("│ * Evidence score is a heuristic, not a certainty.        │")
-    print("└" + "─" * w + "┘")
+    # 6. CONSISTENCY & CONFIDENCE
+    print("─" * w)
+    const_disp = stats.get("consistency", "N/A")
+    if const_disp == "INCONSISTENT":
+        print("CONSISTENCY: ⚠️ INCONSISTENT (커밋 ↔ PR 맥락 불일치)")
+    elif const_disp == "HIGH":
+        print("CONSISTENCY: ✓ HIGH (커밋 ↔ PR 맥락 일치)")
+    else:
+        print(f"CONSISTENCY: {const_disp}")
+
+    print(f"CONFIDENCE:  {stats.get('confidence', stats.get('grade', 'UNKNOWN'))}")
+    print("─" * w)
+    print("LIMITATION")
+    print("─" * w)
+    print("본 분석은 Git 히스토리 및 GitHub 공개 메타데이터를 근거로 복원되었습니다.")
+    print("기록되지 않은 개발자의 실제 내적 의도는 자의적으로 단정하지 않습니다.")
+    print("━" * w + "\n")

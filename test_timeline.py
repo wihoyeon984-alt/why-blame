@@ -1,61 +1,516 @@
 import unittest
-from timeline import classify_commit, calculate_evidence_strength, build_timeline
+
+from timeline import (
+    classify_commit,
+    calculate_evidence_strength,
+    build_timeline,
+)
 
 
 class TestTimeline(unittest.TestCase):
+
+    # =========================================================
+    # Commit classification
+    # =========================================================
+
     def test_classify_conventional_commits(self):
-        """feat, fix, revert 등 커밋 메시지 프리픽스 자동 분류 검증"""
-        self.assertEqual(classify_commit("feat: add login feature"), "✨ FEATURE")
-        self.assertEqual(classify_commit("fix: resolve payment issue"), "🐛 BUG FIX")
-        self.assertEqual(classify_commit("revert: rollback bad commit"), "↩ REVERT")
-        self.assertEqual(classify_commit("refactor: clean up db layer"), "🧹 REFACTOR")
-        self.assertEqual(classify_commit("docs: update README"), "📝 DOCS")
-        self.assertEqual(classify_commit("is_revert flag true", is_revert=True), "↩ REVERT")
+        self.assertEqual(
+            classify_commit("feat: add payment"),
+            "✨ FEATURE"
+        )
+
+        self.assertEqual(
+            classify_commit("fix: prevent duplicate charge"),
+            "🐛 BUG FIX"
+        )
+
+        self.assertEqual(
+            classify_commit("refactor: simplify payment flow"),
+            "🧹 REFACTOR"
+        )
+
+        self.assertEqual(
+            classify_commit("test: add payment tests"),
+            "🧪 TEST"
+        )
+
+        self.assertEqual(
+            classify_commit("docs: update README"),
+            "📝 DOCS"
+        )
+
+        self.assertEqual(
+            classify_commit("perf: optimize query"),
+            "⚡ PERF"
+        )
+
+        self.assertEqual(
+            classify_commit("security: validate token"),
+            "🔒 SECURITY"
+        )
+
+    def test_classify_revert(self):
+        self.assertEqual(
+            classify_commit(
+                "revert: rollback condition",
+                is_revert=True
+            ),
+            "↩ REVERT"
+        )
+
+        self.assertEqual(
+            classify_commit(
+                "Revert payment change"
+            ),
+            "↩ REVERT"
+        )
 
     def test_classify_keyword_fallback(self):
-        """접두어가 없는 일반 커밋 메시지의 키워드 기반 분류 검증"""
-        self.assertEqual(classify_commit("prevent race condition in billing"), "🐛 BUG FIX")
-        self.assertEqual(classify_commit("add support for oauth2"), "✨ FEATURE")
-        self.assertEqual(classify_commit("cleanup unused imports"), "🧹 REFACTOR")
-        self.assertEqual(classify_commit("bump version number"), "🔧 UPDATE")
+        self.assertEqual(
+            classify_commit("prevent duplicate payment"),
+            "🐛 BUG FIX"
+        )
 
-    def test_evidence_strength_grades(self):
-        """README 명세에 정의된 5단계 증거 점수 구간 검증"""
-        # 점수 0점 -> LOW
-        self.assertEqual(calculate_evidence_strength([])["grade"], "LOW")
+        self.assertEqual(
+            classify_commit("implement user validation"),
+            "✨ FEATURE"
+        )
 
-        # 점수 3점 (message>5 [+1] + diff_lines [+2]) -> WEAK
-        timeline_weak = [{"message": "fix payment race", "diff_lines": ["+ charge()"]}]
-        self.assertEqual(calculate_evidence_strength(timeline_weak)["grade"], "WEAK")
+        self.assertEqual(
+            classify_commit("cleanup old code"),
+            "🧹 REFACTOR"
+        )
 
-        # 점수 6점 (message [+1] + diff [+2] + refs [+3]) -> MODERATE
-        timeline_mod = [{"message": "fix payment race", "diff_lines": ["+ charge()"], "refs": [101]}]
-        self.assertEqual(calculate_evidence_strength(timeline_mod)["grade"], "MODERATE")
+        self.assertEqual(
+            classify_commit("update configuration"),
+            "🔧 UPDATE"
+        )
 
-        # 점수 9점 (message [+1] + diff [+2] + refs [+3] + revert [+3]) -> HIGH
-        timeline_high = [{"message": "fix payment race", "diff_lines": ["+ charge()"], "refs": [101], "is_revert": True}]
-        self.assertEqual(calculate_evidence_strength(timeline_high)["grade"], "HIGH")
+    # =========================================================
+    # Evidence score
+    #
+    # Message       +2
+    # Diff          +2
+    # Real GitHub   +3
+    # Fetched title +2
+    # Revert        +3
+    #
+    # Maximum = 12
+    # =========================================================
 
-        # 점수 11점 (message [+1] + diff [+2] + refs [+3] + fetched [+2] + revert [+3]) -> VERY HIGH
-        timeline_vhigh = [{
-            "message": "fix payment race",
-            "diff_lines": ["+ charge()"],
-            "refs": [101],
-            "ref_items": [{"title": "Payment Fix"}],
-            "ref_details": ["#101 ('Payment Fix')"],
-            "is_revert": True
-        }]
-        self.assertEqual(calculate_evidence_strength(timeline_vhigh)["grade"], "VERY HIGH")
-
-    def test_build_timeline_first_commit_birth(self):
-        """첫 번째 커밋에 📍 FIRST OBSERVED 타입이 부여되는지 검증"""
-        sample_commits = [
-            {"hash": "aaa", "date": "2026-09-01", "message": "second", "is_revert": False, "refs": [], "diff_lines": []},
-            {"hash": "bbb", "date": "2026-08-01", "message": "first", "is_revert": False, "refs": [], "diff_lines": []},
+    def test_evidence_strength_low(self):
+        timeline = [
+            {
+                "message": "x",
+                "diff_lines": [],
+                "ref_items": [],
+                "is_revert": False
+            }
         ]
-        timeline, stats = build_timeline(sample_commits, None, lambda o, r, n: "")
-        self.assertEqual(timeline[0]["type"], "📍 FIRST OBSERVED")
-        self.assertEqual(timeline[-1]["type"], "🔧 UPDATE")
+
+        result = calculate_evidence_strength(timeline)
+
+        self.assertEqual(result["score"], 0)
+        self.assertEqual(result["grade"], "LOW")
+
+    def test_evidence_strength_weak(self):
+        timeline = [
+            {
+                "message": "fix payment",
+                "diff_lines": ["+ charge()"],
+                "ref_items": [],
+                "is_revert": False
+            }
+        ]
+
+        result = calculate_evidence_strength(timeline)
+
+        self.assertEqual(result["score"], 4)
+        self.assertEqual(result["grade"], "WEAK")
+
+    def test_evidence_strength_moderate(self):
+        timeline = [
+            {
+                "message": "fix payment race",
+                "diff_lines": ["+ charge()"],
+                "ref_items": [
+                    {
+                        "status": "SUCCESS",
+                        "number": 101,
+                        "type": "ISSUE",
+                        "title": ""
+                    }
+                ],
+                "is_revert": False
+            }
+        ]
+
+        result = calculate_evidence_strength(timeline)
+
+        self.assertEqual(result["score"], 7)
+        self.assertEqual(result["grade"], "MODERATE")
+        self.assertTrue(result["has_refs"])
+
+    def test_evidence_strength_high(self):
+        timeline = [
+            {
+                "message": "fix payment race",
+                "diff_lines": ["+ charge()"],
+                "ref_items": [
+                    {
+                        "status": "SUCCESS",
+                        "number": 101,
+                        "type": "ISSUE",
+                        "title": "Payment Fix"
+                    }
+                ],
+                "is_revert": False
+            }
+        ]
+
+        result = calculate_evidence_strength(timeline)
+
+        self.assertEqual(result["score"], 9)
+        self.assertEqual(result["grade"], "HIGH")
+        self.assertTrue(result["has_refs"])
+
+    def test_evidence_strength_very_high(self):
+        timeline = [
+            {
+                "message": "fix payment race",
+                "diff_lines": ["+ charge()"],
+                "ref_items": [
+                    {
+                        "status": "SUCCESS",
+                        "number": 101,
+                        "type": "ISSUE",
+                        "title": "Payment Fix"
+                    }
+                ],
+                "is_revert": True
+            }
+        ]
+
+        result = calculate_evidence_strength(timeline)
+
+        self.assertEqual(result["score"], 12)
+        self.assertEqual(result["grade"], "VERY HIGH")
+
+    def test_not_found_reference_is_not_evidence(self):
+        timeline = [
+            {
+                "message": "fix payment",
+                "diff_lines": ["+ charge()"],
+                "ref_items": [
+                    {
+                        "status": "NOT_FOUND",
+                        "number": 1347,
+                        "type": "UNKNOWN",
+                        "title": ""
+                    }
+                ],
+                "is_revert": False
+            }
+        ]
+
+        result = calculate_evidence_strength(timeline)
+
+        self.assertEqual(result["score"], 4)
+        self.assertFalse(result["has_refs"])
+
+    def test_not_found_reference_does_not_count_as_fetched(self):
+        timeline = [
+            {
+                "message": "fix payment",
+                "diff_lines": ["+ charge()"],
+                "ref_items": [
+                    {
+                        "status": "NOT_FOUND",
+                        "number": 1347,
+                        "type": "UNKNOWN",
+                        "title": ""
+                    }
+                ],
+                "is_revert": False
+            }
+        ]
+
+        result = calculate_evidence_strength(timeline)
+
+        self.assertFalse(result["has_refs"])
+        self.assertEqual(result["score"], 4)
+
+    def test_success_reference_is_evidence(self):
+        timeline = [
+            {
+                "message": "fix payment",
+                "diff_lines": ["+ charge()"],
+                "ref_items": [
+                    {
+                        "status": "SUCCESS",
+                        "number": 101,
+                        "type": "ISSUE",
+                        "title": ""
+                    }
+                ],
+                "is_revert": False
+            }
+        ]
+
+        result = calculate_evidence_strength(timeline)
+
+        self.assertEqual(result["score"], 7)
+        self.assertTrue(result["has_refs"])
+
+    # =========================================================
+    # Timeline
+    # =========================================================
+
+    def test_build_timeline_first_commit_observed(self):
+        commits = [
+            {
+                "hash": "aaa111122223333",
+                "message": "feat: initial payment",
+                "diff_lines": ["+ charge()"],
+                "refs": [],
+                "is_revert": False
+            },
+            {
+                "hash": "bbb111122223333",
+                "message": "fix: payment bug",
+                "diff_lines": [
+                    "- charge()",
+                    "+ safe_charge()"
+                ],
+                "refs": [],
+                "is_revert": False
+            }
+        ]
+
+        def fake_fetch_ref(owner, repo, number):
+            return {
+                "status": "NOT_FOUND",
+                "number": number,
+                "type": "UNKNOWN",
+                "title": ""
+            }
+
+        timeline, stats = build_timeline(
+            commits,
+            ("wihoyeon984-alt", "why-blame"),
+            fake_fetch_ref,
+            lambda owner, repo, sha: []
+        )
+
+        self.assertEqual(
+            timeline[0]["type"],
+            "📍 FIRST OBSERVED"
+        )
+
+        self.assertEqual(
+            timeline[1]["type"],
+            "✨ FEATURE"
+        )
+
+    def test_sha_lookup_finds_pr(self):
+        commits = [
+            {
+                "hash": "abcdef1234567890",
+                "message": "fix: payment",
+                "diff_lines": ["+ charge()"],
+                "refs": [],
+                "is_revert": False
+            }
+        ]
+
+        def fake_fetch_ref(owner, repo, number):
+            raise AssertionError(
+                "SHA PR을 찾았으므로 #번호 fallback이 실행되면 안 됩니다."
+            )
+
+        def fake_fetch_commit_prs(owner, repo, sha):
+            self.assertEqual(
+                sha,
+                "abcdef1234567890"
+            )
+
+            return [
+                {
+                    "status": "SUCCESS",
+                    "number": 55,
+                    "type": "PR",
+                    "title": "Fix payment",
+                    "body_summary": "",
+                    "labels": [],
+                    "state": "merged",
+                    "url": "https://github.com/example"
+                }
+            ]
+
+        timeline, stats = build_timeline(
+            commits,
+            ("wihoyeon984-alt", "why-blame"),
+            fake_fetch_ref,
+            fake_fetch_commit_prs
+        )
+
+        self.assertEqual(
+            timeline[0]["ref_details"],
+            ["PR #55 ('Fix payment')"]
+        )
+
+        self.assertEqual(
+            timeline[0]["ref_items"][0]["status"],
+            "SUCCESS"
+        )
+
+    def test_sha_lookup_without_issue_number(self):
+        commits = [
+            {
+                "hash": "abcdef1234567890",
+                "message": "fix: payment logic",
+                "diff_lines": ["+ safe_charge()"],
+                "refs": [],
+                "is_revert": False
+            }
+        ]
+
+        def fake_fetch_ref(owner, repo, number):
+            raise AssertionError(
+                "Issue 번호가 없으므로 fallback이 실행되면 안 됩니다."
+            )
+
+        def fake_fetch_commit_prs(owner, repo, sha):
+            return [
+                {
+                    "status": "SUCCESS",
+                    "number": 77,
+                    "type": "PR",
+                    "title": "Improve payment validation"
+                }
+            ]
+
+        timeline, stats = build_timeline(
+            commits,
+            ("wihoyeon984-alt", "why-blame"),
+            fake_fetch_ref,
+            fake_fetch_commit_prs
+        )
+
+        self.assertEqual(
+            timeline[0]["ref_details"],
+            ["PR #77 ('Improve payment validation')"]
+        )
+
+    def test_sha_lookup_falls_back_to_commit_reference(self):
+        commits = [
+            {
+                "hash": "abcdef1234567890",
+                "message": "fix payment (#101)",
+                "diff_lines": ["+ charge()"],
+                "refs": [101],
+                "is_revert": False
+            }
+        ]
+
+        def fake_fetch_commit_prs(owner, repo, sha):
+            return []
+
+        def fake_fetch_ref(owner, repo, number):
+            self.assertEqual(number, 101)
+
+            return {
+                "status": "SUCCESS",
+                "number": 101,
+                "type": "ISSUE",
+                "title": "Payment Fix"
+            }
+
+        timeline, stats = build_timeline(
+            commits,
+            ("wihoyeon984-alt", "why-blame"),
+            fake_fetch_ref,
+            fake_fetch_commit_prs
+        )
+
+        self.assertEqual(
+            timeline[0]["ref_details"],
+            ["ISSUE #101 ('Payment Fix')"]
+        )
+
+        self.assertTrue(
+            timeline[0]["ref_items"]
+        )
+
+    def test_not_found_reference_is_displayed_separately(self):
+        commits = [
+            {
+                "hash": "abc123456789",
+                "message": "fix payment (#1347)",
+                "diff_lines": ["+ charge()"],
+                "refs": [1347],
+                "is_revert": False
+            }
+        ]
+
+        def fake_fetch_ref(owner, repo, number):
+            return {
+                "status": "NOT_FOUND",
+                "number": number,
+                "type": "UNKNOWN",
+                "title": "",
+                "body_summary": "",
+                "labels": [],
+                "state": None,
+                "url": None
+            }
+
+        timeline, stats = build_timeline(
+            commits,
+            ("wihoyeon984-alt", "why-blame"),
+            fake_fetch_ref,
+            lambda owner, repo, sha: []
+        )
+
+        self.assertEqual(
+            timeline[0]["ref_details"],
+            ["REF #1347 [NOT FOUND]"]
+        )
+
+        self.assertEqual(
+            stats["score"],
+            4
+        )
+
+    def test_revert_is_preserved(self):
+        commits = [
+            {
+                "hash": "abc123456789",
+                "message": "revert: rollback condition",
+                "diff_lines": ["- old_condition"],
+                "refs": [],
+                "is_revert": True
+            }
+        ]
+
+        def fake_fetch_ref(owner, repo, number):
+            return {}
+
+        timeline, stats = build_timeline(
+            commits,
+            ("wihoyeon984-alt", "why-blame"),
+            fake_fetch_ref,
+            lambda owner, repo, sha: []
+        )
+
+        self.assertEqual(
+            timeline[0]["type"],
+            "📍 FIRST OBSERVED"
+        )
+
+        self.assertTrue(
+            timeline[0]["is_revert"]
+        )
 
 
 if __name__ == "__main__":
