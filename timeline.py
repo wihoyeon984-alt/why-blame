@@ -38,7 +38,7 @@ def classify_commit(message, is_revert=False):
 
 def calculate_evidence_strength(timeline):
     """
-    리뷰어 권장 8개 항목 가중치 매트릭스 (총점 12점 만점)
+    리뷰어 권장 가중치 매트릭스 (총점 12점 만점)
     - Commit 메시지 (+1)
     - 코드 Diff 존재 (+2)
     - Issue/PR 참조 번호 (+3)
@@ -63,16 +63,17 @@ def calculate_evidence_strength(timeline):
     if reverts > 0:
         score += 3
 
-    if score >= 9:
-        grade = "VERY HIGH (매우 강력한 근거)"
-    elif score >= 6:
-        grade = "HIGH (명확한 근거)"
-    elif score >= 4:
-        grade = "MODERATE (보통)"
-    elif score >= 2:
-        grade = "WEAK (약한 근거)"
+    # README 명세와 일치시킨 등급 기준
+    if score >= 11:
+        grade = "VERY HIGH"
+    elif score >= 8:
+        grade = "HIGH"
+    elif score >= 5:
+        grade = "MODERATE"
+    elif score >= 3:
+        grade = "WEAK"
     else:
-        grade = "LOW (근거 불충분)"
+        grade = "LOW"
 
     return {
         "score": score,
@@ -98,7 +99,9 @@ def build_timeline(commits, repo_info, fetch_title_func):
         for num in item["refs"]:
             if repo_info:
                 owner, repo_name = repo_info
-                title = fetch_title_func(owner, repo_name, num)
+                res = fetch_title_func(owner, repo_name, num)
+                # 딕셔너리 또는 문자열 응답 모두 안전하게 처리
+                title = res.get("title", "") if isinstance(res, dict) else res
                 if title:
                     ref_details.append(f"#{num} ('{title}')")
                 else:
