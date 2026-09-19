@@ -1,4 +1,4 @@
-﻿import unittest
+import unittest
 from timeline import classify_commit, calculate_evidence_strength, build_timeline
 
 
@@ -41,19 +41,20 @@ class TestTimeline(unittest.TestCase):
             "message": "fix payment race",
             "diff_lines": ["+ charge()"],
             "refs": [101],
+            "ref_items": [{"title": "Payment Fix"}],
             "ref_details": ["#101 ('Payment Fix')"],
             "is_revert": True
         }]
         self.assertEqual(calculate_evidence_strength(timeline_vhigh)["grade"], "VERY HIGH")
 
     def test_build_timeline_first_commit_birth(self):
-        """첫 번째 커밋에 🌱 BIRTH 타입이 부여되는지 검증"""
+        """첫 번째 커밋에 📍 FIRST OBSERVED 타입이 부여되는지 검증"""
         sample_commits = [
             {"hash": "aaa", "date": "2026-09-01", "message": "second", "is_revert": False, "refs": [], "diff_lines": []},
             {"hash": "bbb", "date": "2026-08-01", "message": "first", "is_revert": False, "refs": [], "diff_lines": []},
         ]
         timeline, stats = build_timeline(sample_commits, None, lambda o, r, n: "")
-        self.assertEqual(timeline[0]["type"], "🌱 BIRTH")
+        self.assertEqual(timeline[0]["type"], "📍 FIRST OBSERVED")
         self.assertEqual(timeline[-1]["type"], "🔧 UPDATE")
 
 

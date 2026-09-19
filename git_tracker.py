@@ -56,7 +56,7 @@ def extract_git_history(file_name, start_line, end_line):
         messages = [l.strip() for l in lines if l.startswith("    ")]
         full_msg = " ".join(messages)
         
-        # [v2.0 신규] 실제 코드 Diff (-와 +) 추출
+# 실제 코드 Diff (- / +) 추출 (헤더 제외)
         diff_lines = []
         in_diff = False
         for l in lines:
@@ -66,6 +66,8 @@ def extract_git_history(file_name, start_line, end_line):
             if in_diff:
                 if l.startswith("+") and not l.startswith("+++"):
                     diff_lines.append("+ " + l[1:].strip())
+                elif l.startswith("-") and not l.startswith("---"):
+                    diff_lines.append("- " + l[1:].strip())
 
         numbers = re.findall(r"#(\d+)", full_msg)
         is_revert = "revert" in full_msg.lower()

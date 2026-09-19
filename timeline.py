@@ -45,7 +45,12 @@ def calculate_evidence_strength(timeline):
     reverts = sum(1 for t in timeline if t.get("is_revert"))
     has_diff = any(len(t.get("diff_lines", [])) > 0 for t in timeline)
     has_refs = any(len(t.get("refs", [])) > 0 for t in timeline)
-    has_fetched = any(any("'" in r for r in t.get("ref_details", [])) for t in timeline)
+    
+    # 구조화된 딕셔너리(ref_items)의 title 존재 여부로 정확하게 판별
+    has_fetched = any(
+        any(ref.get("title") for ref in t.get("ref_items", []))
+        for t in timeline
+    )
 
     if total > 0 and any(len(t.get("message", "")) > 5 for t in timeline):
         score += 1
@@ -85,7 +90,8 @@ def build_timeline(commits, repo_info, fetch_ref_func):
 
     for idx, item in enumerate(timeline):
         if idx == 0:
-            item["type"] = "🌱 BIRTH"
+            # 기술적 엄밀성을 위해 BIRTH -> FIRST OBSERVED로 명칭 개선
+            item["type"] = "📍 FIRST OBSERVED"
         else:
             item["type"] = classify_commit(item["message"], item["is_revert"])
 
