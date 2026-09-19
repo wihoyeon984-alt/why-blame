@@ -38,7 +38,18 @@ def calculate_evidence_strength(timeline):
     total = len(timeline)
     reverts = sum(1 for t in timeline if t.get("is_revert"))
     has_diff = any(len(t.get("diff_lines", [])) > 0 for t in timeline)
-    has_refs = any(len(t.get("refs", [])) > 0 or len(t.get("ref_items", [])) > 0 for t in timeline)
+    
+    # [핵심] NOT_FOUND로 판명된 가짜 참조는 증거(has_refs)로 인정하지 않음!
+    valid_refs_exist = False
+    for t in timeline:
+        if t.get("ref_items"):
+            if any(r.get("status") == "SUCCESS" or (r.get("title") and r.get("status") != "NOT_FOUND") for r in t.get("ref_items", [])):
+                valid_refs_exist = True
+        elif t.get("refs"):
+            valid_refs_exist = True
+
+    has_refs = valid_refs_exist
+
     has_fetched = any(
         any(ref.get("title") for ref in t.get("ref_items", []))
         or any("'" in r for r in t.get("ref_details", []))
@@ -145,6 +156,10 @@ def build_timeline(commits, repo_info, fetch_ref_func, fetch_commit_prs_func=Non
                         ref_details.append(f"{label} ('{title}')")
                     else:
                         ref_details.append(label)
+                    ref_items.append(res)
+                elif isinstance(res, dict) and res.get("status") == "NOT_FOUND":
+                    # [핵심] 존재하지 않는 404 참조는 [NOT FOUND]로 명확히 표시!
+                    ref_details.append(f"REF #{num} [NOT FOUND]")
                     ref_items.append(res)
                 elif isinstance(res, dict) and res.get("title"):
                     ref_details.append(f"#{num} ('{res['title']}')")
