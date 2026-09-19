@@ -1,7 +1,6 @@
 def classify_commit(message, is_revert=False):
     """
     Conventional Commits 프리픽스(feat:, fix: 등)를 최우선으로 인식합니다.
-    예: 'feat: fix login UI' -> 'fix' 단어가 있어도 접두어가 feat이므로 FEATURE로 분류
     """
     m_low = message.strip().lower()
     if is_revert or m_low.startswith("revert"):
@@ -25,7 +24,7 @@ def classify_commit(message, is_revert=False):
     if prefix in ["sec", "security"]:
         return "🔒 SECURITY"
 
-    # 접두어가 없는 일반 커밋용 키워드 폴백
+    # 일반 키워드 폴백
     if any(k in m_low for k in ["fix", "bug", "patch", "resolve", "prevent"]):
         return "🐛 BUG FIX"
     if any(k in m_low for k in ["feat", "add", "implement"]):
@@ -38,12 +37,8 @@ def classify_commit(message, is_revert=False):
 
 def calculate_evidence_strength(timeline):
     """
-    리뷰어 권장 가중치 매트릭스 (총점 12점 만점)
-    - Commit 메시지 (+1)
-    - 코드 Diff 존재 (+2)
-    - Issue/PR 참조 번호 (+3)
-    - GitHub 실제 제목 확인 (+2)
-    - Revert 이력 (+3)
+    가중치 매트릭스 (총점 12점 만점)
+    README 명세: 0-2 LOW, 3-4 WEAK, 5-7 MODERATE, 8-10 HIGH, 11+ VERY HIGH
     """
     score = 0
     total = len(timeline)
@@ -63,7 +58,6 @@ def calculate_evidence_strength(timeline):
     if reverts > 0:
         score += 3
 
-    # README 명세와 일치시킨 등급 기준
     if score >= 11:
         grade = "VERY HIGH"
     elif score >= 8:
@@ -86,7 +80,7 @@ def calculate_evidence_strength(timeline):
     }
 
 
-def build_timeline(commits, repo_info, fetch_title_func):
+def build_timeline(commits, repo_info, fetch_ref_func):
     timeline = list(reversed(commits))
 
     for idx, item in enumerate(timeline):
@@ -96,19 +90,37 @@ def build_timeline(commits, repo_info, fetch_title_func):
             item["type"] = classify_commit(item["message"], item["is_revert"])
 
         ref_details = []
+        ref_items = []
         for num in item["refs"]:
             if repo_info:
                 owner, repo_name = repo_info
-                res = fetch_title_func(owner, repo_name, num)
-                # 딕셔너리 또는 문자열 응답 모두 안전하게 처리
-                title = res.get("title", "") if isinstance(res, dict) else res
-                if title:
-                    ref_details.append(f"#{num} ('{title}')")
+                res = fetch_ref_func(owner, repo_name, num)
+                
+                # 구조화된 딕셔너리 응답 처리
+                if isinstance(res, dict) and res.get("status") == "SUCCESS":
+                    ref_type = res.get("type", "REF")
+                    title = res.get("title", "")
+                    label = f"{ref_type} #{num}"
+                    if title:
+                        ref_details.append(f"{label} ('{title}')")
+                    else:
+                        ref_details.append(label)
+                    ref_items.append(res)
+                elif isinstance(res, dict) and res.get("title"):
+                    ref_details.append(f"#{num} ('{res['title']}')")
+                    ref_items.append(res)
+                elif isinstance(res, str) and res:
+                    ref_details.append(f"#{num} ('{res}')")
+                    ref_items.append({"number": num, "title": res, "type": "REF", "url": ""})
                 else:
                     ref_details.append(f"#{num}")
+                    ref_items.append({"number": num, "title": "", "type": "REF", "url": ""})
             else:
                 ref_details.append(f"#{num}")
+                ref_items.append({"number": num, "title": "", "type": "REF", "url": ""})
+
         item["ref_details"] = ref_details
+        item["ref_items"] = ref_items
 
     stats = calculate_evidence_strength(timeline)
     return timeline, stats
