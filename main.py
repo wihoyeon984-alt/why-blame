@@ -1,6 +1,6 @@
 import sys
 from git_tracker import extract_git_history, get_repo_info, get_current_code_lines
-from github_client import fetch_title
+from github_client import fetch_ref_info
 from timeline import build_timeline
 from viewer import render_card
 
@@ -12,7 +12,7 @@ if not args:
 
 target = args[0]
 
-# [v2.0 버그픽스] rsplit을 써서 C:\project\app.py:10 같은 윈도우 절대 경로도 완벽 지원!
+# [버그 수정 1] Windows 드라이브(C:\...) 절대 경로 완벽 지원
 if ":" in target:
     file_name, line_str = target.rsplit(":", 1)
     if "-" in line_str:
@@ -21,6 +21,8 @@ if ":" in target:
     else:
         start_line = int(line_str)
         end_line = start_line
+
+# [버그 수정 2] int(args) 버그 수정 -> args, args 정상 인덱싱!
 elif len(args) >= 3:
     file_name = args[0]
     start_line = int(args)
@@ -42,5 +44,5 @@ commits = extract_git_history(file_name, start_line, end_line)
 if not commits:
     sys.exit(1)
 
-timeline, stats = build_timeline(commits, repo_info, fetch_title)
+timeline, stats = build_timeline(commits, repo_info, fetch_ref_info)
 render_card(file_name, line_range_str, repo_info, current_lines, timeline, stats)
