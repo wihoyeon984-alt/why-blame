@@ -1,4 +1,4 @@
-﻿import subprocess
+import subprocess
 import re
 
 def get_repo_info():
@@ -56,7 +56,7 @@ def extract_git_history(file_name, start_line, end_line):
         messages = [l.strip() for l in lines if l.startswith("    ")]
         full_msg = " ".join(messages)
         
-# 실제 코드 Diff (- / +) 추출 (헤더 제외)
+        # 실제 코드 Diff (- / +) 추출 (Git 헤더 ---, +++ 제외)
         diff_lines = []
         in_diff = False
         for l in lines:

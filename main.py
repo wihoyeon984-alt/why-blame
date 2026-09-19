@@ -13,8 +13,7 @@ if not args:
 
 target = args[0]
 
-# 파일경로:줄번호 형식 (예: service.py:10 또는 C:\project\service.py:1-3)
-# Windows 드라이브 콜론(C:)과 라인 번호 콜론을 구분하기 위해 마지막 콜론 뒤가 숫자인지 확인
+# 1. 파일경로:줄번호 형식 (Windows 절대 경로 및 다중 라인 범위 지원)
 if ":" in target and target.rsplit(":", 1)[-1].replace("-", "").isdigit():
     file_name, line_str = target.rsplit(":", 1)
     if "-" in line_str:
@@ -24,16 +23,16 @@ if ":" in target and target.rsplit(":", 1)[-1].replace("-", "").isdigit():
         start_line = int(line_str)
         end_line = start_line
 
-# 공백으로 시작줄/끝줄 지정 (예: python main.py service.py 1 3)
+# 2. 공백으로 시작줄 끝줄 지정 (예: python main.py service.py 1 3)
 elif len(args) >= 3:
     file_name = args[0]
-    start_line = int(args[int(1)])
-    end_line = int(args[int(2)])
+    start_line = int(args)
+    end_line = int(args)
 
-# 공백으로 단일 라인 지정 (예: python main.py service.py 10)
+# 3. 공백으로 단일 라인 지정 (예: python main.py service.py 10)
 elif len(args) == 2:
     file_name = args[0]
-    start_line = int(args[int(1)])
+    start_line = int(args)
     end_line = start_line
 
 else:

@@ -2,19 +2,19 @@
 
 > **"Git blame tells you who. Why-blame tells you why."**  
 > `git blame`은 "누가 썼는지"만 알려줄 뿐 "왜 이렇게 됐는지"는 알려주지 않습니다.  
-> **Why-blame**은 코드의 변경 이력, 코드 Diff(-/+), GitHub PR/이슈를 추적하여 시간순 발자취(Timeline)와 변경 사유를 복원하는 개발자 생산성 도구입니다.
+> **Why-blame**은 코드의 변경 이력, 코드 Diff(-/+), GitHub PR/이슈 본문 맥락을 추적하여 시간순 발자취(Timeline)와 변경 사유를 복원하는 개발자 생산성 도구입니다.
 
 ---
 
 ## ✨ 핵심 기능
 
-1. **시간순 타임라인 & 코드 Diff 복원**:
+1. **시간순 타임라인 & 코드 Diff(-/+) 복원**:
    * 최초 감지(`📍 FIRST OBSERVED`), 롤백(`↩ REVERT`), 버그 수정(`🐛 BUG FIX`), 기능 추가(`✨ FEATURE`) 등 시계열 흐름 시각화
    * 각 커밋에서 **어떤 코드가 빠지고(`-`), 들어왔는지(`+`)** 실제 Diff 라인을 직접 노출
-2. **실시간 GitHub API 결합**:
-   * 원격 저장소를 자동 감지하여 커밋 메시지의 `#번호`에 해당하는 실제 GitHub 제목, PR/이슈 구분 및 URL 동적 연동 (인메모리 캐싱 지원)
+2. **실시간 GitHub API 결합 (PR/Issue & 본문 Context)**:
+   * 커밋 메시지의 `#번호`를 감지하여 실제 GitHub 제목, PR/이슈 구분, 본문 요약문(`Context`), 라벨, URL 링크를 동적 연동 (인메모리 캐싱 지원)
 3. **정밀 증거 가중치 매트릭스 (Evidence Matrix)**:
-   * 단순 커밋 횟수가 아닌 `Diff(+2)`, `Issue/PR 참조(+3)`, `제목 확인(+2)`, `Revert(+3)` 등을 종합 평가
+   * 단순 커밋 횟수가 아닌 `Diff(+2)`, `Issue/PR 참조(+3)`, `GitHub 메타데이터 확인(+2)`, `Revert(+3)` 등을 종합 평가
    * 점수대별 등급: `LOW` (0~2) / `WEAK` (3~4) / `MODERATE` (5~7) / `HIGH` (8~10) / `VERY HIGH` (11+)
    * *Evidence score is a heuristic, not a factual certainty.*
 4. **엄격한 근거 부족 방어 (Evidence Sufficiency Guard)**:
@@ -27,9 +27,9 @@
 ## 🏗️ 아키텍처 (관심사 분리 모듈 구조)
 
 * `git_tracker.py`: 로컬 Git 명령어(`git log -L`) 실행 및 라인 Diff(-/+) 추출
-* `github_client.py`: GitHub REST API 통신, PR/Issue 구분 및 캐싱/예외 처리
+* `github_client.py`: GitHub REST API 통신, PR/Issue 구분 및 본문/라벨 파싱, 캐싱/예외 처리
 * `timeline.py`: Conventional Commits 분류기 및 증거 가중치 매트릭스 계산 (순수 로직)
-* `viewer.py`: 터미널 카드 렌더링 및 근거 부족 가드 표기
+* `viewer.py`: 터미널 카드 렌더링, 본문 Context/라벨/링크 표시 및 근거 부족 가드 표기
 * `main.py`: CLI 인자 파싱 및 전체 파이프라인 조립 진입점
 
 ---
@@ -48,7 +48,7 @@
 
 ## 🧪 단위 테스트 (Unit Tests)
 
-프로젝트 내 모든 핵심 로직(Git Diff 추출, Timeline 분류, GitHub API Mocking 등)을 단위 테스트로 검증합니다:
+프로젝트 내 모든 핵심 로직(실제 Git Diff 추출 Mock, Timeline 분류 및 FIRST OBSERVED, GitHub API Mocking 등)을 단위 테스트로 검증합니다:
 
 ```bash
 python -m unittest discover
