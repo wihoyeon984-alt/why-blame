@@ -1,6 +1,22 @@
 def synthesize_narrative(timeline, stats):
+    """
+    수집된 타임라인의 모든 사건을 바탕으로 결정론적 서사를 생성합니다.
+    - 증거 불일치(INCONSISTENT) 감지 시 거짓 서사 생성을 차단하고 경고 출력
+    - 롤백 시 실제 커밋 메시지를 직접 인용
+    - 중간 단계(결함 수정, 기능 추가 등)를 빠짐없이 서사에 반영
+    """
     if not timeline:
         return "추적 이력 없음", "추적된 Git 변경 이력이 없습니다."
+
+    # [핵심 방어] 증거 불일치 감지 시 거짓 서사 생성 원천 차단!
+    if stats.get("consistency") == "INCONSISTENT":
+        pairs_str = ", ".join(stats.get("inconsistent_pairs", []))
+        headline = "⚠️ 증거 불일치(Inconsistent Evidence) 감지"
+        body = (
+            f"수집된 커밋 메시지와 연관 PR의 맥락이 서로 상충되거나 다른 주제를 가리키고 있습니다 ({pairs_str}). "
+            f"거짓 서사 생성을 방지하기 위해 구체적인 변경 사유를 단정하지 않으며, 신뢰도(Confidence)가 강등되었습니다."
+        )
+        return headline, body
 
     total = len(timeline)
     first = timeline[0]

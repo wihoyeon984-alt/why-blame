@@ -19,7 +19,7 @@ def render_card(file_name, line_range_str, repo_info, current_lines, timeline, s
         print(f"> {disp}")
     print("─" * w)
 
-    # 2. Evidence Sufficiency Guard (증거 부족 시 거절 카드)
+    # 2. Evidence Sufficiency Guard
     if stats.get("score", 0) <= 2:
         print("WHY (변경 사유)")
         print("─" * w)
@@ -72,7 +72,7 @@ def render_card(file_name, line_range_str, repo_info, current_lines, timeline, s
                     print(f"    🔗 {r_url}")
         print()
 
-    # 5. EVIDENCE CHECKLIST (증거 가용성 체크리스트)
+    # 5. EVIDENCE CHECKLIST & CONSISTENCY
     print("─" * w)
     print("EVIDENCE (수집된 근거 체크리스트)")
     print("─" * w)
@@ -90,9 +90,17 @@ def render_card(file_name, line_range_str, repo_info, current_lines, timeline, s
     if has_revert:
         print(f"[✓] Revert History ({stats.get('reverts_count')}회 롤백 이력)")
 
-    # 6. CONFIDENCE & LIMITATION
+    # 6. CONSISTENCY & CONFIDENCE
     print("─" * w)
-    print(f"CONFIDENCE: {stats.get('grade', 'UNKNOWN')} ({stats.get('strength', '')})")
+    const_disp = stats.get("consistency", "N/A")
+    if const_disp == "INCONSISTENT":
+        print("CONSISTENCY: ⚠️ INCONSISTENT (커밋 ↔ PR 맥락 불일치)")
+    elif const_disp == "HIGH":
+        print("CONSISTENCY: ✓ HIGH (커밋 ↔ PR 맥락 일치)")
+    else:
+        print(f"CONSISTENCY: {const_disp}")
+
+    print(f"CONFIDENCE:  {stats.get('confidence', stats.get('grade', 'UNKNOWN'))}")
     print("─" * w)
     print("LIMITATION")
     print("─" * w)

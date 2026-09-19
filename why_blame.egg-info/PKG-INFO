@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: why-blame
-Version: 0.2.3
+Version: 0.2.4
 Summary: Git blame tells you who. Why-blame tells you why.
 Author: Wi Ho-yeon
 Requires-Python: >=3.8

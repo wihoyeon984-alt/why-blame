@@ -1,4 +1,5 @@
 README.md
+consistency.py
 git_tracker.py
 github_client.py
 main.py
@@ -11,3 +12,6 @@ why_blame.egg-info/SOURCES.txt
 why_blame.egg-info/dependency_links.txt
 why_blame.egg-info/entry_points.txt
 why_blame.egg-info/top_level.txt
+why_blame.egg-info/.vs/ProjectSettings.json
+why_blame.egg-info/.vs/slnx.sqlite
+why_blame.egg-info/.vs/why_blame.egg-info.slnx/FileContentIndex/7b604f8f-e197-4eb9-ac94-809043c26356.vsidx
