@@ -1,9 +1,9 @@
-import subprocess
+﻿import subprocess
 import re
 
 def get_repo_info():
     """원격 저장소 URL에서 (소유자, 저장소명)을 추출합니다."""
-    res = subprocess.run(["git", "config", "--get", "remote.origin.url"], capture_output=True, text=True)
+    res = subprocess.run(["git", "config", "--get", "remote.origin.url"], capture_output=True, text=True, encoding="utf-8", errors="replace")
     remote_url = res.stdout.strip()
     if not remote_url:
         return None
@@ -30,7 +30,7 @@ def get_current_code_lines(file_name, start_line, end_line):
 def extract_git_history(file_name, start_line, end_line):
     """git log -L을 실행해 커밋 정보와 실제 코드 변경 Diff(-/+)를 추출합니다."""
     cmd = ["git", "log", "-L", f"{start_line},{end_line}:{file_name}", "--no-merges", "--date=short"]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     
     if result.returncode != 0:
         print("❌ Git history 추적 실패:")
