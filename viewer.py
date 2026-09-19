@@ -25,7 +25,7 @@ def render_card(file_name, line_range_str, repo_info, current_lines, timeline, s
         print("─" * w)
         print("⚠️  No reliable historical explanation found.")
         print("   (수집된 역사적 근거가 부족하여 변경 사유를 확정할 수 없습니다.)\n")
-        print("EVIDENCE")
+        print("EVIDENCE EVALUATION")
         print("─" * w)
         print(f"[{'✓' if stats.get('has_message') else '✗'}] Commit message")
         print(f"[{'✓' if stats.get('has_diff') else '✗'}] Code diff (-/+)")
@@ -72,34 +72,35 @@ def render_card(file_name, line_range_str, repo_info, current_lines, timeline, s
                     print(f"    🔗 {r_url}")
         print()
 
-    # 5. EVIDENCE CHECKLIST & CONSISTENCY
+    # 5. EVIDENCE EVALUATION (4차원 증거 평가 모델)
     print("─" * w)
-    print("EVIDENCE (수집된 근거 체크리스트)")
+    print("EVIDENCE EVALUATION (4차원 신뢰도 지표)")
     print("─" * w)
     has_pr = any(any(r.get("type") == "PR" for r in t.get("ref_items", [])) for t in timeline)
-    has_context = any(any(r.get("body_summary") for r in t.get("ref_items", [])) for t in timeline)
+    has_context = stats.get("has_context", False)
     has_issue = any(any(r.get("type") == "ISSUE" for r in t.get("ref_items", [])) for t in timeline)
-    has_revert = stats.get("reverts_count", 0) > 0
 
     print(f"[{'✓' if stats.get('has_message') else '✗'}] Commit message (유의미한 커밋 메시지)")
     print(f"[{'✓' if stats.get('has_diff') else '✗'}] Code diff (물리적 코드 변경 증명)")
     print(f"[{'✓' if has_pr else '✗'}] Linked PR (GitHub 실제 머지 PR)")
-    print(f"[{'✓' if has_context else '✗'}] PR / Issue Context (본문 상세 맥락)")
+    print(f"[{'✓' if has_context else '✗'}] PR Context (본문 상세 맥락)")
     if has_issue:
         print("[✓] Linked Issue (연관 이슈)")
-    if has_revert:
-        print(f"[✓] Revert History ({stats.get('reverts_count')}회 롤백 이력)")
 
-    # 6. CONSISTENCY & CONFIDENCE
     print("─" * w)
+    print(f"COVERAGE:    {stats.get('coverage', 'N/A')} ({stats.get('strength', '')})")
+
     const_disp = stats.get("consistency", "N/A")
     if const_disp == "INCONSISTENT":
-        print("CONSISTENCY: ⚠️ INCONSISTENT (커밋 ↔ PR 맥락 불일치)")
+        print("CONSISTENCY: ⚠️ INCONSISTENT (커밋 ↔ PR 맥락 상충)")
     elif const_disp == "HIGH":
-        print("CONSISTENCY: ✓ HIGH (커밋 ↔ PR 맥락 일치)")
+        print("CONSISTENCY: ✓ HIGH (도메인 어휘 맥락 일치)")
+    elif const_disp == "MODERATE":
+        print("CONSISTENCY: △ MODERATE (부분 일치/애매함 - 주의 필요)")
     else:
         print(f"CONSISTENCY: {const_disp}")
 
+    print(f"AMBIGUITY:   {stats.get('ambiguity', 'LOW')}")
     print(f"CONFIDENCE:  {stats.get('confidence', stats.get('grade', 'UNKNOWN'))}")
     print("─" * w)
     print("LIMITATION")

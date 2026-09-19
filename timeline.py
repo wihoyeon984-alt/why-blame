@@ -34,12 +34,19 @@ def classify_commit(message, is_revert=False):
 
 
 def calculate_evidence_strength(timeline):
+    """
+    [4차원 신뢰도 모델]
+    1. Coverage: Commit(2) + Diff(2) + Valid PR/Issue(3) + Metadata(2) + PR Context(3) = 12점
+    2. Consistency: HIGH / MODERATE / INCONSISTENT
+    3. Ambiguity: Revert 발생 여부를 독립된 복잡도 신호로 분리
+    4. Confidence: Coverage + Consistency 종합 판정
+    """
     score = 0
     total = len(timeline)
     reverts = sum(1 for t in timeline if t.get("is_revert"))
     has_diff = any(len(t.get("diff_lines", [])) > 0 for t in timeline)
     
-    # [핵심] NOT_FOUND로 판명된 가짜 참조는 증거(has_refs)로 인정하지 않음!
+    # NOT_FOUND 참조는 증거로 인정하지 않음
     valid_refs_exist = False
     for t in timeline:
         if t.get("ref_items"):
@@ -55,8 +62,13 @@ def calculate_evidence_strength(timeline):
         or any("'" in r for r in t.get("ref_details", []))
         for t in timeline
     )
+    has_context = any(
+        any(ref.get("body_summary") for ref in t.get("ref_items", []))
+        for t in timeline
+    )
     has_message = total > 0 and any(len(t.get("message", "")) > 5 for t in timeline)
 
+    # 배점 계산 (Revert 가산점 +3 제거 -> 실제 PR 본문 Context 확인 시 +3 부여)
     if has_message:
         score += 2
     if has_diff:
@@ -65,7 +77,7 @@ def calculate_evidence_strength(timeline):
         score += 3
     if has_fetched:
         score += 2
-    if reverts > 0:
+    if has_context:
         score += 3
 
     if score >= 11:
@@ -79,7 +91,11 @@ def calculate_evidence_strength(timeline):
     else:
         grade = "LOW"
 
-    # 3축 모델: 커밋과 PR 간의 Evidence Consistency 종합 평가
+    # 이력 복잡도 (Ambiguity) 분리
+    ambiguity = f"COMPLEX ({reverts}회 롤백 이력)" if reverts > 0 else "LOW (선형 이력)"
+    coverage_pct = f"{int(score / 12 * 100)}%"
+
+    # Consistency 평가
     has_inconsistent = False
     has_consistent = False
     inconsistent_pairs = []
@@ -108,7 +124,9 @@ def calculate_evidence_strength(timeline):
     return {
         "score": score,
         "grade": grade,
+        "coverage": coverage_pct,
         "consistency": consistency,
+        "ambiguity": ambiguity,
         "confidence": confidence,
         "inconsistent_pairs": inconsistent_pairs,
         "total_events": total,
@@ -116,6 +134,7 @@ def calculate_evidence_strength(timeline):
         "has_diff": has_diff,
         "has_refs": has_refs,
         "has_message": has_message,
+        "has_context": has_context,
         "strength": f"{grade} [{score}/12점]"
     }
 
@@ -158,7 +177,6 @@ def build_timeline(commits, repo_info, fetch_ref_func, fetch_commit_prs_func=Non
                         ref_details.append(label)
                     ref_items.append(res)
                 elif isinstance(res, dict) and res.get("status") == "NOT_FOUND":
-                    # [핵심] 존재하지 않는 404 참조는 [NOT FOUND]로 명확히 표시!
                     ref_details.append(f"REF #{num} [NOT FOUND]")
                     ref_items.append(res)
                 elif isinstance(res, dict) and res.get("title"):

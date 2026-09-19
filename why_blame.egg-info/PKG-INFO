@@ -9,51 +9,18 @@ Description-Content-Type: text/markdown
 # 📜 Why-blame: 코드 한 줄의 전기(傳記)
 
 > **"Git blame tells you WHO. Why-blame tells you WHY."**  
-> `git blame`은 "누가 작성했는지"만 알려줄 뿐 "왜 이렇게 변경되었는지"는 알려주지 않습니다.  
-> **Why-blame**은 코드 한 줄의 탄생부터 변경, 롤백, 정착까지의 Git 이력과 실제 GitHub PR/Issue 본문 맥락을 추적하여 **신뢰성 있는 코드의 일대기(Biography)**를 복원하는 개발자 도구입니다.
+> `git blame`은 "누가 썼는지"만 알려줄 뿐 "왜 그렇게 되었는지"는 알려주지 않습니다.  
+> **Why-blame은 WHY를 억지로 지어내는 도구가 아니라, 증거가 충분할 때만 WHY를 주장하는 도구입니다.**  
+> 코드 한 줄의 탄생, 결함 수정, 롤백, 정착까지의 Git 이력과 실제 GitHub PR/Issue 본문 맥락을 추적하여 **검증 가능한 코드의 일대기(Biography)**를 복원합니다.
 
 ---
 
-## 🖥️ 실행 화면 (Terminal Demo)
+## 💡 Why Why-blame? (Before vs After)
+
+### 🔴 Before: `git blame service.py`
+기존 `git blame`은 마지막으로 코드를 건드린 사람과 시점만 보여주므로, 복잡한 조건문이 **왜 생겨났는지 맥락을 전혀 알 수 없습니다.**
 
 ```text
-$ why-blame payment.py 1 3
-
-┌────────────────────────────────────────────────────────────┐
-│ WHY-BLAME v2.3 (Biography & Evidence Architecture)         │
-│ Target: payment.py:1-3                                     │
-│ GitHub: my-org/payment-service                             │
-├────────────────────────────────────────────────────────────┤
-│ CURRENT (현재 코드 라인)                                   │
-│ > if user.is_active and not user.is_duplicate:             │
-│ >     charge_payment(user)                                 │
-├────────────────────────────────────────────────────────────┤
-│ 📖 BIOGRAPHY (코드의 전기 및 정착 사유)                   │
-│  * 롤백(1회)을 거쳐 정착된 방어적 코드                     │
-│                                                            │
-│  확인된 이력상 2026-01-01 커밋(a111)에서 처음 관찰된 이후, │
-│  수정 과정에서 부작용 등으로 롤백(a222)된 이력이 확인됩니다│
-│  특히 PR #105('Prevent duplicate charge')를 통해 최종      │
-│  커밋(a333)에서 결함이 보완되어 현재 형태로 정착되었습니다 │
-├────────────────────────────────────────────────────────────┤
-│ TIMELINE (변경 이력 & Diff & GitHub 참조)                 │
-│                                                            │
-│ 2026-01-01 📍 FIRST OBSERVED (a111)                        │
-│   feat: initial payment flow                               │
-│   + if user.is_active:                                     │
-│                                                            │
-│ 2026-01-03 🐛 BUG FIX (a333)                               │
-│   fix: avoid race condition in billing                     │
-│   - if user.is_active:                                     │
-│   + if user.is_active and not user.is_duplicate:           │
-│   ↳ PR #105 ('Prevent duplicate charge')                   │
-│     💬 Context: "Users clicked payment button twice..."    │
-│     🏷️ Labels: [bug, payment]                              │
-│     🔗 [https://github.com/my-org/payment-service/pull/105](https://github.com/my-org/payment-service/pull/105)  │
-├────────────────────────────────────────────────────────────┤
-│ EVIDENCE STRENGTH (증거 가용성 종합 평가)                  │
-│ Total Events: 3                                            │
-│ Reverts: 1                                                 │
-│ Evidence Strength: VERY HIGH [11/12점]                     │
-│ * Evidence score is a heuristic, not a certainty.          │
-└────────────────────────────────────────────────────────────┘
+7c4ff011 (Alice   2026-09-18 10:00) 1: def pay(user):
+2c17f746 (Bob     2026-09-18 14:30) 2:     if user.is_active and not user.is_cancelled:
+8857c0c1 (Charlie 2026-09-19 09:15) 3:         charge_payment(user)

@@ -14,4 +14,6 @@ why_blame.egg-info/entry_points.txt
 why_blame.egg-info/top_level.txt
 why_blame.egg-info/.vs/ProjectSettings.json
 why_blame.egg-info/.vs/slnx.sqlite
-why_blame.egg-info/.vs/why_blame.egg-info.slnx/FileContentIndex/7b604f8f-e197-4eb9-ac94-809043c26356.vsidx
+why_blame.egg-info/.vs/why_blame.egg-info.slnx/FileContentIndex/789ac7d5-b091-42bb-829c-b15b48ae9845.vsidx
+why_blame.egg-info/.vs/why_blame.egg-info.slnx/FileContentIndex/d82309b8-86f1-4ea5-a8f5-67a153bd9a7a.vsidx
+why_blame.egg-info/.vs/why_blame.egg-info.slnx/FileContentIndex/f39b0542-8800-41e0-96ee-d00f48640ecd.vsidx
