@@ -9,8 +9,8 @@ def fetch_ref_info(owner, repo, number):
     """
     GitHub Issue 또는 Pull Request 메타데이터를 구조화하여 반환합니다.
     - PR과 Issue 구분 ('type': 'PR' | 'ISSUE')
-    - 에러 분기 처리 (404 Not Found, 403 Rate Limit, 네트워크 오류)
-    - 중복 호출 방지 캐싱
+    - 본문(Body) 핵심 요약문 및 라벨(Labels) 추출
+    - 상태 코드별 에러 분기 및 캐싱
     """
     cache_key = f"{owner}/{repo}#{number}"
     if cache_key in _cache:
@@ -28,14 +28,24 @@ def fetch_ref_info(owner, repo, number):
             if response.status == 200:
                 data = json.loads(response.read().decode("utf-8"))
                 
-                # pull_request 필드 존재 여부로 PR과 Issue 구분
+                # pull_request 필드 유무로 PR과 일반 Issue 구분
                 is_pr = "pull_request" in data
                 
+                # 본문(Body)에서 첫 1~2문장의 핵심 맥락 요약 추출
+                body_raw = data.get("body") or ""
+                summary_lines = [l.strip() for l in body_raw.splitlines() if l.strip() and not l.startswith("#")]
+                body_summary = " ".join(summary_lines[:2])[:120] if summary_lines else ""
+                
+                # 라벨 추출
+                labels = [l.get("name") for l in data.get("labels", []) if isinstance(l, dict)]
+
                 result = {
                     "status": "SUCCESS",
                     "number": number,
                     "type": "PR" if is_pr else "ISSUE",
                     "title": data.get("title", ""),
+                    "body_summary": body_summary,
+                    "labels": labels,
                     "state": data.get("state", "closed"),
                     "url": data.get("html_url", "")
                 }
@@ -44,19 +54,19 @@ def fetch_ref_info(owner, repo, number):
 
     except urllib.error.HTTPError as e:
         if e.code == 404:
-            result = {"status": "NOT_FOUND", "number": number, "type": "UNKNOWN", "title": "", "state": None, "url": None}
+            result = {"status": "NOT_FOUND", "number": number, "type": "UNKNOWN", "title": "", "body_summary": "", "labels": [], "state": None, "url": None}
         elif e.code == 403:
-            result = {"status": "RATE_LIMIT", "number": number, "type": "UNKNOWN", "title": "", "state": None, "url": None}
+            result = {"status": "RATE_LIMIT", "number": number, "type": "UNKNOWN", "title": "", "body_summary": "", "labels": [], "state": None, "url": None}
         else:
-            result = {"status": f"HTTP_ERROR_{e.code}", "number": number, "type": "UNKNOWN", "title": "", "state": None, "url": None}
+            result = {"status": f"HTTP_ERROR_{e.code}", "number": number, "type": "UNKNOWN", "title": "", "body_summary": "", "labels": [], "state": None, "url": None}
         _cache[cache_key] = result
         return result
 
     except (urllib.error.URLError, TimeoutError):
-        return {"status": "NETWORK_ERROR", "number": number, "type": "UNKNOWN", "title": "", "state": None, "url": None}
+        return {"status": "NETWORK_ERROR", "number": number, "type": "UNKNOWN", "title": "", "body_summary": "", "labels": [], "state": None, "url": None}
     except Exception:
-        return {"status": "UNKNOWN_ERROR", "number": number, "type": "UNKNOWN", "title": "", "state": None, "url": None}
+        return {"status": "UNKNOWN_ERROR", "number": number, "type": "UNKNOWN", "title": "", "body_summary": "", "labels": [], "state": None, "url": None}
 
-# 하위 호환성을 위한 별칭 함수들
+# 하위 호환성을 위한 별칭
 fetch_reference = fetch_ref_info
 fetch_title = lambda owner, repo, num: fetch_ref_info(owner, repo, num).get("title", "")
