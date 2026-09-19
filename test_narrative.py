@@ -61,5 +61,36 @@ class TestNarrative(unittest.TestCase):
         self.assertNotIn("부작용 등으로", body)
 
 
+    def test_blocked_confidence_prevents_specific_why(self):
+        timeline = [
+            {
+                "date": "2026-09-01",
+                "hash": "blocked01",
+                "message": "fix: payment condition",
+                "type": "BUG FIX",
+                "ref_items": []
+            },
+            {
+                "date": "2026-09-02",
+                "hash": "blocked02",
+                "message": "update: payment flow",
+                "type": "UPDATE",
+                "ref_items": []
+            }
+        ]
+
+        stats = {
+            "consistency": "MODERATE",
+            "is_blocked": True,
+            "inconsistent_pairs": []
+        }
+
+        headline, body = synthesize_narrative(timeline, stats)
+
+        self.assertTrue(headline)
+        self.assertTrue(body)
+        self.assertNotIn("payment flow", body)
+
+
 if __name__ == "__main__":
     unittest.main()

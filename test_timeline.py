@@ -4,6 +4,11 @@ from timeline import (
     classify_commit,
     calculate_evidence_strength,
     build_timeline,
+    calculate_availability,
+    calculate_consistency,
+    calculate_source_reliability,
+    calculate_history_ambiguity,
+    decide_overall_confidence,
 )
 
 
@@ -26,7 +31,7 @@ class TestTimeline(unittest.TestCase):
 
         self.assertEqual(
             classify_commit("refactor: simplify payment flow"),
-            "🧹 REFACTOR"
+            "♻️ REFACTOR"
         )
 
         self.assertEqual(
@@ -55,14 +60,14 @@ class TestTimeline(unittest.TestCase):
                 "revert: rollback condition",
                 is_revert=True
             ),
-            "↩ REVERT"
+            "🔄 REVERT"
         )
 
         self.assertEqual(
             classify_commit(
                 "Revert payment change"
             ),
-            "↩ REVERT"
+            "🔄 REVERT"
         )
 
     def test_classify_keyword_fallback(self):
@@ -78,12 +83,12 @@ class TestTimeline(unittest.TestCase):
 
         self.assertEqual(
             classify_commit("cleanup old code"),
-            "🧹 REFACTOR"
+            "♻️ REFACTOR"
         )
 
         self.assertEqual(
             classify_commit("update configuration"),
-            "🔧 UPDATE"
+            "📦 UPDATE"
         )
 
     # =========================================================
@@ -174,7 +179,7 @@ class TestTimeline(unittest.TestCase):
         self.assertEqual(result["grade"], "HIGH")
         self.assertTrue(result["has_refs"])
 
-    def test_evidence_strength_very_high(self):
+    def test_evidence_strength_high_with_revert(self):
         timeline = [
             {
                 "message": "fix payment race",
@@ -193,8 +198,8 @@ class TestTimeline(unittest.TestCase):
 
         result = calculate_evidence_strength(timeline)
 
-        self.assertEqual(result["score"], 12)
-        self.assertEqual(result["grade"], "VERY HIGH")
+        self.assertEqual(result["score"], 9)
+        self.assertEqual(result["grade"], "HIGH")
 
     def test_not_found_reference_is_not_evidence(self):
         timeline = [
@@ -304,7 +309,7 @@ class TestTimeline(unittest.TestCase):
 
         self.assertEqual(
             timeline[0]["type"],
-            "📍 FIRST OBSERVED"
+            "🌱 FIRST OBSERVED"
         )
 
         self.assertEqual(
@@ -325,7 +330,7 @@ class TestTimeline(unittest.TestCase):
 
         def fake_fetch_ref(owner, repo, number):
             raise AssertionError(
-                "SHA PR을 찾았으므로 #번호 fallback이 실행되면 안 됩니다."
+                "SHA PR??李얠븯?쇰?濡?#踰덊샇 fallback???ㅽ뻾?섎㈃ ???⑸땲??"
             )
 
         def fake_fetch_commit_prs(owner, repo, sha):
@@ -377,7 +382,7 @@ class TestTimeline(unittest.TestCase):
 
         def fake_fetch_ref(owner, repo, number):
             raise AssertionError(
-                "Issue 번호가 없으므로 fallback이 실행되면 안 됩니다."
+                "Issue 踰덊샇媛 ?놁쑝誘濡?fallback???ㅽ뻾?섎㈃ ???⑸땲??"
             )
 
         def fake_fetch_commit_prs(owner, repo, sha):
@@ -505,11 +510,99 @@ class TestTimeline(unittest.TestCase):
 
         self.assertEqual(
             timeline[0]["type"],
-            "📍 FIRST OBSERVED"
+            "🌱 FIRST OBSERVED"
         )
 
         self.assertTrue(
             timeline[0]["is_revert"]
+        )
+
+
+    def test_v2_availability_levels(self):
+        self.assertEqual(
+            calculate_availability(True, True, True, True),
+            "HIGH"
+        )
+        self.assertEqual(
+            calculate_availability(True, True, False, False),
+            "MODERATE"
+        )
+        self.assertEqual(
+            calculate_availability(False, False, False, False),
+            "LOW"
+        )
+
+    def test_v2_unlinked_yields_weak_confidence(self):
+        overall, blocked, limitations = decide_overall_confidence(
+            "HIGH",
+            "UNLINKED",
+            "LOW",
+            "LOW"
+        )
+
+        self.assertEqual(overall, "WEAK")
+        self.assertFalse(blocked)
+
+    def test_v2_inconsistent_blocks_why_and_yields_low(self):
+        overall, blocked, limitations = decide_overall_confidence(
+            "HIGH",
+            "INCONSISTENT",
+            "HIGH",
+            "LOW"
+        )
+
+        self.assertTrue(overall.startswith("LOW"))
+        self.assertTrue(blocked)
+        self.assertTrue(len(limitations) > 0)
+
+    def test_v2_high_consistency_with_low_availability_yields_moderate(self):
+        overall, blocked, limitations = decide_overall_confidence(
+            "LOW",
+            "HIGH",
+            "HIGH",
+            "LOW"
+        )
+
+        self.assertEqual(overall, "MODERATE")
+        self.assertFalse(blocked)
+
+    def test_v2_revert_detected_caps_confidence_to_medium(self):
+        overall, blocked, limitations = decide_overall_confidence(
+            "HIGH",
+            "HIGH",
+            "HIGH",
+            "HIGH"
+        )
+
+        self.assertEqual(overall, "MEDIUM")
+        self.assertFalse(blocked)
+        self.assertTrue(
+            any("Rollback" in item for item in limitations)
+        )
+
+    def test_v2_multiple_reverts_tracked_in_limitations(self):
+        timeline = [
+            {
+                "message": "revert payment fix",
+                "is_revert": True,
+                "diff_lines": [],
+                "ref_items": []
+            },
+            {
+                "message": "revert previous change",
+                "is_revert": True,
+                "diff_lines": [],
+                "ref_items": []
+            }
+        ]
+
+        result = calculate_evidence_strength(timeline)
+
+        self.assertTrue(result["has_rollback"])
+        self.assertEqual(result["history_ambiguity"], "HIGH")
+        self.assertEqual(len(result["report"].rollback_commits), 2)
+        self.assertTrue(
+            any("Rollback" in item for item in result["limitations"])
         )
 
 

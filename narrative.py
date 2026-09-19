@@ -9,7 +9,10 @@ def synthesize_narrative(timeline, stats):
         return "추적 이력 없음", "추적된 Git 변경 이력이 없습니다."
 
     # [핵심 방어] 증거 불일치 감지 시 거짓 서사 생성 원천 차단!
-    if stats.get("consistency") == "INCONSISTENT":
+    if (
+        stats.get("is_blocked") is True
+        or stats.get("consistency") == "INCONSISTENT"
+    ):
         pairs_str = ", ".join(stats.get("inconsistent_pairs", []))
         headline = "⚠️ 증거 불일치(Inconsistent Evidence) 감지"
         body = (
