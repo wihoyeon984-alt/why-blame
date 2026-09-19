@@ -25,14 +25,14 @@ if ":" in target and target.rsplit(":", 1)[-1].replace("-", "").isdigit():
 
 # 2. 공백으로 시작줄 끝줄 지정 (예: python main.py service.py 1 3)
 elif len(args) >= 3:
-    file_name = args[0]
-    start_line = int(args)
-    end_line = int(args)
+    file_name, start_str, end_str = args[:3]
+    start_line = int(start_str)
+    end_line = int(end_str)
 
 # 3. 공백으로 단일 라인 지정 (예: python main.py service.py 10)
 elif len(args) == 2:
-    file_name = args[0]
-    start_line = int(args)
+    file_name, line_str = args[:2]
+    start_line = int(line_str)
     end_line = start_line
 
 else:
