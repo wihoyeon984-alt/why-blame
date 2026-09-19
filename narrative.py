@@ -64,14 +64,18 @@ def synthesize_narrative(timeline, stats):
         mid_sentence = ""
 
     last_context = ""
+    last_change = "변경 사항"
+
     if last.get("ref_items"):
         ref = last["ref_items"][0]
         last_context = f"PR #{ref.get('number')}('{ref.get('title')}')을 통해 "
+        last_change = "검증된 변경 사항"
 
     body = (
         f"확인된 이력상 {first.get('date')} 커밋({first.get('hash')})에서 처음 관찰되었습니다. "
         f"{mid_sentence}"
-        f"최종적으로 {last.get('date')} 커밋({last.get('hash')})에서 {last_context}'{last.get('message')}' 작업이 반영되어 현재 형태로 정착되었습니다."
+        f"최종적으로 {last.get('date')} 커밋({last.get('hash')})에서 "
+        f"{last_context}{last_change}이 반영되어 현재 형태로 정착되었습니다."
     )
 
     if reverts:

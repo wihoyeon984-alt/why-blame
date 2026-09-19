@@ -1,9 +1,9 @@
-import subprocess
+﻿import subprocess
 import re
 
 
 def get_repo_info():
-    """원격 저장소 URL에서 (소유자, 저장소명)을 추출합니다."""
+    """?먭꺽 ??μ냼 URL?먯꽌 (?뚯쑀?? ??μ냼紐???異붿텧?⑸땲??"""
     res = subprocess.run(
         ["git", "config", "--get", "remote.origin.url"],
         capture_output=True,
@@ -26,7 +26,7 @@ def get_repo_info():
 
 
 def get_current_code_lines(file_name, start_line, end_line):
-    """지정된 범위의 현재 코드 줄들을 리스트로 읽어옵니다."""
+    """吏?뺣맂 踰붿쐞???꾩옱 肄붾뱶 以꾨뱾??由ъ뒪?몃줈 ?쎌뼱?듬땲??"""
     try:
         with open(file_name, "r", encoding="utf-8") as f:
             lines = f.readlines()
@@ -37,23 +37,23 @@ def get_current_code_lines(file_name, start_line, end_line):
         return [line.rstrip("\r\n") for line in lines[s:e]]
 
     except FileNotFoundError:
-        print(f"오류: 파일을 찾을 수 없습니다: {file_name}")
+        print(f"?ㅻ쪟: ?뚯씪??李얠쓣 ???놁뒿?덈떎: {file_name}")
         return []
 
     except Exception as e:
-        print(f"오류: 파일 읽기 실패: {e}")
+        print(f"?ㅻ쪟: ?뚯씪 ?쎄린 ?ㅽ뙣: {e}")
         return []
 
 
 def extract_git_history(file_name, start_line, end_line):
     """
-    git log -L을 실행해 커밋 정보와 실제 코드 변경 Diff(-/+)를 추출합니다.
+    git log -L???ㅽ뻾??而ㅻ컠 ?뺣낫? ?ㅼ젣 肄붾뱶 蹂寃?Diff(-/+)瑜?異붿텧?⑸땲??
 
-    중요한 원칙:
-    - commit message와 diff를 분리합니다.
-    - Issue/PR 번호는 commit message에서만 추출합니다.
-    - diff 내부의 '#123' 같은 문자열은 Issue/PR 참조로 취급하지 않습니다.
-    - 전체 commit SHA를 보존하여 GitHub API의 SHA 기반 PR 조회에 사용합니다.
+    以묒슂???먯튃:
+    - commit message? diff瑜?遺꾨━?⑸땲??
+    - Issue/PR 踰덊샇??commit message?먯꽌留?異붿텧?⑸땲??
+    - diff ?대???'#123' 媛숈? 臾몄옄?댁? Issue/PR 李몄“濡?痍④툒?섏? ?딆뒿?덈떎.
+    - ?꾩껜 commit SHA瑜?蹂댁〈?섏뿬 GitHub API??SHA 湲곕컲 PR 議고쉶???ъ슜?⑸땲??
     """
 
     cmd = [
@@ -74,7 +74,7 @@ def extract_git_history(file_name, start_line, end_line):
     )
 
     if result.returncode != 0:
-        print("❌ Git history 추적 실패:")
+        print("??Git history 異붿쟻 ?ㅽ뙣:")
         print(result.stderr.strip())
         return []
 
@@ -102,11 +102,11 @@ def extract_git_history(file_name, start_line, end_line):
         if not full_hash:
             full_hash = "Unknown"
 
-        # 화면 출력이나 짧은 식별에 사용할 7자리 SHA도 함께 보관
+        # ?붾㈃ 異쒕젰?대굹 吏㏃? ?앸퀎???ъ슜??7?먮━ SHA???④퍡 蹂닿?
         short_hash = full_hash[:7]
 
         # ---------------------------------------------------------
-        # Commit metadata / Diff 영역 분리
+        # Commit metadata / Diff ?곸뿭 遺꾨━
         # ---------------------------------------------------------
         if "diff --git" in block:
             header_part, diff_part = block.split("diff --git", 1)
@@ -116,7 +116,7 @@ def extract_git_history(file_name, start_line, end_line):
         header_lines = header_part.splitlines()
 
         # ---------------------------------------------------------
-        # 날짜
+        # ?좎쭨
         # ---------------------------------------------------------
         date_str = "Unknown"
 
@@ -129,7 +129,7 @@ def extract_git_history(file_name, start_line, end_line):
         # Commit message
         # ---------------------------------------------------------
         #
-        # diff --git 이전의 4칸 들여쓰기만 commit message로 취급합니다.
+        # diff --git ?댁쟾??4移??ㅼ뿬?곌린留?commit message濡?痍④툒?⑸땲??
         #
         messages = [
             line.strip()
@@ -140,13 +140,13 @@ def extract_git_history(file_name, start_line, end_line):
         full_msg = " ".join(messages)
 
         # ---------------------------------------------------------
-        # 실제 Diff
+        # ?ㅼ젣 Diff
         # ---------------------------------------------------------
         #
-        # + : 추가된 코드
-        # - : 삭제된 코드
+        # + : 異붽???肄붾뱶
+        # - : ??젣??肄붾뱶
         #
-        # +++ / --- 파일 헤더는 제외합니다.
+        # +++ / --- ?뚯씪 ?ㅻ뜑???쒖쇅?⑸땲??
         #
         diff_lines = []
 
@@ -159,18 +159,18 @@ def extract_git_history(file_name, start_line, end_line):
                 diff_lines.append("- " + line[1:].strip())
 
         # ---------------------------------------------------------
-        # Issue / PR 번호
+        # Issue / PR 踰덊샇
         # ---------------------------------------------------------
         #
-        # 반드시 commit message에서만 찾습니다.
-        # 따라서 diff 안의 '#999'는 Issue로 인식되지 않습니다.
+        # 諛섎뱶??commit message?먯꽌留?李얠뒿?덈떎.
+        # ?곕씪??diff ?덉쓽 '#999'??Issue濡??몄떇?섏? ?딆뒿?덈떎.
         #
         numbers = re.findall(r"#(\d+)", full_msg)
 
         # ---------------------------------------------------------
-        # Revert 여부
+        # Revert ?щ?
         # ---------------------------------------------------------
-        is_revert = "revert" in full_msg.lower()
+        is_revert = full_msg.strip().lower().startswith("revert")
 
         commits.append(
             {
