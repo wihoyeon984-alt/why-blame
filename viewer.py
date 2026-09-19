@@ -1,7 +1,10 @@
+import textwrap
+from narrative import synthesize_narrative
+
 def render_card(file_name, line_range_str, repo_info, current_lines, timeline, stats):
     w = 60
     print("┌" + "─" * w + "┐")
-    print("│ WHY-BLAME v2.2 (Evidence-First Architecture)             │")
+    print("│ WHY-BLAME v2.3 (Biography & Evidence Architecture)       │")
     print(f"│ Target: {file_name}:{line_range_str:<49}│")
     if repo_info:
         owner, repo_name = repo_info
@@ -20,8 +23,8 @@ def render_card(file_name, line_range_str, repo_info, current_lines, timeline, s
         print("│ (신뢰할 만한 근거가 부족하여 변경 사유를 확정할 수 없습니다.)   │")
         print("│                                                          │")
         print("│ Evidence Status:                                         │")
-	print(f"│ [{'x' if stats.get('has_message') else ' '}] commit message                                     │")        
-	print(f"│ [{'x' if stats['has_diff'] else ' '}] code diff                                        │")
+        print(f"│ [{'x' if stats.get('has_message') else ' '}] commit message                                     │")
+        print(f"│ [{'x' if stats['has_diff'] else ' '}] code diff                                        │")
         print(f"│ [{'x' if stats['has_refs'] else ' '}] linked issue / PR                                 │")
         print("│ [ ] design discussion                                    │")
         print("│                                                          │")
@@ -30,6 +33,16 @@ def render_card(file_name, line_range_str, repo_info, current_lines, timeline, s
         print("└" + "─" * w + "┘")
         return
 
+    # 📖 BIOGRAPHY: 코드의 전기 및 변경 사유 서사 요약문
+    headline, narrative_body = synthesize_narrative(timeline, stats)
+    print("│ 📖 BIOGRAPHY (코드의 전기 및 정착 사유)                 │")
+    print(f"│  * {headline:<54}│")
+    print("│                                                          │")
+    for line in textwrap.wrap(narrative_body, width=54):
+        print(f"│  {line:<56}│")
+    print("├" + "─" * w + "┤")
+
+    # 타임라인 상세 출력
     print("│ TIMELINE (변경 이력 & Diff & GitHub 참조)               │")
     print("│                                                          │")
 
@@ -39,11 +52,11 @@ def render_card(file_name, line_range_str, repo_info, current_lines, timeline, s
         msg_disp = item["message"][:54]
         print(f"│   {msg_disp:<56}│")
 
-        # Diff (- / +) 출력
+        # 실제 Diff (- / +) 출력
         for d in item.get("diff_lines", [])[:2]:
             print(f"│   {d[:54]:<56}│")
 
-        # 구조화된 PR / Issue 정보, 본문 맥락(Context), URL 링크 출력
+        # 구조화된 PR / Issue 정보 및 링크
         if item.get("ref_items"):
             for ref in item["ref_items"]:
                 r_type = ref.get("type", "REF")
@@ -52,12 +65,11 @@ def render_card(file_name, line_range_str, repo_info, current_lines, timeline, s
                 r_context = ref.get("body_summary", "")
                 r_labels = ref.get("labels", [])
                 r_url = ref.get("url", "")
-                
+
                 title_disp = f" ('{r_title[:28]}...')" if len(r_title) > 28 else (f" ('{r_title}')" if r_title else "")
                 ref_line = f"   ↳ {r_type} #{r_num}{title_disp}"
                 print(f"│ {ref_line:<58}│")
 
-                # 본문 핵심 맥락이 있으면 출력 (진짜 Why의 핵심 단서)
                 if r_context:
                     ctx_line = f"     💬 Context: \"{r_context[:44]}...\""
                     print(f"│ {ctx_line:<58}│")
