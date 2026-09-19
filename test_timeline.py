@@ -1,4 +1,4 @@
-import unittest
+﻿import unittest
 from timeline import classify_commit, calculate_evidence_strength, build_timeline
 
 
@@ -54,7 +54,7 @@ class TestTimeline(unittest.TestCase):
         ]
         timeline, stats = build_timeline(sample_commits, None, lambda o, r, n: "")
         self.assertEqual(timeline[0]["type"], "🌱 BIRTH")
-        self.assertEqual(timeline["type"], "🔧 UPDATE")
+        self.assertEqual(timeline[-1]["type"], "🔧 UPDATE")
 
 
 if __name__ == "__main__":
