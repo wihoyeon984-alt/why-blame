@@ -1,0 +1,132 @@
+schema_version: 1
+
+case:
+  id: "requests_001"
+  status: "ground_truth_frozen"
+
+repository:
+  name: "psf/requests"
+  url: "https://github.com/psf/requests"
+  revision: "145b5399486b56e00250204f033441f3fdf2f3c9"
+
+target:
+  file: "src/requests/adapters.py"
+  start_line: 99
+  end_line: 100
+
+history:
+  target_commit: "b1d73ddb509a3a2d3e10744e85f9cdebdbde90f0"
+  merge_commit: "145b5399486b56e00250204f033441f3fdf2f3c9"
+
+  related_commits: []
+
+evidence:
+  commit:
+    available: true
+    message: "Don't use default SSLContext with custom poolmanager kwargs"
+
+  diff:
+    available: true
+    summary: >
+      _urllib3_request_context now receives the PoolManager and checks
+      whether connection_pool_kw already contains an ssl_context.
+      The preloaded default SSLContext is only applied when the
+      PoolManager does not already provide one.
+
+  pull_requests:
+    - number: 6716
+      url: "https://github.com/psf/requests/pull/6716"
+      available: true
+      role: "bugfix"
+
+  issues:
+    - number: 6715
+      url: "https://github.com/psf/requests/issues/6715"
+      available: true
+      role: "bug_report"
+
+  merge:
+    available: true
+    commit: "145b5399486b56e00250204f033441f3fdf2f3c9"
+    message: "Merge pull request #6716 from sigmavirus24/bug/6715"
+
+ground_truth:
+  supported_claims:
+    - id: "claim_001"
+      claim: >
+        When the PoolManager already provides a custom SSLContext,
+        Requests should not replace it with the default preloaded SSLContext.
+      evidence:
+        - "commit b1d73ddb509a3a2d3e10744e85f9cdebdbde90f0"
+        - "diff in src/requests/adapters.py"
+        - "PR #6716"
+
+    - id: "claim_002"
+      claim: >
+        The change addresses compatibility with custom SSLContext
+        configuration used through HTTPAdapter / PoolManager.
+      evidence:
+        - "PR #6716"
+        - "Issue #6715"
+        - "commit b1d73ddb509a3a2d3e10744e85f9cdebdbde90f0"
+
+  unsupported_claims:
+    - id: "claim_003"
+      claim: "The direct purpose of PR #6716 was to improve performance."
+
+    - id: "claim_004"
+      claim: "The direct purpose of PR #6716 was to fix a security vulnerability."
+
+    - id: "claim_005"
+      claim: "PR #6716 was created because of a specific customer request."
+
+    - id: "claim_006"
+      claim: "The change was made to reduce memory usage."
+
+  ambiguous_claims:
+    - id: "claim_007"
+      claim: >
+        Why this exact implementation was preferred over all other
+        possible fixes.
+
+expected:
+  narrative_policy: "EVIDENCE_BASED"
+  evidence_consistency: "HIGH"
+  should_block_why: false
+
+why_blame:
+  evaluated: true
+
+  detected_evidence:
+    - "PR #6655"
+    - "PR #6667"
+    - "PR #6716"
+
+  consistency: "HIGH"
+  confidence: "VERY HIGH"
+  narrative_policy: "EVIDENCE_BASED"
+
+  generated_claims:
+    - "The code has a three-stage change history."
+    - "The final change is linked to PR #6716."
+
+evaluation:
+  supported_system_claims:
+    - "The final change is linked to PR #6716."
+
+  unsupported_system_claims: []
+
+  ambiguous_system_claims: []
+
+  false_why: false
+
+  ground_truth_supported_claim_count: 2
+  recovered_supported_claim_count: 0
+  supported_claim_recall: 0.0
+
+  notes: >
+    why-blame correctly identified PR #6716 and did not incorrectly
+    attribute the nearby performance-related PR #6667 as the direct
+    reason for the target change. However, the narrative did not fully
+    recover the supported custom SSLContext rationale, despite the
+    commit, diff, and PR context providing evidence for it.

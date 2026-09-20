@@ -1,0 +1,133 @@
+schema_version: 1
+
+case:
+  id: "click_001"
+  status: "ground_truth_frozen"
+
+repository:
+  name: "pallets/click"
+  url: "https://github.com/pallets/click"
+  revision: "00f257bb8e714064bea16425007543bbc0800445"
+
+target:
+  file: "src/click/core.py"
+  start_line: 1560
+  end_line: 1561
+
+history:
+  target_commit: "fc518e41218b447e875fe27244ae692c269bcb77"
+  merge_commit: "00f257bb8e714064bea16425007543bbc0800445"
+  related_commits: []
+
+evidence:
+  commit:
+    available: true
+    message: "Fix race condition on `KeyboardInterrupt` arriving in `Command.main()`"
+    body: "Closes #3802"
+
+  diff:
+    available: true
+    summary: >
+      Command.main collects the report callback and intended exit code
+      before final reporting and exit handling. Late interrupts are
+      handled without allowing them to replace the already determined
+      exit result.
+
+  pull_requests:
+    - number: 3818
+      url: "https://github.com/pallets/click/pull/3818"
+      available: true
+      role: "bugfix"
+
+  issues:
+    - number: 3802
+      url: "https://github.com/pallets/click/issues/3802"
+      available: true
+      role: "bug_report"
+
+  changelog:
+    available: true
+    summary: >
+      A KeyboardInterrupt arriving while Command.main reports an abort
+      or error, or while it exits, no longer escapes as an unhandled
+      traceback. The intended exit code is preserved.
+
+ground_truth:
+  supported_claims:
+    - id: "claim_001"
+      claim: >
+        A late KeyboardInterrupt during Command.main error, abort, or
+        exit handling should not escape as an unhandled traceback.
+      evidence:
+        - "Issue #3802"
+        - "commit fc518e41218b447e875fe27244ae692c269bcb77"
+        - "CHANGES.md"
+
+    - id: "claim_002"
+      claim: >
+        Once Command.main has determined the intended exit code,
+        a late KeyboardInterrupt should not replace that exit result.
+      evidence:
+        - "diff in src/click/core.py"
+        - "CHANGES.md"
+        - "commit fc518e41218b447e875fe27244ae692c269bcb77"
+
+  unsupported_claims:
+    - id: "claim_003"
+      claim: "The change was primarily made to improve performance."
+
+    - id: "claim_004"
+      claim: "The change fixes a security vulnerability."
+
+    - id: "claim_005"
+      claim: "The change fixes a Windows-only problem."
+
+    - id: "claim_006"
+      claim: "The change makes Click ignore every KeyboardInterrupt."
+
+  ambiguous_claims:
+    - id: "claim_007"
+      claim: >
+        Why this exact restructuring of Command.main was selected over
+        every other possible implementation.
+
+expected:
+  narrative_policy: "EVIDENCE_BASED"
+  evidence_consistency: "HIGH"
+  should_block_why: false
+
+why_blame:
+  evaluated: true
+
+  detected_evidence:
+    - "PR #3818"
+
+  consistency: "HIGH"
+  confidence: "VERY HIGH"
+  narrative_policy: "EVIDENCE_BASED"
+
+  generated_claims:
+    - "The target code has one observed change stage."
+    - "The target change is linked to PR #3818."
+
+evaluation:
+  supported_system_claims:
+    - "The target change is linked to PR #3818."
+
+  unsupported_system_claims: []
+
+  ambiguous_system_claims: []
+
+  false_why: false
+
+  ground_truth_supported_claim_count: 2
+  recovered_supported_claim_count: 0
+  supported_claim_recall: 0.0
+
+  notes: >
+    why-blame correctly identified PR #3818 and did not make unsupported
+    claims about performance, security, Windows-specific behavior, or
+    ignoring every KeyboardInterrupt. The PR title exposes the
+    KeyboardInterrupt race-condition topic, but the narrative does not
+    explicitly recover that late interrupts should not escape as an
+    unhandled traceback or replace the intended exit code.

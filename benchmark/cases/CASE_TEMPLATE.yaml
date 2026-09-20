@@ -1,0 +1,41 @@
+schema_version: 1
+
+case:
+  id: ""
+  status: "draft"
+
+repository:
+  name: ""
+  url: ""
+  revision: ""
+
+target:
+  file: ""
+  start_line: null
+  end_line: null
+
+evidence:
+  commit: ""
+  pull_request: ""
+  issue: ""
+
+ground_truth:
+  supported_claims: []
+  unsupported_claims: []
+  ambiguous_claims: []
+
+expected:
+  narrative_policy: ""
+  should_block_why: false
+
+why_blame:
+  evaluated: false
+  consistency: ""
+  confidence: ""
+  generated_claims: []
+
+evaluation:
+  supported_system_claims: []
+  unsupported_system_claims: []
+  false_why: false
+  notes: ""

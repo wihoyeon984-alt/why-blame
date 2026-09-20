@@ -1,0 +1,141 @@
+schema_version: 1
+
+case:
+  id: "click_002"
+  status: "ground_truth_frozen"
+
+repository:
+  name: "pallets/click"
+  url: "https://github.com/pallets/click"
+  revision: "bb7be1f6a91f3fd1267d1a6d68771273d593f9c7"
+
+target:
+  file: "src/click/core.py"
+  start_line: 2900
+  end_line: 2901
+
+history:
+  original_commit: "6c4a77ba24854dab793a8ff72110a0a24c403c9f"
+  revert_commit: "bb7be1f6a91f3fd1267d1a6d68771273d593f9c7"
+  related_commits: []
+
+evidence:
+  original_commit:
+    available: true
+    message: "Use `default=True` as a sentinel for non-boolean flags"
+    body: "Refs: #3111"
+
+  revert_commit:
+    available: true
+    message: "Revert \"Use `default=True` as a sentinel for non-boolean flags\""
+    body: "This reverts commit 6c4a77ba24854dab793a8ff72110a0a24c403c9f."
+
+  diff:
+    available: true
+    summary: >
+      The original commit restricted default=True sentinel handling to
+      non-boolean flags by adding the not self.is_bool_flag condition.
+      The revert removed that condition and restored the previous
+      self.is_flag behavior.
+
+  issues:
+    - number: 3111
+      url: "https://github.com/pallets/click/issues/3111"
+      available: true
+      role: "referenced_by_original_commit"
+
+ground_truth:
+  supported_claims:
+    - id: "claim_001"
+      claim: >
+        The original commit changed default=True sentinel handling so
+        that it applied only to non-boolean flags.
+      evidence:
+        - "commit 6c4a77ba24854dab793a8ff72110a0a24c403c9f"
+        - "diff in src/click/core.py"
+
+    - id: "claim_002"
+      claim: >
+        The later commit explicitly reverted the original change and
+        restored the previous self.is_flag condition.
+      evidence:
+        - "commit bb7be1f6a91f3fd1267d1a6d68771273d593f9c7"
+        - "revert commit body"
+        - "diff in src/click/core.py"
+
+  unsupported_claims:
+    - id: "claim_003"
+      claim: "The original change was reverted because it introduced a bug."
+
+    - id: "claim_004"
+      claim: "The original change was reverted because of a compatibility problem."
+
+    - id: "claim_005"
+      claim: "The original change was reverted because of a performance problem."
+
+    - id: "claim_006"
+      claim: "Issue #3111 proves the specific reason why the change was reverted."
+
+  ambiguous_claims:
+    - id: "claim_007"
+      claim: >
+        The specific motivation for reverting the original change,
+        beyond the fact that the original commit was explicitly reverted.
+
+expected:
+  narrative_policy: "CONSERVATIVE"
+  evidence_consistency: "HIGH"
+  should_block_why: false
+  has_rollback: true
+  history_ambiguity: "HIGH"
+  maximum_confidence: "MEDIUM"
+
+why_blame:
+  evaluated: true
+
+  detected_evidence:
+    - "PR #3225"
+    - "Issue #3111"
+    - "Revert bb7be1f6a91f3fd1267d1a6d68771273d593f9c7"
+
+  consistency: "HIGH"
+  confidence: "MEDIUM"
+  narrative_policy: "CONSERVATIVE"
+
+  generated_claims:
+    - "The target code has a history containing one rollback."
+    - "The final state was reached after a revert."
+    - "The specific reason for the change is not asserted beyond the verified history."
+
+evaluation:
+  supported_system_claims:
+    - "The target history contains one rollback."
+    - "The final state was reached after an explicit revert."
+
+  unsupported_system_claims: []
+
+  ambiguous_system_claims: []
+
+  false_why: false
+
+  ground_truth_supported_claim_count: 2
+  recovered_supported_claim_count: 1
+  supported_claim_recall: 0.5
+
+  revert_detected: true
+  ambiguity_correct: true
+  confidence_cap_correct: true
+
+  observed_issues:
+    - >
+      Timeline output appears to contain a duplicate event for commit
+      6c4a77ba24854dab793a8ff72110a0a24c403c9f with an Unknown date
+      and empty message. This should be investigated separately as a
+      possible git log -L parsing artifact.
+
+  notes: >
+    why-blame correctly detected the explicit revert, increased history
+    ambiguity, capped confidence at MEDIUM despite full evidence coverage
+    and HIGH consistency, and avoided inventing a specific reason for the
+    rollback. The system did not claim that the revert was caused by a
+    bug, compatibility problem, performance problem, or Issue #3111.

@@ -1,0 +1,131 @@
+schema_version: 1
+
+case:
+  id: "flask_001"
+  status: "ground_truth_frozen"
+
+repository:
+  name: "pallets/flask"
+  url: "https://github.com/pallets/flask"
+  revision: "53b8f08218796d95764c5252bccd8a50a173a6fb"
+
+target:
+  file: "src/flask/testing.py"
+  start_line: 243
+  end_line: 244
+
+history:
+  target_commit: "53b8f08218796d95764c5252bccd8a50a173a6fb"
+  related_commits: []
+
+evidence:
+  commit:
+    available: true
+    message: "push preserved contexts in correct order"
+
+  diff:
+    available: true
+    summary: >
+      FlaskClient no longer restores preserved contexts by repeatedly
+      popping them from the end of _new_contexts. It enters the contexts
+      in their stored order and clears the collection afterward.
+
+  pull_requests:
+    - number: 5797
+      url: "https://github.com/pallets/flask/pull/5797"
+      available: true
+      role: "bugfix"
+
+  issues:
+    - number: 5786
+      url: "https://github.com/pallets/flask/issues/5786"
+      available: true
+      role: "bug_report"
+
+  changelog:
+    available: true
+    summary: >
+      When using follow_redirects in the test client, the final state
+      of session is correct.
+
+ground_truth:
+  supported_claims:
+    - id: "claim_001"
+      claim: >
+        Preserved request contexts must be restored in the correct order
+        so that the final request context is not obscured by an earlier one.
+      evidence:
+        - "commit 53b8f08218796d95764c5252bccd8a50a173a6fb"
+        - "diff in src/flask/testing.py"
+        - "Issue #5786"
+
+    - id: "claim_002"
+      claim: >
+        The change fixes the final session state observed by the Flask
+        test client when follow_redirects is used.
+      evidence:
+        - "Issue #5786"
+        - "CHANGES.rst"
+        - "commit 53b8f08218796d95764c5252bccd8a50a173a6fb"
+
+  unsupported_claims:
+    - id: "claim_003"
+      claim: "The change fixes a production HTTP session bug."
+
+    - id: "claim_004"
+      claim: "The change was primarily made to improve performance."
+
+    - id: "claim_005"
+      claim: "The change fixes a security vulnerability."
+
+    - id: "claim_006"
+      claim: "The change fixes a browser cookie handling problem."
+
+  ambiguous_claims:
+    - id: "claim_007"
+      claim: >
+        Why this exact context restoration implementation was chosen
+        instead of every other possible fix.
+
+expected:
+  narrative_policy: "EVIDENCE_BASED"
+  evidence_consistency: "HIGH"
+  should_block_why: false
+
+why_blame:
+  evaluated: true
+
+  detected_evidence:
+    - "PR #4666"
+    - "PR #5797"
+
+  consistency: "HIGH"
+  confidence: "VERY HIGH"
+  narrative_policy: "EVIDENCE_BASED"
+
+  generated_claims:
+    - "The target code has a two-stage change history."
+    - "The final target change is linked to PR #5797."
+
+evaluation:
+  supported_system_claims:
+    - "The final target change is linked to PR #5797."
+
+  unsupported_system_claims: []
+
+  ambiguous_system_claims: []
+
+  false_why: false
+
+  ground_truth_supported_claim_count: 2
+  recovered_supported_claim_count: 0
+  supported_claim_recall: 0.0
+
+  notes: >
+    why-blame correctly identified the implementation PR #5797 and did
+    not make unsupported claims about production HTTP sessions,
+    performance, security, or browser cookie handling.
+    The PR title exposes that preserved contexts are pushed in the
+    correct order, but the narrative does not explicitly recover why
+    that ordering matters or that the change fixes the final session
+    state when follow_redirects is used.

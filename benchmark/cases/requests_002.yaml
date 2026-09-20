@@ -1,0 +1,129 @@
+schema_version: 1
+
+case:
+  id: "requests_002"
+  status: "ground_truth_frozen"
+
+repository:
+  name: "psf/requests"
+  url: "https://github.com/psf/requests"
+  revision: "b8be93a721792deeadd2f498b8f77cf610e7765f"
+
+target:
+  file: "src/requests/utils.py"
+  start_line: 137
+  end_line: 138
+
+history:
+  target_commit: "3fd309a5c14e4cfbd96bea6c8e71b4958fe090bb"
+  merge_commit: "b8be93a721792deeadd2f498b8f77cf610e7765f"
+  related_commits: []
+
+evidence:
+  commit:
+    available: true
+    message: "Enhance `super_len` to count encoded bytes for str"
+    body: "This fixes issue #6586"
+
+  diff:
+    available: true
+    summary: >
+      super_len now converts str values to UTF-8 encoded bytes before
+      calculating their length.
+
+  pull_requests:
+    - number: 6589
+      url: "https://github.com/psf/requests/pull/6589"
+      available: true
+      role: "bugfix"
+
+  issues:
+    - number: 6586
+      url: "https://github.com/psf/requests/issues/6586"
+      available: true
+      role: "bug_report"
+
+  merge:
+    available: true
+    commit: "b8be93a721792deeadd2f498b8f77cf610e7765f"
+    message: "Merge pull request #6589 from bruceadams/super_len_str_utf-8"
+
+ground_truth:
+  supported_claims:
+    - id: "claim_001"
+      claim: >
+        super_len should measure the encoded byte length of a string
+        rather than its Unicode character count.
+      evidence:
+        - "commit 3fd309a5c14e4cfbd96bea6c8e71b4958fe090bb"
+        - "diff in src/requests/utils.py"
+        - "Issue #6586"
+        - "PR #6589"
+
+    - id: "claim_002"
+      claim: >
+        String inputs are encoded as UTF-8 before their length is
+        calculated.
+      evidence:
+        - "diff in src/requests/utils.py"
+        - "commit 3fd309a5c14e4cfbd96bea6c8e71b4958fe090bb"
+
+  unsupported_claims:
+    - id: "claim_003"
+      claim: "The direct purpose of PR #6589 was to improve performance."
+
+    - id: "claim_004"
+      claim: "The direct purpose of PR #6589 was to fix a security vulnerability."
+
+    - id: "claim_005"
+      claim: "The change was specifically made to support AWS API Gateway."
+
+    - id: "claim_006"
+      claim: "The change was made to reduce memory usage."
+
+  ambiguous_claims:
+    - id: "claim_007"
+      claim: >
+        Why UTF-8 encoding inside super_len was preferred over every
+        other possible implementation.
+
+expected:
+  narrative_policy: "EVIDENCE_BASED"
+  evidence_consistency: "HIGH"
+  should_block_why: false
+
+why_blame:
+  evaluated: true
+
+  detected_evidence:
+    - "PR #6589"
+
+  consistency: "HIGH"
+  confidence: "VERY HIGH"
+  narrative_policy: "EVIDENCE_BASED"
+
+  generated_claims:
+    - "The target code has one observed change stage."
+    - "The target change is linked to PR #6589."
+
+evaluation:
+  supported_system_claims:
+    - "The target change is linked to PR #6589."
+
+  unsupported_system_claims: []
+
+  ambiguous_system_claims: []
+
+  false_why: false
+
+  ground_truth_supported_claim_count: 2
+  recovered_supported_claim_count: 0
+  supported_claim_recall: 0.0
+
+  notes: >
+    why-blame correctly identified PR #6589 and produced no unsupported
+    performance, security, AWS-specific, or memory-related causal claims.
+    The commit message and PR title expose the encoded-byte rationale,
+    but the narrative itself stops at identifying the commit and linked PR
+    instead of explicitly recovering the supported byte-length and UTF-8
+    encoding rationale.
