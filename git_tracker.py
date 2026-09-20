@@ -3,7 +3,7 @@ import re
 
 
 def get_repo_info():
-    """원격 저장소 URL에서 (소유자, 저장소명)을 추출합니다."""
+    """원격 GitHub 저장소 URL에서 (소유자, 저장소명)을 추출합니다."""
     res = subprocess.run(
         ["git", "config", "--get", "remote.origin.url"],
         capture_output=True,
@@ -17,12 +17,30 @@ def get_repo_info():
     if not remote_url:
         return None
 
-    m = re.search(r"github\.com[^/]+/([^/.]+)", remote_url)
+    https_prefix = "https://github.com/"
+    ssh_prefix = "git@github.com:"
 
-    if m:
-        return m.group(1), m.group(2)
+    if remote_url.startswith(https_prefix):
+        path = remote_url[len(https_prefix):]
+    elif remote_url.startswith(ssh_prefix):
+        path = remote_url[len(ssh_prefix):]
+    else:
+        return None
 
-    return None
+    if path.endswith(".git"):
+        path = path[:-4]
+
+    parts = path.split("/")
+
+    if len(parts) != 2:
+        return None
+
+    owner, repo = parts
+
+    if not owner or not repo:
+        return None
+
+    return owner, repo
 
 
 def get_current_code_lines(file_name, start_line, end_line):

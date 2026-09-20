@@ -256,6 +256,46 @@ diff --git a/service.py b/service.py
             result[0]["is_revert"]
         )
 
+    @patch("git_tracker.subprocess.run")
+    def test_get_repo_info_from_https_remote(self, mock_run):
+        """HTTPS GitHub remote에서 owner/repo를 정확히 추출합니다."""
+        mock_result = MagicMock()
+        mock_result.stdout = (
+            "https://github.com/"
+            "wihoyeon984-alt/why-blame.git\n"
+        )
+
+        mock_run.return_value = mock_result
+
+        from git_tracker import get_repo_info
+
+        result = get_repo_info()
+
+        self.assertEqual(
+            result,
+            ("wihoyeon984-alt", "why-blame"),
+        )
+
+    @patch("git_tracker.subprocess.run")
+    def test_get_repo_info_from_ssh_remote(self, mock_run):
+        """SSH GitHub remote에서 owner/repo를 정확히 추출합니다."""
+        mock_result = MagicMock()
+        mock_result.stdout = (
+            "git@github.com:"
+            "wihoyeon984-alt/why-blame.git\n"
+        )
+
+        mock_run.return_value = mock_result
+
+        from git_tracker import get_repo_info
+
+        result = get_repo_info()
+
+        self.assertEqual(
+            result,
+            ("wihoyeon984-alt", "why-blame"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
