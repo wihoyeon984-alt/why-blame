@@ -1,57 +1,161 @@
 import sys
+
 from git_tracker import extract_git_history, get_repo_info, get_current_code_lines
 from github_client import fetch_ref_info, fetch_commit_prs
 from timeline import build_timeline
 from viewer import render_card
 
-def main():
-    args = sys.argv[1:]
+
+USAGE = """사용법:
+  why-blame <파일경로:줄번호>
+  why-blame <파일경로:시작줄-끝줄>
+  why-blame <파일경로> <줄번호>
+  why-blame <파일경로> <시작줄> <끝줄>
+
+예시:
+  why-blame service.py:10
+  why-blame service.py:1-3
+  why-blame service.py 10
+  why-blame service.py 1 3
+"""
+
+
+def print_usage():
+    print(USAGE)
+
+
+def validate_line_range(start_line, end_line):
+    if start_line < 1 or end_line < 1:
+        raise ValueError("라인 번호는 1 이상이어야 합니다.")
+
+    if start_line > end_line:
+        raise ValueError("시작 라인은 끝 라인보다 클 수 없습니다.")
+
+
+def parse_args(args):
     if not args:
-        print("사용법: why-blame <파일경로:줄번호> 또는 <파일경로:시작줄-끝줄>")
-        print("예시:    why-blame service.py:1-3")
-        print("         why-blame service.py 1 3")
-        sys.exit(1)
+        raise ValueError("분석할 파일과 라인 번호를 지정해야 합니다.")
+
+    if args[0] in ("-h", "--help"):
+        return None
 
     target = args[0]
 
-    # 1. 파일경로:줄번호 형식 (Windows 절대 경로 및 다중 라인 범위 지원)
-    if ":" in target and target.rsplit(":", 1)[-1].replace("-", "").isdigit():
-        file_name, line_str = target.rsplit(":", 1)
-        if "-" in line_str:
-            s, e = line_str.split("-", 1)
-            start_line, end_line = int(s), int(e)
-        else:
-            start_line = int(line_str)
-            end_line = start_line
+    # why-blame service.py:10
+    # why-blame service.py:1-3
+    if ":" in target:
+        file_part, line_part = target.rsplit(":", 1)
 
-    # 2. 공백으로 시작줄 끝줄 지정 (예: why-blame service.py 1 3)
-    elif len(args) >= 3:
-        file_name, start_str, end_str = args[:3]
+        if file_part and line_part:
+            if "-" in line_part:
+                start_str, end_str = line_part.split("-", 1)
+
+                if start_str.isdigit() and end_str.isdigit():
+                    start_line = int(start_str)
+                    end_line = int(end_str)
+
+                    validate_line_range(start_line, end_line)
+
+                    return file_part, start_line, end_line
+
+            elif line_part.isdigit():
+                start_line = int(line_part)
+
+                validate_line_range(start_line, start_line)
+
+                return file_part, start_line, start_line
+
+    # why-blame service.py 1 3
+    if len(args) == 3:
+        file_name, start_str, end_str = args
+
+        if not start_str.isdigit() or not end_str.isdigit():
+            raise ValueError("라인 번호는 양의 정수여야 합니다.")
+
         start_line = int(start_str)
         end_line = int(end_str)
 
-    # 3. 공백으로 단일 라인 지정 (예: why-blame service.py 10)
-    elif len(args) == 2:
-        file_name, line_str = args[:2]
+        validate_line_range(start_line, end_line)
+
+        return file_name, start_line, end_line
+
+    # why-blame service.py 10
+    if len(args) == 2:
+        file_name, line_str = args
+
+        if not line_str.isdigit():
+            raise ValueError("라인 번호는 양의 정수여야 합니다.")
+
         start_line = int(line_str)
-        end_line = start_line
 
-    else:
-        print("오류: 라인 번호를 지정해야 합니다. (예: service.py:1-3 또는 service.py 1 3)")
-        sys.exit(1)
+        validate_line_range(start_line, start_line)
 
-    line_range_str = f"{start_line}" if start_line == end_line else f"{start_line}-{end_line}"
+        return file_name, start_line, start_line
 
-    current_lines = get_current_code_lines(file_name, start_line, end_line)
+    raise ValueError(
+        "올바른 입력 형식이 아닙니다. "
+        "예: service.py:1-3 또는 service.py 1 3"
+    )
+
+
+def main():
+    args = sys.argv[1:]
+
+    try:
+        parsed = parse_args(args)
+
+    except ValueError as exc:
+        print(f"오류: {exc}")
+        print()
+        print_usage()
+        sys.exit(2)
+
+    # --help / -h
+    if parsed is None:
+        print_usage()
+        return
+
+    file_name, start_line, end_line = parsed
+
+    line_range_str = (
+        f"{start_line}"
+        if start_line == end_line
+        else f"{start_line}-{end_line}"
+    )
+
+    current_lines = get_current_code_lines(
+        file_name,
+        start_line,
+        end_line,
+    )
+
     repo_info = get_repo_info()
-    commits = extract_git_history(file_name, start_line, end_line)
+
+    commits = extract_git_history(
+        file_name,
+        start_line,
+        end_line,
+    )
 
     if not commits:
         sys.exit(1)
 
-    # SHA 기반 PR 탐색 함수와 번호 기반 이슈 탐색 함수를 함께 전달
-    timeline, stats = build_timeline(commits, repo_info, fetch_ref_info, fetch_commit_prs)
-    render_card(file_name, line_range_str, repo_info, current_lines, timeline, stats)
+    timeline, stats = build_timeline(
+        commits,
+        repo_info,
+        fetch_ref_info,
+        fetch_commit_prs,
+    )
+
+    render_card(
+        file_name,
+        line_range_str,
+        repo_info,
+        current_lines,
+        timeline,
+        stats,
+    )
+
 
 if __name__ == "__main__":
     main()
