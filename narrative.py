@@ -1,3 +1,11 @@
+from claim_adapter import build_candidate_claims
+from claim_evidence import collect_supported_claims
+from claim_policy import (
+    CONSERVATIVE,
+    collect_visible_claims,
+)
+from claim_renderer import render_supported_claims
+
 def normalize_confidence(stats):
     """
     Confidence Model v2의 여러 confidence 표현을
@@ -83,7 +91,81 @@ def get_verified_ref(item):
 
     return None
 
+def append_supported_claims(body, timeline, stats):
+    """
+    Timeline에서 직접 검증된 Claim만 Narrative에 추가합니다.
 
+    Safety rules:
+    - SUPPORTED Claim만 사용합니다.
+    - BEHAVIOR와 REVERT_FACT만 Narrative에 노출합니다.
+    - CAUSE와 REVERT_CAUSE는 v1 Narrative에서 노출하지 않습니다.
+    - blocked / inconsistent / low-confidence Claim은 Policy Gate에서 제거합니다.
+    - CONSERVATIVE Claim은 직접적인 원인 설명으로 확장하지 않습니다.
+    - 기존 Narrative를 대체하지 않고 검증된 Claim만 추가합니다.
+    """
+    candidates = build_candidate_claims(
+        timeline
+    )
+
+    supported = collect_supported_claims(
+        candidates
+    )
+
+    narrative_safe = [
+        claim
+        for claim in supported
+        if claim.get("type") in {
+            "BEHAVIOR",
+            "REVERT_FACT",
+        }
+    ]
+
+    visible = collect_visible_claims(
+        narrative_safe,
+        stats,
+    )
+
+    if not visible:
+        return body
+
+    direct_claims = [
+        claim
+        for claim in visible
+        if claim.get("visibility") != CONSERVATIVE
+    ]
+
+    conservative_claims = [
+        claim
+        for claim in visible
+        if claim.get("visibility") == CONSERVATIVE
+    ]
+
+    rendered_direct = render_supported_claims(
+        direct_claims
+    )
+
+    rendered_conservative = render_supported_claims(
+        conservative_claims
+    )
+
+    parts = []
+
+    if rendered_direct:
+        parts.append(
+            " 확인된 코드 동작: "
+            + " ".join(rendered_direct)
+        )
+
+    if rendered_conservative:
+        parts.append(
+            " 확인된 이력 범위에서 관찰되는 코드 동작: "
+            + " ".join(rendered_conservative)
+        )
+
+    if not parts:
+        return body
+
+    return body + "".join(parts)
 def synthesize_narrative(timeline, stats):
     """
     Timeline과 Confidence Model의 결과를 바탕으로
@@ -199,8 +281,13 @@ def synthesize_narrative(timeline, stats):
                 "근거는 제한적입니다."
             )
 
-        return headline, body
+        body = append_supported_claims(
+            body,
+            timeline,
+            stats,
+        )
 
+        return headline, body
     # ---------------------------------------------------------
     # 4. Timeline Facts
     # ---------------------------------------------------------
@@ -358,5 +445,11 @@ def synthesize_narrative(timeline, stats):
     # Viewer의 CONFIDENCE 영역에서 별도로 표시되며,
     # Narrative에서는 Confidence를 표현 정책으로만 사용한다.
     _ = confidence
+
+    body = append_supported_claims(
+        body,
+        timeline,
+        stats,
+    )
 
     return headline, body
