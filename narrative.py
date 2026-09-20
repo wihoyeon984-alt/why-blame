@@ -1,12 +1,100 @@
+def normalize_confidence(stats):
+    """
+    Confidence Model v2의 여러 confidence 표현을
+    Narrative Policy가 사용하는 공통 단계로 정규화한다.
+    """
+    raw = str(
+        stats.get(
+            "confidence",
+            stats.get(
+                "overall_confidence",
+                stats.get("grade", "UNKNOWN"),
+            ),
+        )
+    ).strip().upper()
+
+    if raw.startswith("VERY HIGH"):
+        return "VERY_HIGH"
+
+    if raw.startswith("HIGH"):
+        return "HIGH"
+
+    if raw.startswith("MEDIUM") or raw.startswith("MODERATE"):
+        return "MODERATE"
+
+    if raw.startswith("WEAK"):
+        return "WEAK"
+
+    if raw.startswith("LOW"):
+        return "LOW"
+
+    return "UNKNOWN"
+
+
+def get_narrative_policy(stats):
+    """
+    Confidence 결과를 Narrative 표현 정책으로 변환한다.
+
+    정책:
+    - BLOCKED: 증거 충돌. 구체적인 WHY 차단
+    - LIMITED: 증거 부족. 구체적인 WHY 제한
+    - CONSERVATIVE: 확인된 이력 중심
+    - EVIDENCE_BASED: 검증된 외부 근거 범위에서만 구체화
+
+    Confidence가 높더라도 증거에 없는 원인을 생성할 수는 없다.
+    """
+    if (
+        stats.get("is_blocked") is True
+        or stats.get("consistency") == "INCONSISTENT"
+    ):
+        return "BLOCKED"
+
+    confidence = normalize_confidence(stats)
+
+    if confidence in ("LOW", "WEAK"):
+        return "LIMITED"
+
+    if confidence in ("MODERATE", "UNKNOWN"):
+        return "CONSERVATIVE"
+
+    if confidence in ("HIGH", "VERY_HIGH"):
+        return "EVIDENCE_BASED"
+
+    return "CONSERVATIVE"
+
+
+def get_verified_ref(item):
+    """
+    Timeline item에서 Narrative에 사용할 수 있는
+    검증 가능한 외부 근거를 하나 반환한다.
+
+    NOT_FOUND 상태의 reference는 근거로 사용하지 않는다.
+    """
+    for ref in item.get("ref_items", []):
+        if ref.get("status") == "NOT_FOUND":
+            continue
+
+        title = ref.get("title")
+
+        if not title:
+            continue
+
+        return ref
+
+    return None
+
+
 def synthesize_narrative(timeline, stats):
     """
-    수집된 타임라인의 사건을 바탕으로 보수적인 변경 이력 서사를 생성한다.
+    Timeline과 Confidence Model의 결과를 바탕으로
+    증거 수준에 맞는 보수적인 Narrative를 생성한다.
 
-    원칙:
-    - 증거가 불일치하면 구체적인 WHY 생성을 차단한다.
-    - Git/GitHub 기록에서 확인 가능한 내용만 표현한다.
-    - BUG FIX, FEATURE, REVERT 등의 중간 변경 이력을 보존한다.
-    - "방어적", "보강된", "발전된"처럼 증거 이상의 평가적 표현은 피한다.
+    핵심 원칙:
+    - WHY는 생성하는 것이 아니라 증거로부터 도출한다.
+    - 증거가 충돌하면 구체적인 WHY를 생성하지 않는다.
+    - 증거가 부족하면 변경 사유를 확정하지 않는다.
+    - Confidence가 낮을수록 Narrative도 보수적으로 표현한다.
+    - Confidence가 높아도 증거에 없는 원인을 추론하지 않는다.
     """
     if not timeline:
         return (
@@ -14,22 +102,63 @@ def synthesize_narrative(timeline, stats):
             "추적할 Git 변경 이력이 없습니다.",
         )
 
-    # False-WHY 방어:
-    # 증거가 충돌하면 구체적인 변경 사유를 생성하지 않는다.
-    if (
-        stats.get("is_blocked") is True
-        or stats.get("consistency") == "INCONSISTENT"
-    ):
-        pairs_str = ", ".join(stats.get("inconsistent_pairs", []))
+    policy = get_narrative_policy(stats)
+    confidence = normalize_confidence(stats)
 
-        headline = "⚠️ 증거 불일치(Inconsistent Evidence) 감지"
-
-        body = (
-            "수집된 커밋 메시지와 연관 PR의 맥락이 서로 상충되거나 "
-            f"다른 주제를 가리키고 있습니다 ({pairs_str}). "
-            "거짓 서사 생성을 방지하기 위해 구체적인 변경 사유를 "
-            "단정하지 않으며, 신뢰도(Confidence)가 강등되었습니다."
+    # ---------------------------------------------------------
+    # 1. BLOCKED
+    # ---------------------------------------------------------
+    if policy == "BLOCKED":
+        pairs_str = ", ".join(
+            stats.get("inconsistent_pairs", [])
         )
+
+        headline = "⚠️ 증거 불일치로 변경 사유를 확정할 수 없음"
+
+        if pairs_str:
+            body = (
+                "수집된 커밋 메시지와 연관 PR/Issue의 맥락이 "
+                "서로 일치하지 않습니다. "
+                f"충돌이 확인된 근거: {pairs_str}. "
+                "False-WHY 생성을 방지하기 위해 구체적인 "
+                "변경 사유를 제시하지 않습니다."
+            )
+        else:
+            body = (
+                "수집된 변경 이력에서 서로 일치하지 않는 "
+                "근거가 확인되었습니다. "
+                "False-WHY 생성을 방지하기 위해 구체적인 "
+                "변경 사유를 제시하지 않습니다."
+            )
+
+        return headline, body
+
+    # ---------------------------------------------------------
+    # 2. LOW / WEAK
+    # ---------------------------------------------------------
+    if policy == "LIMITED":
+        first = timeline[0]
+        last = timeline[-1]
+
+        headline = "신뢰할 수 있는 변경 사유를 확정하기 어려움"
+
+        if len(timeline) == 1:
+            body = (
+                f"Git 이력상 {first.get('date', '날짜 미상')} "
+                f"커밋({first.get('hash', '')})이 확인되지만, "
+                "변경 사유를 뒷받침할 충분한 외부 근거가 없습니다. "
+                "따라서 구체적인 WHY는 생성하지 않습니다."
+            )
+        else:
+            body = (
+                f"Git 이력상 {first.get('date', '날짜 미상')} "
+                f"커밋({first.get('hash', '')})부터 "
+                f"{last.get('date', '날짜 미상')} "
+                f"커밋({last.get('hash', '')})까지 "
+                f"총 {len(timeline)}단계의 변경이 확인됩니다. "
+                "그러나 변경 사유를 충분히 검증할 외부 근거가 "
+                "부족하므로 구체적인 WHY는 생성하지 않습니다."
+            )
 
         return headline, body
 
@@ -37,32 +166,44 @@ def synthesize_narrative(timeline, stats):
     first = timeline[0]
     last = timeline[-1]
 
-    # 단일 커밋만 존재하는 경우
+    # ---------------------------------------------------------
+    # 3. 단일 Commit
+    # ---------------------------------------------------------
     if total == 1:
+        verified_ref = get_verified_ref(first)
+
         headline = "현재 확인된 이력상 변경 단계가 하나인 코드"
 
-        first_ref = ""
-
-        if first.get("ref_items"):
-            ref = first["ref_items"][0]
-            ref_type = ref.get("type", "참조")
-            ref_number = ref.get("number")
-            ref_title = ref.get("title")
-
-            first_ref = (
-                f" 연관 {ref_type} #{ref_number}"
-                f"('{ref_title}')가 확인됩니다."
-            )
-
         body = (
-            f"현재 확인된 Git 이력상 {first.get('date', '초기')} "
-            f"커밋({first.get('hash')})에서 처음 관찰되었습니다. "
-            "이후 추가적인 변경 이력은 확인되지 않습니다."
-            f"{first_ref}"
+            f"현재 확인된 Git 이력상 "
+            f"{first.get('date', '날짜 미상')} "
+            f"커밋({first.get('hash', '')})에서 "
+            "처음 관찰되었습니다."
         )
+
+        if (
+            policy == "EVIDENCE_BASED"
+            and verified_ref is not None
+        ):
+            ref_type = verified_ref.get("type", "REF")
+            ref_number = verified_ref.get("number")
+            ref_title = verified_ref.get("title")
+
+            body += (
+                f" 연관 {ref_type} #{ref_number}"
+                f"('{ref_title}')가 외부 근거로 확인됩니다."
+            )
+        else:
+            body += (
+                " 이후 추가적인 변경 사유를 확정할 수 있는 "
+                "근거는 제한적입니다."
+            )
 
         return headline, body
 
+    # ---------------------------------------------------------
+    # 4. Timeline Facts
+    # ---------------------------------------------------------
     reverts = [
         item
         for item in timeline
@@ -136,53 +277,86 @@ def synthesize_narrative(timeline, stats):
         mid_sentence = (
             f"이후 {mid_summary} 등의 변경 단계를 거쳤습니다. "
         )
+
     elif mid_commits:
         mid_sentence = (
-            f"이후 중간 {len(mid_commits)}단계의 변경을 거쳤습니다. "
+            f"이후 중간 {len(mid_commits)}단계의 "
+            "변경을 거쳤습니다. "
         )
+
     else:
         mid_sentence = ""
 
-    last_context = ""
-    last_change = "변경 사항"
+    # ---------------------------------------------------------
+    # 5. Final event
+    # ---------------------------------------------------------
+    verified_ref = get_verified_ref(last)
 
-    if last.get("ref_items"):
-        ref = last["ref_items"][0]
-
-        last_context = (
-            f"PR #{ref.get('number')}"
-            f"('{ref.get('title')}')을 통해 "
-        )
-
-        last_change = "확인 가능한 변경 사항"
-
-    body = (
-        f"확인된 이력상 {first.get('date')} "
-        f"커밋({first.get('hash')})에서 처음 관찰되었습니다. "
-        f"{mid_sentence}"
-        f"최종적으로 {last.get('date')} "
-        f"커밋({last.get('hash')})에서 "
-        f"{last_context}{last_change}이 반영되어 "
-        "현재 형태로 정착되었습니다."
+    last_sentence = (
+        f"최종적으로 {last.get('date', '날짜 미상')} "
+        f"커밋({last.get('hash', '')})에서 "
+        "현재 형태의 변경이 관찰됩니다."
     )
 
-    # Headline 역시 관찰 가능한 이력만 표현한다.
+    # HIGH / VERY HIGH에서만 외부 근거를 구체적으로 연결한다.
+    if (
+        policy == "EVIDENCE_BASED"
+        and verified_ref is not None
+    ):
+        ref_type = verified_ref.get("type", "REF")
+        ref_number = verified_ref.get("number")
+        ref_title = verified_ref.get("title")
+
+        last_sentence = (
+            f"최종적으로 {last.get('date', '날짜 미상')} "
+            f"커밋({last.get('hash', '')})에서 "
+            f"{ref_type} #{ref_number}('{ref_title}')와 "
+            "연결된 변경이 확인되며, "
+            "현재 형태의 변경이 관찰됩니다."
+        )
+
+    # MODERATE / MEDIUM에서는 reference가 있더라도
+    # 구체적인 원인으로 확대하지 않는다.
+    elif policy == "CONSERVATIVE":
+        last_sentence = (
+            f"최종적으로 {last.get('date', '날짜 미상')} "
+            f"커밋({last.get('hash', '')})까지의 "
+            "변경 이력이 확인되며, "
+            "구체적인 변경 원인은 확인된 이력의 범위를 "
+            "넘어 단정하지 않습니다."
+        )
+
+    body = (
+        f"확인된 이력상 {first.get('date', '날짜 미상')} "
+        f"커밋({first.get('hash', '')})에서 "
+        f"처음 관찰되었습니다. "
+        f"{mid_sentence}"
+        f"{last_sentence}"
+    )
+
+    # ---------------------------------------------------------
+    # 6. Evidence-only Headline
+    # ---------------------------------------------------------
     if reverts:
         headline = (
             f"롤백({len(reverts)}회)을 포함한 변경 이력을 거쳐 "
-            "현재 형태로 정착된 코드"
+            "현재 형태에 이른 코드"
         )
 
     elif bug_fixes:
         headline = (
-            f"결함 수정({len(bug_fixes)}회)을 포함한 변경 이력을 거쳐 "
-            "현재 형태로 정착된 코드"
+            f"결함 수정({len(bug_fixes)}회)을 포함한 "
+            "변경 이력이 확인된 코드"
         )
 
     else:
         headline = (
-            f"총 {total}단계의 변경 이력을 거쳐 "
-            "현재 형태로 정착된 코드"
+            f"총 {total}단계의 변경 이력이 확인된 코드"
         )
+
+    # Confidence를 문장에 직접 삽입하지 않는다.
+    # Viewer의 CONFIDENCE 영역에서 별도로 표시되며,
+    # Narrative에서는 Confidence를 표현 정책으로만 사용한다.
+    _ = confidence
 
     return headline, body

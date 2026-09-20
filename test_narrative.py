@@ -1,4 +1,4 @@
-import unittest
+﻿import unittest
 
 from narrative import synthesize_narrative
 
@@ -53,7 +53,13 @@ class TestNarrative(unittest.TestCase):
             },
         ]
 
-        headline, body = synthesize_narrative(timeline, {})
+        stats = {
+            "confidence": "HIGH",
+            "consistency": "HIGH",
+            "is_blocked": False,
+        }
+
+        headline, body = synthesize_narrative(timeline, stats)
 
         self.assertIn("롤백", headline)
         self.assertIn("a222", body)
@@ -85,7 +91,13 @@ class TestNarrative(unittest.TestCase):
             },
         ]
 
-        headline, body = synthesize_narrative(timeline, {})
+        stats = {
+            "confidence": "HIGH",
+            "consistency": "HIGH",
+            "is_blocked": False,
+        }
+
+        headline, body = synthesize_narrative(timeline, stats)
 
         self.assertTrue(headline)
         self.assertIn("b222", body)
@@ -139,7 +151,13 @@ class TestNarrative(unittest.TestCase):
             },
         ]
 
-        headline, body = synthesize_narrative(timeline, {})
+        stats = {
+            "confidence": "HIGH",
+            "consistency": "HIGH",
+            "is_blocked": False,
+        }
+
+        headline, body = synthesize_narrative(timeline, stats)
 
         self.assertTrue(headline)
         self.assertIn("2c17f74", body)
@@ -148,7 +166,7 @@ class TestNarrative(unittest.TestCase):
         self.assertIn("887d17e", body)
         self.assertIn("PR #1", body)
 
-        # Revert가 존재한다는 사실만으로 구체적인 원인을 만들면 안 된다.
+        # Revert媛 議댁옱?쒕떎???ъ떎留뚯쑝濡?援ъ껜?곸씤 ?먯씤??留뚮뱾硫????쒕떎.
         self.assertNotIn("side effect", body.lower())
 
     def test_blocked_confidence_prevents_specific_why(self):
@@ -180,7 +198,7 @@ class TestNarrative(unittest.TestCase):
         self.assertTrue(headline)
         self.assertTrue(body)
 
-        # Blocked 상태에서는 구체적인 마지막 변경 이유를 WHY로 사용하지 않는다.
+        # Blocked ?곹깭?먯꽌??援ъ껜?곸씤 留덉?留?蹂寃??댁쑀瑜?WHY濡??ъ슜?섏? ?딅뒗??
         self.assertNotIn("payment flow", body)
 
     def test_unverified_cause_is_not_presented_as_why(self):
@@ -209,17 +227,18 @@ class TestNarrative(unittest.TestCase):
         ]
 
         stats = {
-            "score": 5,
+            "score": 8,
+            "confidence": "HIGH",
             "consistency": "HIGH",
             "is_blocked": False,
         }
 
         headline, body = synthesize_narrative(timeline, stats)
 
-        # PR에서 확인 가능한 원인은 표현할 수 있다.
+        # PR?먯꽌 ?뺤씤 媛?ν븳 ?먯씤? ?쒗쁽?????덈떎.
         self.assertIn("double charge", body)
 
-        # PR에서 검증되지 않은 performance 원인은 WHY로 확정하면 안 된다.
+        # PR?먯꽌 寃利앸릺吏 ?딆? performance ?먯씤? WHY濡??뺤젙?섎㈃ ???쒕떎.
         self.assertNotIn("improve performance", body)
 
     def test_moderate_confidence_does_not_assert_unverified_final_cause(self):
@@ -260,16 +279,15 @@ class TestNarrative(unittest.TestCase):
 
         headline, body = synthesize_narrative(timeline, stats)
 
-        # Moderate confidence에서는 검증되지 않은 최종 원인을 단정하지 않는다.
+        # Moderate confidence?먯꽌??寃利앸릺吏 ?딆? 理쒖쥌 ?먯씤???⑥젙?섏? ?딅뒗??
         self.assertNotIn("handle edge case", body)
 
     def test_narrative_avoids_unsupported_evaluative_language(self):
         """
-        Git 이력에서 직접 확인할 수 없는 평가적 표현이
-        Narrative에 다시 들어오는 것을 방지한다.
+        Git ?대젰?먯꽌 吏곸젒 ?뺤씤?????녿뒗 ?됯????쒗쁽??        Narrative???ㅼ떆 ?ㅼ뼱?ㅻ뒗 寃껋쓣 諛⑹??쒕떎.
 
-        REVERT가 있다는 것은 '롤백이 있었다'는 사실을 의미할 뿐,
-        코드가 '방어적', '보강됨', '발전됨'을 증명하지는 않는다.
+        REVERT媛 ?덈떎??寃껋? '濡ㅻ갚???덉뿀?????ъ떎???섎???肉?
+        肄붾뱶媛 '諛⑹뼱??, '蹂닿컯??, '諛쒖쟾????利앸챸?섏????딅뒗??
         """
         timeline = [
             {
@@ -308,19 +326,221 @@ class TestNarrative(unittest.TestCase):
 
         text = f"{headline} {body}"
 
-        # 증거가 직접 뒷받침하지 않는 평가적 표현을 금지한다.
-        self.assertNotIn("방어적 코드", text)
-        self.assertNotIn("보강된 코드", text)
-        self.assertNotIn("발전된 코드", text)
+        # 利앷굅媛 吏곸젒 ?룸컺移⑦븯吏 ?딅뒗 ?됯????쒗쁽??湲덉??쒕떎.
+        self.assertNotIn("諛⑹뼱??肄붾뱶", text)
+        self.assertNotIn("蹂닿컯??肄붾뱶", text)
+        self.assertNotIn("諛쒖쟾??肄붾뱶", text)
 
-        # Git 이력에서 직접 확인 가능한 사실은 유지한다.
+        # Git ?대젰?먯꽌 吏곸젒 ?뺤씤 媛?ν븳 ?ъ떎? ?좎??쒕떎.
         self.assertIn("롤백(1회)", headline)
         self.assertIn("변경 이력", headline)
-        self.assertIn("현재 형태로 정착된 코드", headline)
+        self.assertIn("현재 형태에 이른 코드", headline)
 
-        # 실제 Revert commit 역시 History 설명에서 보존되어야 한다.
+        # ?ㅼ젣 Revert commit ??떆 History ?ㅻ챸?먯꽌 蹂댁〈?섏뼱???쒕떎.
         self.assertIn("bbb222", body)
+
+
+
+    # ---------------------------------------------------------
+    # Confidence -> Narrative Policy regression tests
+    # ---------------------------------------------------------
+
+    def test_confidence_normalization(self):
+        from narrative import normalize_confidence
+
+        self.assertEqual(
+            normalize_confidence({"confidence": "VERY HIGH"}),
+            "VERY_HIGH",
+        )
+        self.assertEqual(
+            normalize_confidence({"confidence": "HIGH"}),
+            "HIGH",
+        )
+        self.assertEqual(
+            normalize_confidence({"confidence": "MEDIUM"}),
+            "MODERATE",
+        )
+        self.assertEqual(
+            normalize_confidence({"confidence": "MODERATE"}),
+            "MODERATE",
+        )
+        self.assertEqual(
+            normalize_confidence({"confidence": "WEAK"}),
+            "WEAK",
+        )
+        self.assertEqual(
+            normalize_confidence({"confidence": "LOW"}),
+            "LOW",
+        )
+
+    def test_missing_confidence_defaults_to_conservative(self):
+        from narrative import get_narrative_policy
+
+        self.assertEqual(
+            get_narrative_policy({}),
+            "CONSERVATIVE",
+        )
+
+    def test_high_confidence_allows_verified_reference(self):
+        timeline = [
+            {
+                "date": "2026-09-18",
+                "hash": "high001",
+                "message": "feat: initial payment flow",
+                "type": "FIRST OBSERVED",
+                "is_revert": False,
+                "ref_items": [],
+            },
+            {
+                "date": "2026-09-19",
+                "hash": "high002",
+                "message": "fix: prevent double charge",
+                "type": "BUG FIX",
+                "is_revert": False,
+                "ref_items": [
+                    {
+                        "number": 500,
+                        "type": "PR",
+                        "title": "Prevent double charge",
+                        "status": "SUCCESS",
+                    }
+                ],
+            },
+        ]
+
+        stats = {
+            "confidence": "HIGH",
+            "consistency": "HIGH",
+            "is_blocked": False,
+        }
+
+        headline, body = synthesize_narrative(timeline, stats)
+
+        self.assertTrue(headline)
+        self.assertIn("PR #500", body)
+        self.assertIn("Prevent double charge", body)
+
+    def test_medium_confidence_uses_conservative_narrative(self):
+        timeline = [
+            {
+                "date": "2026-09-18",
+                "hash": "medium001",
+                "message": "feat: initial payment flow",
+                "type": "FIRST OBSERVED",
+                "is_revert": False,
+                "ref_items": [],
+            },
+            {
+                "date": "2026-09-19",
+                "hash": "medium002",
+                "message": "fix: prevent double charge",
+                "type": "BUG FIX",
+                "is_revert": False,
+                "ref_items": [
+                    {
+                        "number": 501,
+                        "type": "PR",
+                        "title": "Prevent double charge",
+                        "status": "SUCCESS",
+                    }
+                ],
+            },
+        ]
+
+        stats = {
+            "confidence": "MEDIUM",
+            "consistency": "HIGH",
+            "is_blocked": False,
+        }
+
+        headline, body = synthesize_narrative(timeline, stats)
+
+        self.assertTrue(headline)
+        self.assertNotIn("PR #501", body)
+        self.assertNotIn("Prevent double charge", body)
+        self.assertIn("변경 이력", body)
+        self.assertIn("단정하지 않습니다", body)
+
+    def test_weak_confidence_blocks_specific_why(self):
+        timeline = [
+            {
+                "date": "2026-09-18",
+                "hash": "weak001",
+                "message": "fix: mysterious production issue",
+                "type": "BUG FIX",
+                "is_revert": False,
+                "ref_items": [],
+            },
+            {
+                "date": "2026-09-19",
+                "hash": "weak002",
+                "message": "fix: secret root cause",
+                "type": "BUG FIX",
+                "is_revert": False,
+                "ref_items": [],
+            },
+        ]
+
+        stats = {
+            "confidence": "WEAK",
+            "consistency": "UNLINKED",
+            "is_blocked": False,
+        }
+
+        headline, body = synthesize_narrative(timeline, stats)
+
+        self.assertIn(
+            "신뢰할 수 있는 변경 사유를 확정하기 어려움",
+            headline,
+        )
+        self.assertIn(
+            "구체적인 WHY는 생성하지 않습니다",
+            body,
+        )
+
+        # Commit message만으로 구체적 원인을 WHY에 재사용하면 안 된다.
+        self.assertNotIn("secret root cause", body)
+
+    def test_inconsistent_evidence_always_blocks_why(self):
+        timeline = [
+            {
+                "date": "2026-09-18",
+                "hash": "inc001",
+                "message": "fix: payment validation",
+                "type": "BUG FIX",
+                "is_revert": False,
+                "ref_items": [
+                    {
+                        "number": 700,
+                        "type": "PR",
+                        "title": "Improve image rendering",
+                        "status": "SUCCESS",
+                    }
+                ],
+            }
+        ]
+
+        stats = {
+            # Confidence가 높게 들어오더라도 증거 충돌이 우선한다.
+            "confidence": "HIGH",
+            "consistency": "INCONSISTENT",
+            "is_blocked": True,
+            "inconsistent_pairs": [
+                "payment validation <-> image rendering"
+            ],
+        }
+
+        headline, body = synthesize_narrative(timeline, stats)
+
+        self.assertIn("증거 불일치", headline)
+        self.assertIn("제시하지 않습니다", body)
+
+        # 충돌한 PR의 내용을 WHY로 채택하면 안 된다.
+        self.assertNotIn("Improve image rendering", headline)
 
 
 if __name__ == "__main__":
     unittest.main()
+
+
+
