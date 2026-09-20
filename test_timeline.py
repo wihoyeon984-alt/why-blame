@@ -93,14 +93,6 @@ class TestTimeline(unittest.TestCase):
 
     # =========================================================
     # Evidence score
-    #
-    # Message       +2
-    # Diff          +2
-    # Real GitHub   +3
-    # Fetched title +2
-    # Revert        +3
-    #
-    # Maximum = 12
     # =========================================================
 
     def test_evidence_strength_low(self):
@@ -330,7 +322,8 @@ class TestTimeline(unittest.TestCase):
 
         def fake_fetch_ref(owner, repo, number):
             raise AssertionError(
-                "SHA PR??李얠븯?쇰?濡?#踰덊샇 fallback???ㅽ뻾?섎㈃ ???⑸땲??"
+                "SHA 기반 PR 조회가 성공하면 "
+                "#번호 fallback을 실행하면 안 됩니다."
             )
 
         def fake_fetch_commit_prs(owner, repo, sha):
@@ -382,7 +375,8 @@ class TestTimeline(unittest.TestCase):
 
         def fake_fetch_ref(owner, repo, number):
             raise AssertionError(
-                "Issue 踰덊샇媛 ?놁쑝誘濡?fallback???ㅽ뻾?섎㈃ ???⑸땲??"
+                "Issue 번호가 없으므로 "
+                "#번호 fallback을 실행하면 안 됩니다."
             )
 
         def fake_fetch_commit_prs(owner, repo, sha):
@@ -517,6 +511,9 @@ class TestTimeline(unittest.TestCase):
             timeline[0]["is_revert"]
         )
 
+    # =========================================================
+    # Confidence Model v2
+    # =========================================================
 
     def test_v2_availability_levels(self):
         self.assertEqual(
@@ -576,8 +573,12 @@ class TestTimeline(unittest.TestCase):
 
         self.assertEqual(overall, "MEDIUM")
         self.assertFalse(blocked)
+
         self.assertTrue(
-            any("Rollback" in item for item in limitations)
+            any(
+                "Rollback" in item
+                for item in limitations
+            )
         )
 
     def test_v2_multiple_reverts_tracked_in_limitations(self):
@@ -598,11 +599,25 @@ class TestTimeline(unittest.TestCase):
 
         result = calculate_evidence_strength(timeline)
 
-        self.assertTrue(result["has_rollback"])
-        self.assertEqual(result["history_ambiguity"], "HIGH")
-        self.assertEqual(len(result["report"].rollback_commits), 2)
         self.assertTrue(
-            any("Rollback" in item for item in result["limitations"])
+            result["has_rollback"]
+        )
+
+        self.assertEqual(
+            result["history_ambiguity"],
+            "HIGH"
+        )
+
+        self.assertEqual(
+            len(result["report"].rollback_commits),
+            2
+        )
+
+        self.assertTrue(
+            any(
+                "Rollback" in item
+                for item in result["limitations"]
+            )
         )
 
 

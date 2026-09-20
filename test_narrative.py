@@ -1,6 +1,10 @@
-﻿import unittest
+import unittest
 
-from narrative import synthesize_narrative
+from narrative import (
+    get_narrative_policy,
+    normalize_confidence,
+    synthesize_narrative,
+)
 
 
 class TestNarrative(unittest.TestCase):
@@ -166,7 +170,7 @@ class TestNarrative(unittest.TestCase):
         self.assertIn("887d17e", body)
         self.assertIn("PR #1", body)
 
-        # Revert媛 議댁옱?쒕떎???ъ떎留뚯쑝濡?援ъ껜?곸씤 ?먯씤??留뚮뱾硫????쒕떎.
+        # Revert가 존재한다는 사실만으로 구체적인 원인을 만들면 안 된다.
         self.assertNotIn("side effect", body.lower())
 
     def test_blocked_confidence_prevents_specific_why(self):
@@ -198,7 +202,7 @@ class TestNarrative(unittest.TestCase):
         self.assertTrue(headline)
         self.assertTrue(body)
 
-        # Blocked ?곹깭?먯꽌??援ъ껜?곸씤 留덉?留?蹂寃??댁쑀瑜?WHY濡??ъ슜?섏? ?딅뒗??
+        # Blocked 상태에서는 구체적인 마지막 변경 이유를 WHY로 사용하지 않는다.
         self.assertNotIn("payment flow", body)
 
     def test_unverified_cause_is_not_presented_as_why(self):
@@ -235,10 +239,10 @@ class TestNarrative(unittest.TestCase):
 
         headline, body = synthesize_narrative(timeline, stats)
 
-        # PR?먯꽌 ?뺤씤 媛?ν븳 ?먯씤? ?쒗쁽?????덈떎.
+        # PR에서 확인 가능한 원인은 표현할 수 있다.
         self.assertIn("double charge", body)
 
-        # PR?먯꽌 寃利앸릺吏 ?딆? performance ?먯씤? WHY濡??뺤젙?섎㈃ ???쒕떎.
+        # PR에서 검증되지 않은 performance 원인은 WHY로 확정하면 안 된다.
         self.assertNotIn("improve performance", body)
 
     def test_moderate_confidence_does_not_assert_unverified_final_cause(self):
@@ -279,15 +283,16 @@ class TestNarrative(unittest.TestCase):
 
         headline, body = synthesize_narrative(timeline, stats)
 
-        # Moderate confidence?먯꽌??寃利앸릺吏 ?딆? 理쒖쥌 ?먯씤???⑥젙?섏? ?딅뒗??
+        # Moderate Confidence에서는 검증되지 않은 최종 원인을 단정하지 않는다.
         self.assertNotIn("handle edge case", body)
 
     def test_narrative_avoids_unsupported_evaluative_language(self):
         """
-        Git ?대젰?먯꽌 吏곸젒 ?뺤씤?????녿뒗 ?됯????쒗쁽??        Narrative???ㅼ떆 ?ㅼ뼱?ㅻ뒗 寃껋쓣 諛⑹??쒕떎.
+        Git 이력에서 직접 확인할 수 없는 평가적 표현이
+        Narrative에 다시 들어오는 것을 방지한다.
 
-        REVERT媛 ?덈떎??寃껋? '濡ㅻ갚???덉뿀?????ъ떎???섎???肉?
-        肄붾뱶媛 '諛⑹뼱??, '蹂닿컯??, '諛쒖쟾????利앸챸?섏????딅뒗??
+        REVERT가 있다는 것은 '롤백이 있었다'는 사실을 의미할 뿐,
+        코드가 '방어적', '보강됨', '발전됨'을 증명하지는 않는다.
         """
         timeline = [
             {
@@ -326,28 +331,24 @@ class TestNarrative(unittest.TestCase):
 
         text = f"{headline} {body}"
 
-        # 利앷굅媛 吏곸젒 ?룸컺移⑦븯吏 ?딅뒗 ?됯????쒗쁽??湲덉??쒕떎.
-        self.assertNotIn("諛⑹뼱??肄붾뱶", text)
-        self.assertNotIn("蹂닿컯??肄붾뱶", text)
-        self.assertNotIn("諛쒖쟾??肄붾뱶", text)
+        # 증거가 직접 뒷받침하지 않는 평가적 표현을 금지한다.
+        self.assertNotIn("방어적 코드", text)
+        self.assertNotIn("보강된 코드", text)
+        self.assertNotIn("발전된 코드", text)
 
-        # Git ?대젰?먯꽌 吏곸젒 ?뺤씤 媛?ν븳 ?ъ떎? ?좎??쒕떎.
+        # Git 이력에서 직접 확인 가능한 사실은 유지한다.
         self.assertIn("롤백(1회)", headline)
         self.assertIn("변경 이력", headline)
         self.assertIn("현재 형태에 이른 코드", headline)
 
-        # ?ㅼ젣 Revert commit ??떆 History ?ㅻ챸?먯꽌 蹂댁〈?섏뼱???쒕떎.
+        # 실제 Revert Commit도 History 설명에서 보존되어야 한다.
         self.assertIn("bbb222", body)
-
-
 
     # ---------------------------------------------------------
     # Confidence -> Narrative Policy regression tests
     # ---------------------------------------------------------
 
     def test_confidence_normalization(self):
-        from narrative import normalize_confidence
-
         self.assertEqual(
             normalize_confidence({"confidence": "VERY HIGH"}),
             "VERY_HIGH",
@@ -374,8 +375,6 @@ class TestNarrative(unittest.TestCase):
         )
 
     def test_missing_confidence_defaults_to_conservative(self):
-        from narrative import get_narrative_policy
-
         self.assertEqual(
             get_narrative_policy({}),
             "CONSERVATIVE",
@@ -521,7 +520,7 @@ class TestNarrative(unittest.TestCase):
         ]
 
         stats = {
-            # Confidence가 높게 들어오더라도 증거 충돌이 우선한다.
+            # Confidence가 높더라도 Evidence 충돌이 우선한다.
             "confidence": "HIGH",
             "consistency": "INCONSISTENT",
             "is_blocked": True,
@@ -535,12 +534,9 @@ class TestNarrative(unittest.TestCase):
         self.assertIn("증거 불일치", headline)
         self.assertIn("제시하지 않습니다", body)
 
-        # 충돌한 PR의 내용을 WHY로 채택하면 안 된다.
+        # 충돌한 PR 내용을 WHY로 채택하면 안 된다.
         self.assertNotIn("Improve image rendering", headline)
 
 
 if __name__ == "__main__":
     unittest.main()
-
-
-

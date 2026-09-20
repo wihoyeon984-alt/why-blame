@@ -1,5 +1,5 @@
-﻿import unittest
-from unittest.mock import patch, MagicMock
+import unittest
+from unittest.mock import MagicMock, patch
 
 from git_tracker import extract_git_history
 
@@ -8,7 +8,7 @@ class TestGitTracker(unittest.TestCase):
 
     @patch("git_tracker.subprocess.run")
     def test_extracts_added_and_deleted_diff(self, mock_run):
-        """?ㅼ젣 extract_git_history()媛 + / - Diff瑜?紐⑤몢 異붿텧?섎뒗吏 ?뺤씤"""
+        """extract_git_history()가 추가/삭제 Diff를 모두 추출하는지 확인합니다."""
 
         sample_log = """commit 2c17f74
 Author: test
@@ -31,7 +31,11 @@ diff --git a/service.py b/service.py
 
         mock_run.return_value = mock_result
 
-        result = extract_git_history("service.py", 2, 2)
+        result = extract_git_history(
+            "service.py",
+            2,
+            2,
+        )
 
         self.assertEqual(len(result), 1)
 
@@ -39,18 +43,18 @@ diff --git a/service.py b/service.py
 
         self.assertEqual(
             commit["diff_lines"][0],
-            "- if user.is_active:"
+            "- if user.is_active:",
         )
 
         self.assertEqual(
             commit["diff_lines"][1],
-            "+ if user.is_active and not user.is_duplicate:"
+            "+ if user.is_active and not user.is_duplicate:",
         )
 
     @patch("git_tracker.subprocess.run")
     def test_diff_reference_is_not_treated_as_issue(self, mock_run):
         """
-        Diff ?덉쓽 '#999'??Issue/PR 踰덊샇濡?異붿텧?섎㈃ ???⑸땲??
+        Diff 내부의 '#999'를 Issue/PR 번호로 추출하면 안 됩니다.
         """
 
         sample_log = """commit abc1234
@@ -74,17 +78,26 @@ diff --git a/service.py b/service.py
 
         mock_run.return_value = mock_result
 
-        result = extract_git_history("service.py", 2, 2)
+        result = extract_git_history(
+            "service.py",
+            2,
+            2,
+        )
 
         self.assertEqual(len(result), 1)
 
         commit = result[0]
 
-        self.assertEqual(commit["refs"], [])
+        self.assertEqual(
+            commit["refs"],
+            [],
+        )
 
     @patch("git_tracker.subprocess.run")
     def test_commit_message_reference_is_extracted(self, mock_run):
-        """Commit message??#123? ?뺤긽?곸쑝濡?異붿텧?섏뼱???⑸땲??"""
+        """
+        Commit message의 #123이 정상적으로 참조 번호로 추출되는지 확인합니다.
+        """
 
         sample_log = """commit abc1234
 Author: test
@@ -107,17 +120,26 @@ diff --git a/service.py b/service.py
 
         mock_run.return_value = mock_result
 
-        result = extract_git_history("service.py", 2, 2)
+        result = extract_git_history(
+            "service.py",
+            2,
+            2,
+        )
 
         self.assertEqual(len(result), 1)
 
         commit = result[0]
 
-        self.assertEqual(commit["refs"], ["123"])
+        self.assertEqual(
+            commit["refs"],
+            ["123"],
+        )
 
     @patch("git_tracker.subprocess.run")
     def test_revert_is_detected_from_commit_message(self, mock_run):
-        """Revert ?щ???commit message?먯꽌留??먮떒?⑸땲??"""
+        """
+        Revert 여부를 Commit message의 시작 부분에서 판단하는지 확인합니다.
+        """
 
         sample_log = """commit abc1234
 Author: test
@@ -140,23 +162,31 @@ diff --git a/service.py b/service.py
 
         mock_run.return_value = mock_result
 
-        result = extract_git_history("service.py", 2, 2)
+        result = extract_git_history(
+            "service.py",
+            2,
+            2,
+        )
 
         self.assertEqual(len(result), 1)
 
         commit = result[0]
 
-        self.assertTrue(commit["is_revert"])
+        self.assertTrue(
+            commit["is_revert"]
+        )
 
     @patch("git_tracker.subprocess.run")
     def test_korean_commit_message(self, mock_run):
-        """UTF-8 ?쒓? commit message媛 源⑥?吏 ?딅뒗吏 ?뺤씤?⑸땲??"""
+        """
+        UTF-8 한국어 Commit message가 깨지지 않는지 확인합니다.
+        """
 
         sample_log = """commit abc1234
 Author: test
 Date: 2026-09-18
 
-    寃곗젣 寃利?濡쒖쭅 ?섏젙
+    결제 검증 로직 수정
 
 diff --git a/service.py b/service.py
 --- a/service.py
@@ -173,20 +203,25 @@ diff --git a/service.py b/service.py
 
         mock_run.return_value = mock_result
 
-        result = extract_git_history("service.py", 2, 2)
+        result = extract_git_history(
+            "service.py",
+            2,
+            2,
+        )
 
         self.assertEqual(len(result), 1)
 
         self.assertEqual(
             result[0]["message"],
-            "寃곗젣 寃利?濡쒖쭅 ?섏젙"
+            "결제 검증 로직 수정",
         )
-
-
 
     @patch("git_tracker.subprocess.run")
     def test_revert_word_in_normal_commit_is_not_revert(self, mock_run):
-        """일반 커밋 메시지의 revert라는 단어를 실제 Revert로 오판하면 안 됩니다."""
+        """
+        일반 Commit message에 revert라는 단어가 있다는 이유만으로
+        실제 Revert Commit으로 오판하면 안 됩니다.
+        """
 
         sample_log = """commit abc1234
 Author: test
@@ -209,10 +244,18 @@ diff --git a/service.py b/service.py
 
         mock_run.return_value = mock_result
 
-        result = extract_git_history("service.py", 2, 2)
+        result = extract_git_history(
+            "service.py",
+            2,
+            2,
+        )
 
         self.assertEqual(len(result), 1)
-        self.assertFalse(result[0]["is_revert"])
+
+        self.assertFalse(
+            result[0]["is_revert"]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
