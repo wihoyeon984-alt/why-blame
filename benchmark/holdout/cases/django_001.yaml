@@ -1,0 +1,388 @@
+﻿id: django_001
+
+repository:
+  owner: "django"
+  name: "django"
+  url: "https://github.com/django/django"
+
+revision:
+  commit: "64edef37e7b419dd584307d84650a192fb47dc4c"
+
+target:
+  file: "django/db/backends/base/schema.py"
+  start_line: 1151
+  end_line: 1171
+
+selection:
+  selected_before_system_run: true
+  previously_used_for_development: false
+  notes: >
+    Holdout candidate selected from public Git history before running
+    why-blame. The target changes schema alteration behavior for
+    backends that support changing column comments independently of
+    column types. Parent commit:
+    9cb2cba6fc7f71ed768aed8cbc32e7447ecb0be8.
+
+history:
+  expected_shape: >
+    single production implementation event followed by test-only
+    refinements
+  relevant_events:
+    - "64edef37e7b419dd584307d84650a192fb47dc4c"
+    - "a3f0642f69"
+    - "82f34e2f72"
+
+ground_truth:
+  frozen: true
+  frozen_before_system_run: true
+
+  claims:
+
+    - id: claim_001
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        When the database backend supports independent column-comment
+        alteration and db_comment changes, Django performs the column
+        comment alteration separately.
+
+      semantics:
+        action: "ALTER"
+        subject: "column comment"
+        target: "database column comment"
+        condition: >
+          the backend supports comments, db_comment changed, and the
+          backend supports independent comment alteration
+        scope: "BaseDatabaseSchemaEditor"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "64edef37e7b419dd584307d84650a192fb47dc4c"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The new elif branch checks supports_comments, a changed
+            db_comment, and supports_independent_comment_alteration,
+            then calls _alter_column_comment_sql() and appends the
+            resulting SQL operation to post_actions.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The condition and separate comment-alteration behavior are
+        directly observable in the production diff.
+
+    - id: claim_002
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        For a backend that supports independent column-comment
+        alteration, a db_comment change alone no longer requires the
+        column type alteration path.
+
+      semantics:
+        action: "AVOID"
+        subject: "column type alteration"
+        target: "db_comment-only change"
+        condition: >
+          the backend supports independent column-comment alteration
+        scope: "BaseDatabaseSchemaEditor"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "64edef37e7b419dd584307d84650a192fb47dc4c"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The condition that sends a comment change through
+            _alter_column_type_sql() now explicitly requires that
+            supports_independent_comment_alteration is false.
+            A separate branch handles the comment when that feature
+            is true.
+
+        - channel: COMMIT
+          ref: "64edef37e7b419dd584307d84650a192fb47dc4c"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The commit message explicitly states that the change avoids
+            altering column type when only db_comment changes.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        Both the removal from the type-alteration condition and the
+        newly separated comment-alteration path directly support this
+        behavior.
+
+    - id: claim_003
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        Independent column-comment alteration is disabled by default,
+        while the Oracle and PostgreSQL backends explicitly enable it
+        in this revision.
+
+      semantics:
+        action: "ENABLE"
+        subject: "independent column-comment alteration"
+        target: "Oracle and PostgreSQL backends"
+        condition: ""
+        scope: "database backend feature flags"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: NONE
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "64edef37e7b419dd584307d84650a192fb47dc4c"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            BaseDatabaseFeatures declares
+            supports_independent_comment_alteration = False.
+            The Oracle and PostgreSQL feature classes explicitly set
+            the capability to True.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        This limits the supported behavior to explicitly capable
+        backends instead of generalizing it to every Django database
+        backend.
+
+    - id: claim_004
+      type: CAUSE
+      label: SUPPORTED
+
+      text: >
+        The change addresses unnecessary column type alteration when
+        only a field's db_comment changes.
+
+      semantics:
+        action: "AVOID"
+        subject: "unnecessary column type alteration"
+        target: "db_comment-only field changes"
+        condition: ""
+        scope: "schema migrations"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: NONE
+        scope: DIRECT
+
+      evidence:
+        - channel: COMMIT
+          ref: "64edef37e7b419dd584307d84650a192fb47dc4c"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The commit explicitly states:
+            Fixed #36947 -- Avoided altering column type when only
+            db_comment changes.
+
+        - channel: ISSUE
+          ref: "#36947"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The Django ticket reports that changing db_comment generated
+            an unnecessary ALTER COLUMN TYPE statement, including a
+            PostgreSQL example where the operation fails because the
+            column is used by a generated column.
+
+        - channel: DIFF
+          ref: "64edef37e7b419dd584307d84650a192fb47dc4c"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The implementation separates comment alteration from type
+            alteration for capable database backends.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The causal claim is explicitly documented by both the commit
+        message and the linked Django ticket and matches the production
+        implementation.
+
+    - id: claim_005
+      type: CAUSE
+      label: UNSUPPORTED
+
+      text: >
+        The change was introduced primarily to improve schema migration
+        performance.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: NONE
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence: []
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The frozen evidence describes correctness of schema alteration,
+        not performance optimization as the primary motivation.
+
+    - id: claim_006
+      type: BEHAVIOR
+      label: UNSUPPORTED
+
+      text: >
+        Every Django database backend always performs column-comment
+        changes independently of column type alteration.
+
+      semantics:
+        action: "ALTER"
+        subject: "column comment"
+        target: "all database backends"
+        condition: ""
+        scope: "Django database backends"
+
+      field_entailment:
+        action: PARTIAL
+        subject: DIRECT
+        target: CONFLICTING
+        condition: NONE
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "64edef37e7b419dd584307d84650a192fb47dc4c"
+          relation: CONTRADICTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The base feature default is false. Only backends that
+            explicitly enable supports_independent_comment_alteration
+            receive the separated behavior.
+
+      contradiction:
+        status: PRESENT
+        evidence:
+          - "64edef37e7b419dd584307d84650a192fb47dc4c"
+
+      rationale: >
+        Generalizing the new behavior to every backend would exceed the
+        explicitly feature-gated implementation.
+
+    - id: claim_007
+      type: CAUSE
+      label: UNSUPPORTED
+
+      text: >
+        The change adds GeneratedField support to Django.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: NONE
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence: []
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        GeneratedField exposed the reported failure scenario, but the
+        implementation changes schema handling for db_comment and
+        backend capabilities rather than introducing GeneratedField
+        support itself.
+
+system_run:
+  executed: false
+  implementation_commit: "2c4bf34"
+  executed_at: ""
+  command: ""
+
+result:
+  raw_output_file: ""
+
+  presented_claims: []
+
+  counts:
+    ground_truth_supported: 4
+    recovered_supported: 0
+    presented_total: 0
+    unsupported_presented: 0
+    correct_attributions: 0
+    attribution_items: 0
+    correct_abstentions: 0
+    system_abstentions: 0
+    required_abstentions: 3
+
+  metrics:
+    claim_precision: null
+    supported_claim_recall: null
+    unsupported_claim_rate: null
+    false_why: null
+    evidence_attribution_accuracy: null
+    abstention_precision: null
+    abstention_recall: null
+
+review:
+  benchmark_failure: false
+  notes: ""
+

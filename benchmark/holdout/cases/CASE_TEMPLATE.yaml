@@ -1,0 +1,100 @@
+id: holdout_000
+
+repository:
+  owner: ""
+  name: ""
+  url: ""
+
+revision:
+  commit: ""
+
+target:
+  file: ""
+  start_line: 0
+  end_line: 0
+
+selection:
+  selected_before_system_run: true
+  previously_used_for_development: false
+  notes: ""
+
+history:
+  expected_shape: ""
+  relevant_events: []
+
+ground_truth:
+  frozen: false
+  frozen_before_system_run: false
+
+  claims: []
+
+# Claim example:
+#
+# - id: claim_001
+#   type: BEHAVIOR
+#   label: SUPPORTED
+#
+#   text: ""
+#
+#   semantics:
+#     action: ""
+#     subject: ""
+#     target: ""
+#     condition: ""
+#     scope: ""
+#
+#   field_entailment:
+#     action: DIRECT
+#     subject: DIRECT
+#     target: NONE
+#     condition: NONE
+#     scope: NONE
+#
+#   evidence:
+#     - channel: DIFF
+#       ref: ""
+#       relation: SUPPORTS
+#       relevance: HIGH
+#       sufficiency: HIGH
+#       note: ""
+#
+#   contradiction:
+#     status: NONE
+#     evidence: []
+#
+#   rationale: ""
+
+system_run:
+  executed: false
+  implementation_commit: ""
+  executed_at: ""
+  command: ""
+
+result:
+  raw_output_file: ""
+
+  presented_claims: []
+
+  counts:
+    ground_truth_supported: 0
+    recovered_supported: 0
+    presented_total: 0
+    unsupported_presented: 0
+    correct_attributions: 0
+    attribution_items: 0
+    correct_abstentions: 0
+    system_abstentions: 0
+    required_abstentions: 0
+
+  metrics:
+    claim_precision: null
+    supported_claim_recall: null
+    unsupported_claim_rate: null
+    false_why: null
+    evidence_attribution_accuracy: null
+    abstention_precision: null
+    abstention_recall: null
+
+review:
+  benchmark_failure: false
+  notes: ""

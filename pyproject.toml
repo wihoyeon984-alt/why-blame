@@ -17,4 +17,16 @@ dependencies = []
 why-blame = "main:main"
 
 [tool.setuptools]
-py-modules = ["main", "git_tracker", "github_client", "timeline", "viewer", "narrative", "consistency"]
+py-modules = [
+    "main",
+    "git_tracker",
+    "github_client",
+    "timeline",
+    "viewer",
+    "narrative",
+    "consistency",
+    "claim_adapter",
+    "claim_evidence",
+    "claim_policy",
+    "claim_renderer",
+]

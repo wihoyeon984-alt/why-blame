@@ -1,0 +1,282 @@
+﻿id: urllib3_001
+
+repository:
+  owner: "urllib3"
+  name: "urllib3"
+  url: "https://github.com/urllib3/urllib3"
+
+revision:
+  commit: "09217b75d51f3c74d089b587f1be813b6bdfc7d7"
+
+target:
+  file: "dummyserver/hypercornserver.py"
+  start_line: 79
+  end_line: 84
+
+selection:
+  selected_before_system_run: true
+  previously_used_for_development: false
+  notes: >
+    Holdout candidate selected from public Git history before running
+    why-blame. The target adds explicit exception cleanup for sockets
+    created by the urllib3 dummy Hypercorn server.
+    Parent commit:
+    b1d30ab61fe0db8f11092805e8c5ac43e091064a.
+
+history:
+  expected_shape: "single implementation event with linked PR context"
+  relevant_events:
+    - "09217b75d51f3c74d089b587f1be813b6bdfc7d7"
+
+ground_truth:
+  frozen: true
+  frozen_before_system_run: true
+
+  claims:
+
+    - id: claim_001
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        If socket setup raises an exception, sockets accumulated so far
+        are closed before the exception is re-raised.
+
+      semantics:
+        action: "CLOSE"
+        subject: "sockets accumulated so far"
+        target: ""
+        condition: "socket setup raises an exception"
+        scope: "dummy Hypercorn server socket setup"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: NONE
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "09217b75d51f3c74d089b587f1be813b6bdfc7d7"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The added except BaseException block iterates over sockets,
+            calls sock.close() for each one, and then re-raises the
+            exception.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The cleanup and re-raise behavior is directly observable from
+        the target diff and does not require external causal evidence.
+
+    - id: claim_002
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        A newly created socket is added to the cleanup collection before
+        bind() is attempted, allowing that socket to be included in
+        exception cleanup if binding fails.
+
+      semantics:
+        action: "ADD"
+        subject: "newly created socket"
+        target: "socket cleanup collection"
+        condition: "before bind is attempted"
+        scope: "dummy Hypercorn server socket setup"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "09217b75d51f3c74d089b587f1be813b6bdfc7d7"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            sockets.append(sock) was moved directly after socket
+            creation and occurs before sock.bind(). The exception
+            handler later closes every socket in this collection.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        This structural ordering is directly established by the diff.
+        It explains why a socket whose bind operation fails can already
+        be part of the cleanup collection.
+
+    - id: claim_003
+      type: CAUSE
+      label: SUPPORTED
+
+      text: >
+        The explicit cleanup is performed because the caller may retry
+        after EADDRINUSE, so sockets created before the failed attempt
+        should be closed instead of being left to garbage collection.
+
+      semantics:
+        action: "CLOSE"
+        subject: "sockets created before the failed attempt"
+        target: "explicit cleanup before retry"
+        condition: "the caller retries on EADDRINUSE"
+        scope: "dummy Hypercorn server socket setup"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "09217b75d51f3c74d089b587f1be813b6bdfc7d7"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The source comment explicitly states that the caller retries
+            on EADDRINUSE and that sockets created so far are closed
+            rather than left to the garbage collector.
+
+        - channel: COMMIT
+          ref: "09217b75d51f3c74d089b587f1be813b6bdfc7d7"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The commit message explicitly states that dummyserver
+            sockets are closed when bind fails before retrying.
+
+        - channel: PR
+          ref: "#5262"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: PARTIAL
+          note: >
+            The implementation commit is explicitly associated with
+            pull request #5262.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        Unlike the basic cleanup behavior, the retry and garbage
+        collection rationale is explicitly documented by the source
+        comment and commit message.
+
+    - id: claim_004
+      type: CAUSE
+      label: UNSUPPORTED
+
+      text: >
+        The change fixes a production urllib3 HTTP client socket leak.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: NONE
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence: []
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The frozen change is in dummyserver/hypercornserver.py and
+        concerns urllib3 test/support infrastructure. The gathered
+        evidence does not establish a production urllib3 HTTP client
+        socket-leak bug.
+
+    - id: claim_005
+      type: CAUSE
+      label: UNSUPPORTED
+
+      text: >
+        The change was primarily introduced to improve network
+        performance.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: NONE
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence: []
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The frozen evidence establishes explicit resource cleanup before
+        retry, not a performance optimization as the reason for the
+        change.
+
+system_run:
+  executed: false
+  implementation_commit: "2c4bf34"
+  executed_at: ""
+  command: ""
+
+result:
+  raw_output_file: ""
+
+  presented_claims: []
+
+  counts:
+    ground_truth_supported: 3
+    recovered_supported: 0
+    presented_total: 0
+    unsupported_presented: 0
+    correct_attributions: 0
+    attribution_items: 0
+    correct_abstentions: 0
+    system_abstentions: 0
+    required_abstentions: 2
+
+  metrics:
+    claim_precision: null
+    supported_claim_recall: null
+    unsupported_claim_rate: null
+    false_why: null
+    evidence_attribution_accuracy: null
+    abstention_precision: null
+    abstention_recall: null
+
+review:
+  benchmark_failure: false
+  notes: ""
+

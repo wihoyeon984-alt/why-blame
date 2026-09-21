@@ -1,0 +1,370 @@
+﻿id: pydantic_001
+
+repository:
+  owner: "pydantic"
+  name: "pydantic"
+  url: "https://github.com/pydantic/pydantic"
+
+revision:
+  commit: "7c3468c56beb1e04580863fd06e2ca5232763995"
+
+target:
+  file: "pydantic/main.py"
+  start_line: 415
+  end_line: 437
+
+selection:
+  selected_before_system_run: true
+  previously_used_for_development: false
+  notes: >
+    Holdout candidate selected from public Git history before running
+    why-blame. The target changes model_copy() behavior when both deep
+    copying and explicit updates are requested.
+    Parent commit:
+    177d21b0c375d48e2d126763c11f4b76aeab57be.
+
+history:
+  expected_shape: "single implementation event with linked PR context"
+  relevant_events:
+    - "7c3468c56beb1e04580863fd06e2ca5232763995"
+
+ground_truth:
+  frozen: true
+  frozen_before_system_run: true
+
+  claims:
+
+    - id: claim_001
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        When model_copy() is called with deep copying enabled and
+        update values present, fields that are not being updated are
+        selectively deep-copied.
+
+      semantics:
+        action: "DEEPCOPY"
+        subject: "fields that are not being updated"
+        target: "copied model"
+        condition: "deep is true and update values are present"
+        scope: "BaseModel.model_copy"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "7c3468c56beb1e04580863fd06e2ca5232763995"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The new deep-and-update branch first creates a shallow copy
+            and selectively calls deepcopy() for entries whose keys are
+            not present in update.
+
+        - channel: COMMIT
+          ref: "7c3468c56beb1e04580863fd06e2ca5232763995"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The commit explicitly states that model_copy() now only
+            deep-copies non-updated fields.
+
+        - channel: PR
+          ref: "#13087"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: PARTIAL
+          note: >
+            The implementation commit is explicitly associated with
+            pull request #13087.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The target diff directly establishes both the deep-and-update
+        condition and the selective deepcopy behavior.
+
+    - id: claim_002
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        Updated field keys are excluded from the selective deepcopy of
+        the model's normal field dictionary.
+
+      semantics:
+        action: "EXCLUDE"
+        subject: "updated field keys"
+        target: "selective deepcopy"
+        condition: "key is present in update"
+        scope: "BaseModel.model_copy"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "7c3468c56beb1e04580863fd06e2ca5232763995"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The loop over copied.__dict__ calls deepcopy(v, memo) only
+            when k not in update.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The exclusion of keys present in update is directly encoded by
+        the condition in the target implementation.
+
+    - id: claim_003
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        Extra fields that are not being updated are also selectively
+        deep-copied when extra data exists.
+
+      semantics:
+        action: "DEEPCOPY"
+        subject: "non-updated extra fields"
+        target: "copied model extra data"
+        condition: >
+          deep and update are present, extra data exists, and the key
+          is not present in update
+        scope: "BaseModel.model_copy"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "7c3468c56beb1e04580863fd06e2ca5232763995"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The loop over copied.__pydantic_extra__ calls deepcopy()
+            only for keys that are not present in update.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        This behavior is directly visible in the extra-data branch of
+        the selected target.
+
+    - id: claim_004
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        Separate selective deepcopy operations share one memo
+        dictionary.
+
+      semantics:
+        action: "SHARE"
+        subject: "selective deepcopy operations"
+        target: "deepcopy memo dictionary"
+        condition: "deep is true and update values are present"
+        scope: "BaseModel.model_copy"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "7c3468c56beb1e04580863fd06e2ca5232763995"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            A single memo dictionary is initialized before the
+            selective loops and passed to each deepcopy() call.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The shared memo and its reuse across deepcopy calls are
+        explicit in the target code.
+
+    - id: claim_005
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        When the deep-and-update combination is not active,
+        model_copy() retains the normal full-deep-copy or shallow-copy
+        selection based on the deep flag.
+
+      semantics:
+        action: "COPY"
+        subject: "model"
+        target: "copied model"
+        condition: "deep and update are not both active"
+        scope: "BaseModel.model_copy"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "7c3468c56beb1e04580863fd06e2ca5232763995"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The else branch retains
+            self.__deepcopy__() if deep else self.__copy__().
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        This prevents the selective deepcopy branch from being
+        incorrectly generalized to every model_copy() call.
+
+    - id: claim_006
+      type: BEHAVIOR
+      label: UNSUPPORTED
+
+      text: >
+        Every field is always deep-copied whenever model_copy() is
+        called with deep=True.
+
+      semantics:
+        action: "DEEPCOPY"
+        subject: "every field"
+        target: "copied model"
+        condition: "deep is true"
+        scope: "BaseModel.model_copy"
+
+      field_entailment:
+        action: PARTIAL
+        subject: CONFLICTING
+        target: DIRECT
+        condition: PARTIAL
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "7c3468c56beb1e04580863fd06e2ca5232763995"
+          relation: CONTRADICTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            When both deep and update are active, fields whose keys are
+            present in update are deliberately excluded from the
+            selective deepcopy loops.
+
+      contradiction:
+        status: PRESENT
+        evidence:
+          - "7c3468c56beb1e04580863fd06e2ca5232763995"
+
+      rationale: >
+        The implementation explicitly distinguishes updated fields
+        from non-updated fields, so the behavior cannot be generalized
+        to every field.
+
+    - id: claim_007
+      type: CAUSE
+      label: UNSUPPORTED
+
+      text: >
+        The selective deepcopy behavior was introduced primarily as a
+        performance optimization.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: NONE
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence: []
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The frozen commit and implementation establish which fields
+        are deep-copied, but the gathered evidence does not by itself
+        establish performance optimization as the primary motivation.
+
+system_run:
+  executed: false
+  implementation_commit: "2c4bf34"
+  executed_at: ""
+  command: ""
+
+result:
+  raw_output_file: ""
+
+  presented_claims: []
+
+  counts:
+    ground_truth_supported: 5
+    recovered_supported: 0
+    presented_total: 0
+    unsupported_presented: 0
+    correct_attributions: 0
+    attribution_items: 0
+    correct_abstentions: 0
+    system_abstentions: 0
+    required_abstentions: 2
+
+  metrics:
+    claim_precision: null
+    supported_claim_recall: null
+    unsupported_claim_rate: null
+    false_why: null
+    evidence_attribution_accuracy: null
+    abstention_precision: null
+    abstention_recall: null
+
+review:
+  benchmark_failure: false
+  notes: ""
+
