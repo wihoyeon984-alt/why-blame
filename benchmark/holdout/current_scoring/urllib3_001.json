@@ -1,0 +1,30 @@
+﻿{
+  "case_id": "urllib3_001",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The current-run output presents the exception cleanup block, including `except BaseException`, `for sock in sockets`, `sock.close()`, and `raise`, exposing the supported cleanup and re-raise behavior."
+    },
+    "claim_002": {
+      "status": "MISSED",
+      "raw_evidence": "The current-run output still does not present the supported ordering that the newly created socket is appended to the cleanup collection before bind() is attempted."
+    },
+    "claim_003": {
+      "status": "PRESENTED",
+      "raw_evidence": "The current-run WHY output presents the source comment stating that the caller retries on EADDRINUSE and that sockets created so far are closed rather than left to garbage collection."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The current-run output does not claim that the change fixes a production urllib3 HTTP client socket leak. The presented scope remains the dummyserver, and the output does not explicitly abstain from this specific unsupported claim."
+    },
+    "claim_005": {
+      "status": "WITHHELD",
+      "raw_evidence": "The current-run output does not claim that network performance was the primary motivation and does not explicitly abstain from that unsupported explanation."
+    }
+  }
+}

@@ -1,0 +1,30 @@
+﻿{
+  "case_id": "black_001",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The current-run WHY output explicitly presents `for comment_after in line.comments_after(leaf):` and `current_line.append(comment_after, preformatted=True)`, showing that comments associated with the leaf are appended to the current output line."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The current-run WHY output associates the change with PR #5330, titled `keep inline comments in _force_standalone_comment_split`, and presents the corresponding comment-appending code."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The current-run output does not claim that comments are preserved specifically to maintain static type checker compatibility. It presents inline-comment preservation without establishing that more specific motivation."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The current-run output does not claim that improving Black formatting performance was the primary motivation."
+    },
+    "claim_005": {
+      "status": "WITHHELD",
+      "raw_evidence": "The current-run output does not claim that the change fixes a security vulnerability caused by removed inline comments."
+    }
+  }
+}

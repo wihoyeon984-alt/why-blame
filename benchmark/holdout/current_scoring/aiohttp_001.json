@@ -1,0 +1,22 @@
+﻿{
+  "case_id": "aiohttp_001",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The current-run WHY output explicitly presents the Content-Length validation condition and raise ValueError behavior."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The current-run WHY output presents PR #12794, stricter non-digit Content-Length rejection, and the RFC 9110 Section 8.6 source comment."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The current-run output does not claim that the validation fixed a specific security vulnerability or HTTP request-smuggling exploit, and does not explicitly abstain from that specific unsupported claim."
+    }
+  }
+}

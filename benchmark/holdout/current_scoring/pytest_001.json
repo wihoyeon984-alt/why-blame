@@ -1,0 +1,30 @@
+﻿{
+  "case_id": "pytest_001",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The current-run WHY output explicitly presents `return _fix_code_filename(co, str(source))`, showing that the cached code object is passed through filename correction using the current source filename."
+    },
+    "claim_002": {
+      "status": "MISSED",
+      "raw_evidence": "The current-run output still does not present the helper behavior in which _fix_code_filename returns the original code object unchanged when co.co_filename already equals the requested filename."
+    },
+    "claim_003": {
+      "status": "MISSED",
+      "raw_evidence": "The current-run output does not present the _fix_code_filename helper implementation selecting _imp._fix_co_filename when available and otherwise using the pure-Python recursive fallback. The commit message mentions this change, but the concrete helper behavior is not exposed as current code behavior."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The current-run output does not present the superseded historical behavior in which a filename mismatch causes the cache to be rejected as stale. It presents the final filename-correction path instead."
+    },
+    "claim_005": {
+      "status": "WITHHELD",
+      "raw_evidence": "The current-run output does not claim that filename correction was introduced primarily as a performance improvement."
+    }
+  }
+}
