@@ -139,6 +139,24 @@ def _extract_encode_assignment(
     return semantics
 
 
+def find_direct_local_helpers(source, target_statement):
+    if not isinstance(source, str) or not isinstance(target_statement, str):
+        return []
+    try:
+        source_tree = ast.parse(source)
+        target_tree = ast.parse(target_statement)
+    except SyntaxError:
+        return []
+    called_names = set()
+    for node in ast.walk(target_tree):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            called_names.add(node.func.id)
+    local_helpers = []
+    for node in source_tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name in called_names:
+            local_helpers.append(node.name)
+    return sorted(local_helpers)
+
 def extract_statement_semantics(
     code,
     source_event,

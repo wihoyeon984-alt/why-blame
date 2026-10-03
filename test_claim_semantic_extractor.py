@@ -14,6 +14,7 @@ from claim_semantic_extractor import (
     extract_diff_semantics,
     extract_statement_semantics,
     extract_target_semantics,
+    find_direct_local_helpers,
 )
 from claim_semantics import (
     DIRECT,
@@ -231,6 +232,21 @@ class TestClaimSemanticExtractor(
             [],
         )
 
+
+    def test_direct_local_helper_is_bounded_expansion_candidate(self):
+        source = 'def helper(value):\n    return value\n\ndef caller(value):\n    return helper(value)'
+        result = find_direct_local_helpers(source, 'return helper(value)')
+        self.assertEqual(result, ['helper'])
+
+    def test_bounded_expansion_does_not_follow_nested_helper(self):
+        source = 'def nested_helper(value):\n    return value\n\ndef helper(value):\n    return nested_helper(value)\n\ndef caller(value):\n    return helper(value)'
+        result = find_direct_local_helpers(source, 'return helper(value)')
+        self.assertEqual(result, ['helper'])
+
+    def test_attribute_call_is_not_treated_as_local_helper(self):
+        source = 'def helper(value):\n    return value'
+        result = find_direct_local_helpers(source, 'return service.helper(value)')
+        self.assertEqual(result, [])
 
 if __name__ == "__main__":
     unittest.main()
