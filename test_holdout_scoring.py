@@ -1,6 +1,7 @@
-﻿import importlib.util
+import importlib.util
 import io
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from contextlib import redirect_stdout
@@ -658,6 +659,70 @@ class TestHoldoutScoring(unittest.TestCase):
             metrics["not_reached"],
             0,
         )
+
+    def test_parser_defaults_to_first_run(self):
+        args = score_holdout.build_parser().parse_args([])
+        self.assertEqual(args.run, "first")
+
+    def test_parser_accepts_current_run(self):
+        args = score_holdout.build_parser().parse_args(
+            ["--run", "current"]
+        )
+        self.assertEqual(args.run, "current")
+
+    def test_resolve_run_dirs_selects_first_and_current(self):
+        holdout_dir = Path("holdout")
+
+        first_results, first_scoring = (
+            score_holdout.resolve_run_dirs(
+                holdout_dir,
+                "first",
+            )
+        )
+        current_results, current_scoring = (
+            score_holdout.resolve_run_dirs(
+                holdout_dir,
+                "current",
+            )
+        )
+
+        self.assertEqual(
+            first_results,
+            holdout_dir / "results",
+        )
+        self.assertEqual(
+            first_scoring,
+            holdout_dir / "scoring",
+        )
+        self.assertEqual(
+            current_results,
+            holdout_dir / "current_run",
+        )
+        self.assertEqual(
+            current_scoring,
+            holdout_dir / "current_scoring",
+        )
+
+    def test_run_commit_metadata_is_not_discovered_as_result(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            results_dir = Path(temp_dir)
+            (results_dir / "case_001.txt").write_text(
+                "case output",
+                encoding="utf-8",
+            )
+            (results_dir / "RUN_COMMIT.txt").write_text(
+                "abcdef1",
+                encoding="utf-8",
+            )
+
+            results = score_holdout.discover_results(
+                results_dir
+            )
+
+            self.assertEqual(
+                set(results),
+                {"case_001"},
+            )
 
 if __name__ == "__main__":
     unittest.main()

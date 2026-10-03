@@ -269,6 +269,9 @@ def discover_results(
     for path in sorted(
         results_dir.glob("*.txt")
     ):
+        if path.name == "RUN_COMMIT.txt":
+            continue
+
         case_id = path.stem
 
         if case_id in results:
@@ -952,6 +955,21 @@ def print_report(
     )
 
 
+def resolve_run_dirs(
+    holdout_dir: Path,
+    run: str,
+) -> tuple[Path, Path]:
+    if run == "current":
+        return (
+            holdout_dir / "current_run",
+            holdout_dir / "current_scoring",
+        )
+
+    return (
+        holdout_dir / "results",
+        holdout_dir / "scoring",
+    )
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
@@ -972,6 +990,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--run",
+        choices=("first", "current"),
+        default="first",
+        help=(
+            "Select scoring inputs: "
+            "'first' uses results/scoring; "
+            "'current' uses current_run/current_scoring."
+        ),
+    )
+    parser.add_argument(
         "--implementation-commit",
         default=(
             DEFAULT_IMPLEMENTATION_COMMIT
@@ -990,12 +1018,9 @@ def main() -> None:
         holdout_dir / "cases"
     )
 
-    results_dir = (
-        holdout_dir / "results"
-    )
-
-    scoring_dir = (
-        holdout_dir / "scoring"
+    results_dir, scoring_dir = resolve_run_dirs(
+        holdout_dir,
+        args.run,
     )
 
     cases = discover_cases(
