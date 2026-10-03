@@ -19,6 +19,8 @@ VALID_LABELS = {
 VALID_EXPOSURE_STATUSES = {
     "PRESENTED",
     "ABSTAINED",
+    "WITHHELD",
+    "MISSED",
     "NOT_REACHED",
     "UNSAFE_PRESENTED",
     "NOT_APPLICABLE",
@@ -26,6 +28,7 @@ VALID_EXPOSURE_STATUSES = {
 
 OBSERVABLE_STATUSES = {
     "PRESENTED",
+    "MISSED",
     "ABSTAINED",
     "UNSAFE_PRESENTED",
 }
@@ -233,19 +236,30 @@ def parse_case_file(path: Path) -> HoldoutCase:
         ),
     )
 
-def discover_cases(cases_dir: Path) -> list[aths = sorted(
+def discover_cases(cases_dir: Path):
+    paths = sorted(
         path
         for path in cases_dir.glob("*.yaml")
         if path.name != "CASE_TEMPLATE.yaml"
     )
 
-    cases = [parse_case_file(path) for path in paths]
+    cases = [
+        parse_case_file(path)
+        for path in paths
+    ]
 
-    case_ids = [case.case_id for case in cases]
+    case_ids = [
+        case.case_id
+        for case in cases
+    ]
+
     if len(case_ids) != len(set(case_ids)):
-        raise ScoringError("duplicate Holdout case ID")
+        raise ScoringError(
+            "duplicate Holdout case ID"
+        )
 
     return cases
+
 
 def discover_results(
     results_dir: Path,
@@ -274,7 +288,7 @@ def load_annotation(
     try:
         data = json.loads(
             path.read_text(
-                encoding="utf-8"
+                encoding="utf-8-sig"
             )
         )
     except json.JSONDecodeError as exc:
@@ -626,6 +640,8 @@ def compute_metrics(
     not_reached = 0
     unsafe_presented = 0
     system_abstentions = 0
+    withheld = 0
+    safe_suppressions = 0
     correct_abstentions = 0
     required_abstentions = 0
 
@@ -682,6 +698,14 @@ def compute_metrics(
 
                 if claim.label != "SUPPORTED":
                     correct_abstentions += 1
+                    safe_suppressions += 1
+
+            if (
+                status == "WITHHELD"
+                and claim.label != "SUPPORTED"
+            ):
+                withheld += 1
+                safe_suppressions += 1
 
     annotation_complete = (
         annotated_claims == total_claims
@@ -751,11 +775,18 @@ def compute_metrics(
         "system_abstentions": (
             system_abstentions
         ),
+        "withheld": withheld,
+        "safe_suppressions": safe_suppressions,
         "required_abstentions": (
             required_abstentions
         ),
     }
 
+
+def semantic_metrics_scoreable(metrics):
+    return bool(
+        metrics["annotation_complete"]
+    )
 
 def format_rate(
     value: float | None,
@@ -815,6 +846,7 @@ def print_report(
     for status in (
         "PRESENTED",
         "ABSTAINED",
+    "WITHHELD",
         "NOT_REACHED",
         "UNSAFE_PRESENTED",
         "NOT_APPLICABLE",
@@ -854,6 +886,18 @@ def print_report(
             ]
         )
     )
+    if not semantic_metrics_scoreable(metrics):
+        print(
+            "Semantic metrics:      NOT SCORED"
+        )
+        print(
+            "Reason:                "
+            "annotations incomplete "
+            f"({metrics['annotated_claims']}/"
+            f"{metrics['total_claims']})"
+        )
+        return
+
     print(
         "Strict supported recall: "
         + format_rate(
