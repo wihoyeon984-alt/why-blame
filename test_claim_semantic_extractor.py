@@ -12,6 +12,7 @@ from claim_safety import (
 )
 from claim_semantic_extractor import (
     extract_diff_semantics,
+    extract_direct_local_helper_semantics,
     extract_statement_semantics,
     extract_target_semantics,
     find_direct_local_helpers,
@@ -247,6 +248,144 @@ class TestClaimSemanticExtractor(
         source = 'def helper(value):\n    return value'
         result = find_direct_local_helpers(source, 'return service.helper(value)')
         self.assertEqual(result, [])
+
+
+    def test_direct_local_helper_body_yields_structured_semantics(self):
+        source = (
+            'def helper(value):\n'
+            '    value = value.encode("utf-8")\n'
+            '\n'
+            'def caller(value):\n'
+            '    helper(value)\n'
+        )
+
+        result = extract_direct_local_helper_semantics(
+            source,
+            'helper(value)',
+            "abc123",
+        )
+
+        self.assertEqual(
+            len(result),
+            1,
+        )
+        self.assertEqual(
+            result[0]["action"],
+            "ENCODE",
+        )
+        self.assertEqual(
+            result[0]["subject"],
+            "value",
+        )
+        self.assertEqual(
+            result[0]["target"],
+            "UTF-8",
+        )
+        self.assertEqual(
+            result[0]["source_event"],
+            "abc123",
+        )
+
+
+    def test_helper_semantics_do_not_expand_to_nested_helper(self):
+        source = (
+            'def nested_helper(value):\n'
+            '    value = value.encode("utf-8")\n'
+            '\n'
+            'def helper(value):\n'
+            '    nested_helper(value)\n'
+            '\n'
+            'def caller(value):\n'
+            '    helper(value)\n'
+        )
+
+        result = extract_direct_local_helper_semantics(
+            source,
+            'helper(value)',
+            "abc123",
+        )
+
+        self.assertEqual(
+            result,
+            [],
+        )
+
+
+    def test_target_semantics_expand_direct_local_helper(self):
+        source = (
+            'def helper(value):\n'
+            '    value = value.encode("utf-8")\n'
+            '\n'
+            'def caller(value):\n'
+            '    helper(value)\n'
+        )
+
+        timeline = [
+            {
+                "hash": "abc123",
+                "diff_lines": [
+                    "+ helper(value)",
+                ],
+                "source": source,
+            }
+        ]
+
+        result = extract_target_semantics(
+            timeline
+        )
+
+        self.assertEqual(
+            len(result),
+            1,
+        )
+        self.assertEqual(
+            result[0]["action"],
+            "ENCODE",
+        )
+        self.assertEqual(
+            result[0]["subject"],
+            "value",
+        )
+        self.assertEqual(
+            result[0]["target"],
+            "UTF-8",
+        )
+        self.assertEqual(
+            result[0]["source_event"],
+            "abc123",
+        )
+
+
+    def test_target_semantics_do_not_expand_nested_helper(self):
+        source = (
+            'def nested_helper(value):\n'
+            '    value = value.encode("utf-8")\n'
+            '\n'
+            'def helper(value):\n'
+            '    nested_helper(value)\n'
+            '\n'
+            'def caller(value):\n'
+            '    helper(value)\n'
+        )
+
+        timeline = [
+            {
+                "hash": "abc123",
+                "diff_lines": [
+                    "+ helper(value)",
+                ],
+                "source": source,
+            }
+        ]
+
+        result = extract_target_semantics(
+            timeline
+        )
+
+        self.assertEqual(
+            result,
+            [],
+        )
 
 if __name__ == "__main__":
     unittest.main()

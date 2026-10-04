@@ -621,5 +621,37 @@ class TestTimeline(unittest.TestCase):
         )
 
 
+
+    def test_build_timeline_preserves_source_snapshot(self):
+        source = (
+            'def helper(value):\n'
+            '    value = value.encode("utf-8")\n'
+        )
+
+        commits = [
+            {
+                "hash": "abc123456789",
+                "message": "fix: normalize value",
+                "diff_lines": [
+                    "+ helper(value)",
+                ],
+                "source": source,
+                "refs": [],
+                "is_revert": False,
+            }
+        ]
+
+        timeline, _ = build_timeline(
+            commits,
+            None,
+            lambda owner, repo, number: {},
+            None,
+        )
+
+        self.assertEqual(
+            timeline[0]["source"],
+            source,
+        )
+
 if __name__ == "__main__":
     unittest.main()

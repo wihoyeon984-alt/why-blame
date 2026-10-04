@@ -200,6 +200,42 @@ def extract_statement_semantics(
     return result
 
 
+def extract_direct_local_helper_semantics(
+    source,
+    target_statement,
+    source_event,
+):
+    helper_names = find_direct_local_helpers(
+        source,
+        target_statement,
+    )
+
+    if not helper_names:
+        return []
+
+    try:
+        source_tree = ast.parse(source)
+    except SyntaxError:
+        return []
+
+    result = []
+
+    for node in source_tree.body:
+        if (
+            isinstance(node, ast.FunctionDef)
+            and node.name in helper_names
+        ):
+            for statement in node.body:
+                code = ast.unparse(statement)
+                result.extend(
+                    extract_statement_semantics(
+                        code,
+                        source_event,
+                    )
+                )
+
+    return result
+
 def extract_diff_semantics(
     diff_lines,
     source_event,
@@ -254,14 +290,46 @@ def extract_target_semantics(
         return []
 
     final_event = timeline[-1]
+    source_event = final_event.get(
+        "hash",
+        "unknown",
+    )
+    diff_lines = final_event.get(
+        "diff_lines",
+        [],
+    )
 
-    return extract_diff_semantics(
-        final_event.get(
-            "diff_lines",
-            [],
-        ),
-        final_event.get(
-            "hash",
-            "unknown",
-        ),
-    )       
+    result = extract_diff_semantics(
+        diff_lines,
+        source_event,
+    )
+
+    source = final_event.get(
+        "source",
+        "",
+    )
+
+    if not source:
+        return result
+
+    for line in diff_lines:
+        if not isinstance(line, str):
+            continue
+
+        if not line.startswith("+ "):
+            continue
+
+        target_statement = line[2:].strip()
+
+        if not target_statement:
+            continue
+
+        result.extend(
+            extract_direct_local_helper_semantics(
+                source,
+                target_statement,
+                source_event,
+            )
+        )
+
+    return result
