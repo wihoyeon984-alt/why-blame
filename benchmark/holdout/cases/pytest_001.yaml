@@ -1,0 +1,284 @@
+﻿id: pytest_001
+
+repository:
+  owner: "pytest-dev"
+  name: "pytest"
+  url: "https://github.com/pytest-dev/pytest"
+
+revision:
+  commit: "3261273a1f5ec51d75f5744bab41ca243d84942a"
+
+target:
+  file: "src/_pytest/assertion/rewrite.py"
+  start_line: 395
+  end_line: 395
+
+selection:
+  selected_before_system_run: true
+  previously_used_for_development: false
+  notes: >
+    Holdout candidate selected from public Git history before running
+    why-blame. This case contains a multi-step semantic evolution inside
+    the implementation history. Parent commit:
+    bb33e5c1feb7223829b9ffe43cf0b4df2bf8df50.
+
+history:
+  expected_shape: "multi-event refinement of an initial bytecode-cache fix"
+  relevant_events:
+    - "3d0f2cf7f48bce129471672ba25cce4c1bff31be"
+    - "bb33e5c1feb7223829b9ffe43cf0b4df2bf8df50"
+    - "3261273a1f5ec51d75f5744bab41ca243d84942a"
+
+ground_truth:
+  frozen: true
+  frozen_before_system_run: true
+
+  claims:
+
+    - id: claim_001
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        After a cached code object is loaded, pytest corrects its stored
+        filename to the current source filename instead of rejecting the
+        cache solely because the stored filename differs.
+
+      semantics:
+        action: "CORRECT"
+        subject: "cached code object's filename"
+        target: "current source filename"
+        condition: "cached code object has been loaded"
+        scope: "_read_pyc"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "3261273a1f5ec51d75f5744bab41ca243d84942a"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The final implementation replaces the previous filename
+            mismatch rejection with
+            _fix_code_filename(co, str(source)).
+            The nearby source comment states that the cache remains
+            valid while only the in-memory location is corrected.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The final target revision directly routes the loaded cached code
+        object through filename correction rather than treating a
+        filename mismatch as sufficient reason to reject the cache.
+
+    - id: claim_002
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        If the cached code object's filename already matches the target
+        filename, the filename-fix helper returns the code object
+        unchanged.
+
+      semantics:
+        action: "RETURN"
+        subject: "code object"
+        target: "the original code object"
+        condition: "co.co_filename equals filename"
+        scope: "_fix_code_filename"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "3261273a1f5ec51d75f5744bab41ca243d84942a"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            _fix_code_filename explicitly checks
+            co.co_filename == filename and returns co.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        This helper behavior is directly visible in the final
+        implementation.
+
+    - id: claim_003
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        Filename correction uses _imp._fix_co_filename when available
+        and otherwise falls back to a pure-Python recursive replacement.
+
+      semantics:
+        action: "CORRECT"
+        subject: "code object filenames"
+        target: "requested filename"
+        condition: "_imp._fix_co_filename availability"
+        scope: "_fix_code_filename"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "3261273a1f5ec51d75f5744bab41ca243d84942a"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The final implementation calls _imp_fix_co_filename when
+            available and otherwise returns _replace_code_filenames.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        Both implementation paths are explicit in the final target
+        revision.
+
+    - id: claim_004
+      type: BEHAVIOR
+      label: UNSUPPORTED
+
+      text: >
+        A filename mismatch in a moved cached pyc causes pytest to
+        reject the cached code object as stale and recreate the cache.
+
+      semantics:
+        action: "REJECT"
+        subject: "cached code object"
+        target: "bytecode cache"
+        condition: "co.co_filename differs from the current source path"
+        scope: "_read_pyc"
+
+      field_entailment:
+        action: CONFLICTING
+        subject: DIRECT
+        target: CONFLICTING
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: HISTORY
+          ref: "3d0f2cf7f48bce129471672ba25cce4c1bff31be"
+          relation: SUPPORTS_HISTORICAL_ONLY
+          relevance: HIGH
+          sufficiency: LOW
+          note: >
+            An earlier implementation in the same development history
+            treated a filename mismatch as stale and returned None.
+
+        - channel: DIFF
+          ref: "3261273a1f5ec51d75f5744bab41ca243d84942a"
+          relation: CONTRADICTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The final implementation explicitly replaces stale-cache
+            rejection with in-memory filename correction while keeping
+            the cache valid.
+
+      contradiction:
+        status: PRESENT
+        evidence:
+          - "3261273a1f5ec51d75f5744bab41ca243d84942a"
+
+      rationale: >
+        This behavior existed in an earlier implementation event but
+        was superseded before the selected target revision. Presenting
+        it as current behavior would be historical pollution.
+
+    - id: claim_005
+      type: CAUSE
+      label: UNSUPPORTED
+
+      text: >
+        The filename correction was introduced primarily to improve
+        pytest performance.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: NONE
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence: []
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The frozen evidence concerns correctness of cached code
+        filenames after files or directories move. It does not
+        establish performance improvement as the primary reason.
+
+system_run:
+  executed: false
+  implementation_commit: "2c4bf34"
+  executed_at: ""
+  command: ""
+
+result:
+  raw_output_file: ""
+
+  presented_claims: []
+
+  counts:
+    ground_truth_supported: 3
+    recovered_supported: 0
+    presented_total: 0
+    unsupported_presented: 0
+    correct_attributions: 0
+    attribution_items: 0
+    correct_abstentions: 0
+    system_abstentions: 0
+    required_abstentions: 2
+
+  metrics:
+    claim_precision: null
+    supported_claim_recall: null
+    unsupported_claim_rate: null
+    false_why: null
+    evidence_attribution_accuracy: null
+    abstention_precision: null
+    abstention_recall: null
+
+review:
+  benchmark_failure: false
+  notes: ""
+
+

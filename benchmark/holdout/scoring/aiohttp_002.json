@@ -1,0 +1,26 @@
+{
+  "case_id": "aiohttp_002",
+  "execution": {
+    "completed": false,
+    "failure_stage": "HISTORY_RENDERING",
+    "failure_type": "UnicodeEncodeError"
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The first-run WHY output explicitly presents the added code `was_paused = self._reading_paused`, showing that the previous reading-paused state is captured before the subsequent resume operation shown in CURRENT CODE."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The first-run WHY output explicitly presents `if was_paused:` followed by `self._reschedule_timeout()`, establishing conditional timeout rescheduling based on the previously captured paused state."
+    },
+    "claim_003": {
+      "status": "PRESENTED",
+      "raw_evidence": "The first-run WHY output associates the final change with PR #12954, titled `Don't re-arm read timeout on a connection returned to the pool`, which presents the pooled-connection timeout motivation. The output does not explicitly present the more detailed ground-truth mechanism that the pending timeout could fire before reuse and make the next request fail immediately."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The first-run WHY output does not claim that the change was primarily a request-performance optimization. It presents timeout correctness and pooled-connection context instead, without explicitly abstaining from the unsupported performance claim."
+    }
+  }
+}

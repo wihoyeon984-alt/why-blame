@@ -1,6 +1,14 @@
+import builtins
+import sys
 import textwrap
 
 from narrative import synthesize_narrative
+
+def _safe_print(*args, **kwargs):
+    stream = kwargs.get('file', sys.stdout)
+    encoding = getattr(stream, 'encoding', None) or 'utf-8'
+    safe_args = [str(arg).encode(encoding, errors='replace').decode(encoding) for arg in args]
+    builtins.print(*safe_args, **kwargs)
 
 
 def render_card(
@@ -11,6 +19,7 @@ def render_card(
     timeline,
     stats,
 ):
+    print = _safe_print
     width = 64
     thick_line = "━" * width
     thin_line = "─" * width

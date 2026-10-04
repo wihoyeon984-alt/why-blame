@@ -1,0 +1,38 @@
+﻿{
+  "case_id": "sqlalchemy_001",
+  "execution": {
+    "completed": false,
+    "failure_stage": "HISTORY_RENDERING",
+    "failure_type": "UnicodeEncodeError"
+  },
+  "claims": {
+    "claim_001": {
+      "status": "MISSED",
+      "raw_evidence": "The first-run WHY output does not present the supported behavior that TEXT and NTEXT are reflected without applying max_length as their type length."
+    },
+    "claim_002": {
+      "status": "MISSED",
+      "raw_evidence": "The first-run WHY output does not present the supported behavior that reflected TEXT and NTEXT preserve collation when collation is present."
+    },
+    "claim_003": {
+      "status": "MISSED",
+      "raw_evidence": "The first-run WHY output does not present the supported behavior that bounded SQL Server string and character types continue deriving reflected length from max_length."
+    },
+    "claim_004": {
+      "status": "ABSTAINED",
+      "raw_evidence": "The WHY output explicitly says that sufficiently verified external evidence for a concrete reason is lacking and therefore does not generate a concrete WHY, covering the claimed reason about avoiding spurious TEXT and NTEXT reflected lengths."
+    },
+    "claim_005": {
+      "status": "ABSTAINED",
+      "raw_evidence": "The WHY output explicitly declines to generate a concrete WHY because sufficient external evidence was not verified, covering the claimed DDL round-trip motivation."
+    },
+    "claim_006": {
+      "status": "ABSTAINED",
+      "raw_evidence": "The WHY output explicitly refuses to generate a concrete WHY rather than asserting the unsupported generalization that SQLAlchemy no longer reflects lengths for all SQL Server string types."
+    },
+    "claim_007": {
+      "status": "ABSTAINED",
+      "raw_evidence": "The WHY output explicitly refuses to generate a concrete WHY and does not assert the unsupported performance-optimization explanation."
+    }
+  }
+}

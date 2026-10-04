@@ -1,0 +1,280 @@
+﻿id: black_001
+
+repository:
+  owner: "psf"
+  name: "black"
+  url: "https://github.com/psf/black"
+
+revision:
+  commit: "59f16b5bd9009bec205eee66cc22f4e74a26bea5"
+
+target:
+  file: "src/black/linegen.py"
+  start_line: START_LINE
+  end_line: END_LINE
+
+selection:
+  selected_before_system_run: true
+  previously_used_for_development: false
+  notes: >
+    Holdout candidate selected from public Git history before running
+    why-blame. The selected change preserves inline comments while
+    _force_standalone_comment_split constructs output lines.
+    Parent commit:
+    PARENT_SHA.
+
+history:
+  expected_shape: "single implementation event with limited causal evidence"
+  relevant_events:
+    - "59f16b5bd9009bec205eee66cc22f4e74a26bea5"
+
+ground_truth:
+  frozen: true
+  frozen_before_system_run: true
+
+  claims:
+
+    - id: claim_001
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        During _force_standalone_comment_split(), comments associated
+        with a leaf are appended to the current output line after that
+        leaf.
+
+      semantics:
+        action: "APPEND"
+        subject: "comments associated with the leaf"
+        target: "current output line"
+        condition: "the forced standalone-comment split processes the leaf"
+        scope: "_force_standalone_comment_split"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "59f16b5bd9009bec205eee66cc22f4e74a26bea5"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The added loop calls line.comments_after(leaf) and appends
+            each returned comment to current_line using
+            preformatted=True.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The target diff directly establishes collection and appending
+        of comments associated with each processed leaf.
+
+    - id: claim_002
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        Inline comments on lines produced by the forced split are
+        preserved instead of being silently dropped.
+
+      semantics:
+        action: "PRESERVE"
+        subject: "inline comments"
+        target: "lines produced by the forced split"
+        condition: ""
+        scope: "_force_standalone_comment_split"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: NONE
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "59f16b5bd9009bec205eee66cc22f4e74a26bea5"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            Comments returned by comments_after(leaf) are explicitly
+            appended to the generated line.
+
+        - channel: COMMIT
+          ref: "59f16b5bd9009bec205eee66cc22f4e74a26bea5"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The commit message states that inline comments are kept in
+            _force_standalone_comment_split.
+
+        - channel: HISTORY
+          ref: "Black CHANGES.md at 59f16b5b"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The changelog states that inline comments were being
+            dropped on lines produced by the forced split and that
+            trailing comments, including type-ignore comments, are now
+            preserved.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        Both the implementation and project changelog directly support
+        the observable comment-preservation behavior.
+
+    - id: claim_003
+      type: CAUSE
+      label: AMBIGUOUS
+
+      text: >
+        The comments are preserved specifically to maintain static type
+        checker compatibility.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: PARTIAL
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence:
+        - channel: HISTORY
+          ref: "Black CHANGES.md at 59f16b5b"
+          relation: RELATED
+          relevance: HIGH
+          sufficiency: LOW
+          note: >
+            The changelog explicitly mentions that a trailing
+            type-ignore comment can otherwise be silently removed.
+            This establishes relevance to type-ignore comments but does
+            not establish static type checker compatibility as the
+            specific motivation for the change.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        A type-ignore example is relevant evidence, but relevance alone
+        does not prove a specific downstream compatibility motivation.
+
+    - id: claim_004
+      type: CAUSE
+      label: UNSUPPORTED
+
+      text: >
+        The change was introduced primarily to improve Black's
+        formatting performance.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: NONE
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence: []
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The frozen evidence concerns preservation of inline comments,
+        not performance optimization.
+
+    - id: claim_005
+      type: CAUSE
+      label: UNSUPPORTED
+
+      text: >
+        The change fixes a security vulnerability caused by removed
+        inline comments.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: NONE
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence: []
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The frozen evidence contains no support for a security
+        vulnerability as the motivation for this change.
+
+system_run:
+  executed: false
+  implementation_commit: "2c4bf34"
+  executed_at: ""
+  command: ""
+
+result:
+  raw_output_file: ""
+
+  presented_claims: []
+
+  counts:
+    ground_truth_supported: 2
+    recovered_supported: 0
+    presented_total: 0
+    unsupported_presented: 0
+    correct_attributions: 0
+    attribution_items: 0
+    correct_abstentions: 0
+    system_abstentions: 0
+    required_abstentions: 3
+
+  metrics:
+    claim_precision: null
+    supported_claim_recall: null
+    unsupported_claim_rate: null
+    false_why: null
+    evidence_attribution_accuracy: null
+    abstention_precision: null
+    abstention_recall: null
+
+review:
+  benchmark_failure: false
+  notes: ""
+

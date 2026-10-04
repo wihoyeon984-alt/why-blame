@@ -43,6 +43,24 @@ def get_repo_info():
     return owner, repo
 
 
+def get_source_at_commit(commit_hash, file_name):
+    result = subprocess.run(
+        [
+            "git",
+            "show",
+            f"{commit_hash}:{file_name}",
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+
+    if result.returncode != 0:
+        return ""
+
+    return result.stdout
+
 def get_current_code_lines(file_name, start_line, end_line):
     """지정된 범위의 현재 코드 줄을 리스트로 읽어옵니다."""
     try:
@@ -202,6 +220,10 @@ def extract_git_history(file_name, start_line, end_line):
                 "date": date_str,
                 "message": full_msg,
                 "diff_lines": diff_lines,
+                "source": get_source_at_commit(
+                    full_hash,
+                    file_name,
+                ),
                 "refs": numbers,
                 "is_revert": is_revert,
             }
