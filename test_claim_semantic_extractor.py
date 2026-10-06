@@ -16,6 +16,7 @@ from claim_semantic_extractor import (
     extract_statement_semantics,
     extract_target_semantics,
     find_direct_local_helpers,
+    extract_statement_ordering,
 )
 from claim_semantics import (
     DIRECT,
@@ -431,6 +432,60 @@ class TestClaimSemanticExtractor(
         self.assertEqual(
             result,
             [],
+        )
+
+
+    def test_statement_ordering_preserves_direct_call_sequence(self):
+        code = (
+            'sock = create_socket()\n'
+            'cleanup.append(sock)\n'
+            'sock.bind(address)\n'
+        )
+
+        result = extract_statement_ordering(
+            code,
+            "abc123",
+        )
+
+        self.assertEqual(
+            result,
+            [
+                {
+                    "before": "create_socket()",
+                    "after": "cleanup.append(sock)",
+                    "source_event": "abc123",
+                },
+                {
+                    "before": "cleanup.append(sock)",
+                    "after": "sock.bind(address)",
+                    "source_event": "abc123",
+                },
+            ],
+        )
+
+
+    def test_statement_ordering_does_not_cross_nested_control_flow(self):
+        code = (
+            'sock = create_socket()\n'
+            'if should_track:\n'
+            '    cleanup.append(sock)\n'
+            'sock.bind(address)\n'
+        )
+
+        result = extract_statement_ordering(
+            code,
+            "abc123",
+        )
+
+        self.assertEqual(
+            result,
+            [
+                {
+                    "before": "create_socket()",
+                    "after": "sock.bind(address)",
+                    "source_event": "abc123",
+                },
+            ],
         )
 
 if __name__ == "__main__":

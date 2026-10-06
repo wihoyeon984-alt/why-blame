@@ -357,3 +357,47 @@ def extract_target_semantics(
         )
 
     return result
+
+def extract_statement_ordering(
+    code,
+    source_event,
+):
+    if not isinstance(code, str):
+        return []
+
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return []
+
+    operations = []
+
+    for node in tree.body:
+        if (
+            isinstance(node, ast.Assign)
+            and isinstance(node.value, ast.Call)
+        ):
+            operations.append(
+                ast.unparse(node.value)
+            )
+            continue
+
+        if (
+            isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Call)
+        ):
+            operations.append(
+                ast.unparse(node.value)
+            )
+
+    return [
+        {
+            "before": before,
+            "after": after,
+            "source_event": source_event,
+        }
+        for before, after in zip(
+            operations,
+            operations[1:],
+        )
+    ]
