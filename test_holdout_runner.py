@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 from pathlib import Path
 
-from benchmark.holdout.run_holdout import parse_execution_case, parse_preserved_target, resolve_preserved_target, read_preserved_output, discover_case_paths, prepare_repository, run_case, write_case_output, run_candidate_case
+from benchmark.holdout.run_holdout import parse_execution_case, parse_preserved_target, resolve_preserved_target, read_preserved_output, discover_case_paths, prepare_repository, run_case, write_case_output, run_candidate_case, resolve_execution_case, main
 
 
 class TestHoldoutRunner(unittest.TestCase):
@@ -142,6 +142,33 @@ TARGET: src/example.py:1700-1701
             )
 
 
+
+    def test_real_black_execution_case_recovers_preserved_target(self):
+        root = Path(__file__).resolve().parent
+        holdout_dir = root / "benchmark" / "holdout"
+
+        case = resolve_execution_case(
+            holdout_dir / "cases" / "black_001.yaml",
+            holdout_dir / "results" / "black_001.txt",
+            holdout_dir / "current_run" / "black_001.txt",
+        )
+
+        self.assertEqual(
+            case.case_id,
+            "black_001",
+        )
+        self.assertEqual(
+            case.target_file,
+            "src/black/linegen.py",
+        )
+        self.assertEqual(
+            case.start_line,
+            1620,
+        )
+        self.assertEqual(
+            case.end_line,
+            1621,
+        )
     def test_real_black_preserved_outputs_agree_on_target(self):
         root = Path(__file__).resolve().parent
         holdout_dir = root / "benchmark" / "holdout"
@@ -325,6 +352,10 @@ target:
             call.kwargs["errors"],
             "replace",
         )
+        self.assertEqual(
+            call.kwargs["env"]["PYTHONIOENCODING"],
+            "utf-8",
+        )
 
 
     def test_write_case_output_preserves_stdout_and_stderr(self):
@@ -436,5 +467,52 @@ target:
             output_dir,
         )
 
+
+    @patch("benchmark.holdout.run_holdout.run_candidate_case")
+    @patch("benchmark.holdout.run_holdout.resolve_execution_case")
+    @patch("benchmark.holdout.run_holdout.discover_case_paths")
+    def test_main_runs_discovered_cases(
+        self,
+        mock_discover,
+        mock_resolve,
+        mock_run_candidate,
+    ):
+        case_path = Path("cases") / "synthetic_001.yaml"
+
+        class Case:
+            case_id = "synthetic_001"
+
+        case = Case()
+
+        mock_discover.return_value = [case_path]
+        mock_resolve.return_value = case
+
+        main([
+            "--cases-dir",
+            "cases",
+            "--output-dir",
+            "current_run",
+            "--work-dir",
+            "candidate_repos",
+            "--why-blame-main",
+            "main.py",
+        ])
+
+        mock_discover.assert_called_once_with(
+            Path("cases"),
+        )
+        holdout_dir = Path(__file__).resolve().parent / "benchmark" / "holdout"
+
+        mock_resolve.assert_called_once_with(
+            case_path,
+            holdout_dir / "results" / "synthetic_001.txt",
+            holdout_dir / "current_run" / "synthetic_001.txt",
+        )
+        mock_run_candidate.assert_called_once_with(
+            case,
+            Path("candidate_repos") / "synthetic_001",
+            Path("main.py"),
+            Path("current_run"),
+        )
 if __name__ == "__main__":
     unittest.main()

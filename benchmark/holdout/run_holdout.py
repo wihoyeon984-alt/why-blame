@@ -1,4 +1,5 @@
-﻿import re
+import os
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -82,6 +83,9 @@ def run_case(
     repository_dir = Path(repository_dir)
     why_blame_main = Path(why_blame_main)
 
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
+
     return subprocess.run(
         [
             sys.executable,
@@ -95,6 +99,7 @@ def run_case(
         text=True,
         encoding="utf-8",
         errors="replace",
+        env=env,
     )
 
 def run_candidate_case(
@@ -216,6 +221,73 @@ def resolve_preserved_target(
 
     return first_target
 
+
+
+def resolve_execution_case(
+    case_path,
+    first_output_path,
+    current_output_path,
+):
+    try:
+        return parse_execution_case(
+            case_path
+        )
+    except ValueError:
+        first_output = read_preserved_output(
+            first_output_path
+        )
+        current_output = read_preserved_output(
+            current_output_path
+        )
+
+        target_file, start_line, end_line = (
+            resolve_preserved_target(
+                first_output,
+                current_output,
+            )
+        )
+
+        text = Path(case_path).read_text(
+            encoding="utf-8-sig"
+        )
+
+        case_id_match = re.search(
+            r'(?m)^id:\s*["\x27]?([^"\x27]+?)["\x27]?\s*$',
+            text,
+        )
+        if not case_id_match:
+            raise ValueError("missing id")
+
+        case_id = case_id_match.group(1).strip()
+
+        yaml_target_file = _find_section_scalar(
+            text,
+            "target",
+            "file",
+        )
+
+        if yaml_target_file != target_file:
+            raise ValueError(
+                f"{case_id}: preserved TARGET file disagrees with case"
+            )
+
+        return ExecutionCase(
+            case_id=case_id,
+            repository_url=_find_section_scalar(
+                text,
+                "repository",
+                "url",
+            ),
+            commit=_find_section_scalar(
+                text,
+                "revision",
+                "commit",
+            ),
+            target_file=target_file,
+            start_line=start_line,
+            end_line=end_line,
+        )
+
 def parse_execution_case(path):
     path = Path(path)
 
@@ -280,3 +352,54 @@ def parse_execution_case(path):
         start_line=start_line,
         end_line=end_line,
     )
+
+def main(argv=None):
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Run Why-Blame Holdout candidate cases."
+    )
+    parser.add_argument(
+        "--cases-dir",
+        type=Path,
+        default=Path(__file__).parent / "cases",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path(__file__).parent / "current_run",
+    )
+    parser.add_argument(
+        "--work-dir",
+        type=Path,
+        default=Path(__file__).parent / "candidate_repos",
+    )
+    parser.add_argument(
+        "--why-blame-main",
+        type=Path,
+        default=Path(__file__).resolve().parents[2] / "main.py",
+    )
+
+    args = parser.parse_args(argv)
+
+    for case_path in discover_case_paths(
+        args.cases_dir
+    ):
+        case = resolve_execution_case(
+            case_path,
+            Path(__file__).parent / "results" / f"{case_path.stem}.txt",
+            Path(__file__).parent / "current_run" / f"{case_path.stem}.txt",
+        )
+
+        run_candidate_case(
+            case,
+            args.work_dir / case.case_id,
+            args.why_blame_main,
+            args.output_dir,
+        )
+
+    return args
+
+
+if __name__ == "__main__":
+    main()
