@@ -7,6 +7,7 @@ from claim_evidence_mapping import (
     collect_event_evidence,
     map_delta_to_event_evidence,
     map_predicate_to_evidence,
+    map_ordering_to_evidence,
 )
 from claim_predicate import (
     PREDICATE_NAME,
@@ -319,6 +320,39 @@ class TestClaimEvidenceMapping(unittest.TestCase):
             text,
         )
 
+
+
+    def test_direct_ordering_creates_ordering_evidence_candidate(self):
+        ordering = {
+            "before": "cleanup.append(sock)",
+            "after": "sock.bind(address)",
+            "source_event": "abc123",
+            "relation": "DIRECT_ORDER",
+        }
+
+        result = map_ordering_to_evidence(
+            ordering
+        )
+
+        self.assertEqual(
+            result,
+            {
+                "status": CANDIDATE,
+                "before": "cleanup.append(sock)",
+                "after": "sock.bind(address)",
+                "source_event": "abc123",
+                "relation": "DIRECT_ORDER",
+            },
+        )
+
+        self.assertNotIn(
+            "cause",
+            result,
+        )
+        self.assertNotIn(
+            "reason",
+            result,
+        )
 
 if __name__ == "__main__":
     unittest.main()

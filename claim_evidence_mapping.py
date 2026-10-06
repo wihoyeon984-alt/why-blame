@@ -189,6 +189,28 @@ def collect_event_evidence(event):
     return result
 
 
+def map_ordering_to_evidence(ordering):
+    if not isinstance(ordering, dict):
+        return None
+
+    if ordering.get("relation") != "DIRECT_ORDER":
+        return None
+
+    before = ordering.get("before")
+    after = ordering.get("after")
+    source_event = ordering.get("source_event")
+
+    if not before or not after or not source_event:
+        return None
+
+    return {
+        "status": CANDIDATE,
+        "before": before,
+        "after": after,
+        "source_event": source_event,
+        "relation": "DIRECT_ORDER",
+    }
+
 def map_predicate_to_evidence(
     predicate,
     evidence,
