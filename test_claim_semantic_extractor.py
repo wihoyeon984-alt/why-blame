@@ -17,6 +17,7 @@ from claim_semantic_extractor import (
     extract_target_semantics,
     find_direct_local_helpers,
     extract_statement_ordering,
+    extract_target_ordering,
 )
 from claim_semantics import (
     DIRECT,
@@ -482,6 +483,46 @@ class TestClaimSemanticExtractor(
             [
                 {
                     "before": "create_socket()",
+                    "after": "sock.bind(address)",
+                    "source_event": "abc123",
+                },
+            ],
+        )
+
+
+    def test_target_ordering_uses_only_final_event(self):
+        timeline = [
+            {
+                "hash": "old123",
+                "source": (
+                    'old_sock = old_socket()\n'
+                    'old_sock.bind(old_address)\n'
+                ),
+            },
+            {
+                "hash": "abc123",
+                "source": (
+                    'sock = create_socket()\n'
+                    'cleanup.append(sock)\n'
+                    'sock.bind(address)\n'
+                ),
+            },
+        ]
+
+        result = extract_target_ordering(
+            timeline
+        )
+
+        self.assertEqual(
+            result,
+            [
+                {
+                    "before": "create_socket()",
+                    "after": "cleanup.append(sock)",
+                    "source_event": "abc123",
+                },
+                {
+                    "before": "cleanup.append(sock)",
                     "after": "sock.bind(address)",
                     "source_event": "abc123",
                 },

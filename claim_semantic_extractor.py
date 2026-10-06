@@ -401,3 +401,27 @@ def extract_statement_ordering(
             operations[1:],
         )
     ]
+
+def extract_target_ordering(
+    timeline,
+):
+    if not timeline:
+        return []
+
+    final_event = timeline[-1]
+    source_event = final_event.get(
+        "hash",
+        "unknown",
+    )
+    source = final_event.get(
+        "source",
+        "",
+    )
+
+    if not source:
+        return []
+
+    return extract_statement_ordering(
+        source,
+        source_event,
+    )
