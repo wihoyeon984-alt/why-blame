@@ -448,6 +448,41 @@ def extract_statement_ordering(
 
     return result
 
+
+def derive_transitive_ordering(ordering):
+    result = list(ordering)
+
+    changed = True
+
+    while changed:
+        changed = False
+        current = list(result)
+
+        for first in current:
+            for second in current:
+                if (
+                    first.get("source_event")
+                    != second.get("source_event")
+                ):
+                    continue
+
+                if first.get("after") != second.get("before"):
+                    continue
+
+                relation = {
+                    "before": first.get("before"),
+                    "after": second.get("after"),
+                    "source_event": first.get("source_event"),
+                }
+
+                if relation in result:
+                    continue
+
+                result.append(relation)
+                changed = True
+
+    return result
+
 def extract_target_ordering(
     timeline,
 ):

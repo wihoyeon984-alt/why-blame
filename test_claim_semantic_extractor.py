@@ -18,6 +18,7 @@ from claim_semantic_extractor import (
     find_direct_local_helpers,
     extract_statement_ordering,
     extract_target_ordering,
+    derive_transitive_ordering,
 )
 from claim_semantics import (
     DIRECT,
@@ -564,6 +565,100 @@ class TestClaimSemanticExtractor(
             ],
         )
 
+
+
+    def test_transitive_ordering_preserves_precedes_relation(self):
+        ordering = [
+            {
+                "before": "create_socket()",
+                "after": "cleanup.append(sock)",
+                "source_event": "abc123",
+            },
+            {
+                "before": "cleanup.append(sock)",
+                "after": "sock.configure()",
+                "source_event": "abc123",
+            },
+            {
+                "before": "sock.configure()",
+                "after": "sock.bind(address)",
+                "source_event": "abc123",
+            },
+        ]
+
+        result = derive_transitive_ordering(
+            ordering
+        )
+
+        self.assertIn(
+            {
+                "before": "cleanup.append(sock)",
+                "after": "sock.bind(address)",
+                "source_event": "abc123",
+            },
+            result,
+        )
+
+
+    def test_transitive_ordering_does_not_cross_source_events(self):
+        ordering = [
+            {
+                "before": "operation_a()",
+                "after": "operation_b()",
+                "source_event": "event_a",
+            },
+            {
+                "before": "operation_b()",
+                "after": "operation_c()",
+                "source_event": "event_b",
+            },
+        ]
+
+        result = derive_transitive_ordering(
+            ordering
+        )
+
+        self.assertNotIn(
+            {
+                "before": "operation_a()",
+                "after": "operation_c()",
+                "source_event": "event_a",
+            },
+            result,
+        )
+
+
+    def test_transitive_ordering_closes_longer_chain(self):
+        ordering = [
+            {
+                "before": "operation_a()",
+                "after": "operation_b()",
+                "source_event": "abc123",
+            },
+            {
+                "before": "operation_b()",
+                "after": "operation_c()",
+                "source_event": "abc123",
+            },
+            {
+                "before": "operation_c()",
+                "after": "operation_d()",
+                "source_event": "abc123",
+            },
+        ]
+
+        result = derive_transitive_ordering(
+            ordering
+        )
+
+        self.assertIn(
+            {
+                "before": "operation_a()",
+                "after": "operation_d()",
+                "source_event": "abc123",
+            },
+            result,
+        )
 
     def test_target_ordering_uses_only_final_event(self):
         timeline = [
