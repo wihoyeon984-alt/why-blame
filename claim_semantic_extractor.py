@@ -393,6 +393,7 @@ def _make_ordering_relations(
             "before": before,
             "after": after,
             "source_event": source_event,
+            "relation": "DIRECT_ORDER",
         }
         for before, after in zip(
             operations,
@@ -473,6 +474,7 @@ def derive_transitive_ordering(ordering):
                     "before": first.get("before"),
                     "after": second.get("after"),
                     "source_event": first.get("source_event"),
+                    "relation": "TRANSITIVE_ORDER",
                 }
 
                 if relation in result:

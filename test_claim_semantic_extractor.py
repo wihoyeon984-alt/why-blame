@@ -454,11 +454,13 @@ class TestClaimSemanticExtractor(
             [
                 {
                     "before": "create_socket()",
+                    "relation": "DIRECT_ORDER",
                     "after": "cleanup.append(sock)",
                     "source_event": "abc123",
                 },
                 {
                     "before": "cleanup.append(sock)",
+                    "relation": "DIRECT_ORDER",
                     "after": "sock.bind(address)",
                     "source_event": "abc123",
                 },
@@ -492,16 +494,19 @@ class TestClaimSemanticExtractor(
                     "before": "create_socket()",
                     "after": "cleanup.append(sock)",
                     "source_event": "abc123",
+                    "relation": "DIRECT_ORDER",
                 },
                 {
                     "before": "cleanup.append(sock)",
                     "after": "sock.configure()",
                     "source_event": "abc123",
+                    "relation": "DIRECT_ORDER",
                 },
                 {
                     "before": "sock.configure()",
                     "after": "sock.bind(address)",
                     "source_event": "abc123",
+                    "relation": "DIRECT_ORDER",
                 },
             ],
         )
@@ -527,16 +532,19 @@ class TestClaimSemanticExtractor(
                     "before": "create_socket()",
                     "after": "cleanup.append(sock)",
                     "source_event": "abc123",
+                    "relation": "DIRECT_ORDER",
                 },
                 {
                     "before": "cleanup.append(sock)",
                     "after": "sock.configure()",
                     "source_event": "abc123",
+                    "relation": "DIRECT_ORDER",
                 },
                 {
                     "before": "sock.configure()",
                     "after": "sock.bind(address)",
                     "source_event": "abc123",
+                    "relation": "DIRECT_ORDER",
                 },
             ],
         )
@@ -561,6 +569,7 @@ class TestClaimSemanticExtractor(
                     "before": "create_socket()",
                     "after": "sock.bind(address)",
                     "source_event": "abc123",
+                    "relation": "DIRECT_ORDER",
                 },
             ],
         )
@@ -583,6 +592,7 @@ class TestClaimSemanticExtractor(
                 "before": "sock.configure()",
                 "after": "sock.bind(address)",
                 "source_event": "abc123",
+                "relation": "TRANSITIVE_ORDER",
             },
         ]
 
@@ -595,6 +605,7 @@ class TestClaimSemanticExtractor(
                 "before": "cleanup.append(sock)",
                 "after": "sock.bind(address)",
                 "source_event": "abc123",
+                "relation": "TRANSITIVE_ORDER",
             },
             result,
         )
@@ -644,6 +655,7 @@ class TestClaimSemanticExtractor(
                 "before": "operation_c()",
                 "after": "operation_d()",
                 "source_event": "abc123",
+                "relation": "TRANSITIVE_ORDER",
             },
         ]
 
@@ -656,6 +668,47 @@ class TestClaimSemanticExtractor(
                 "before": "operation_a()",
                 "after": "operation_d()",
                 "source_event": "abc123",
+                "relation": "TRANSITIVE_ORDER",
+            },
+            result,
+        )
+
+
+    def test_transitive_ordering_distinguishes_direct_and_derived_relations(self):
+        ordering = [
+            {
+                "before": "operation_a()",
+                "after": "operation_b()",
+                "source_event": "abc123",
+                "relation": "DIRECT_ORDER",
+            },
+            {
+                "before": "operation_b()",
+                "after": "operation_c()",
+                "source_event": "abc123",
+                "relation": "DIRECT_ORDER",
+            },
+        ]
+
+        result = derive_transitive_ordering(
+            ordering
+        )
+
+        self.assertIn(
+            {
+                "before": "operation_a()",
+                "after": "operation_b()",
+                "source_event": "abc123",
+                "relation": "DIRECT_ORDER",
+            },
+            result,
+        )
+        self.assertIn(
+            {
+                "before": "operation_a()",
+                "after": "operation_c()",
+                "source_event": "abc123",
+                "relation": "TRANSITIVE_ORDER",
             },
             result,
         )
@@ -690,11 +743,13 @@ class TestClaimSemanticExtractor(
                     "before": "create_socket()",
                     "after": "cleanup.append(sock)",
                     "source_event": "abc123",
+                    "relation": "DIRECT_ORDER",
                 },
                 {
                     "before": "cleanup.append(sock)",
                     "after": "sock.bind(address)",
                     "source_event": "abc123",
+                    "relation": "DIRECT_ORDER",
                 },
             ],
         )
