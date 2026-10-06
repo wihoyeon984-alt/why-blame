@@ -358,21 +358,12 @@ def extract_target_semantics(
 
     return result
 
-def extract_statement_ordering(
-    code,
-    source_event,
+def _extract_block_operations(
+    statements,
 ):
-    if not isinstance(code, str):
-        return []
-
-    try:
-        tree = ast.parse(code)
-    except SyntaxError:
-        return []
-
     operations = []
 
-    for node in tree.body:
+    for node in statements:
         if (
             isinstance(node, ast.Assign)
             and isinstance(node.value, ast.Call)
@@ -390,6 +381,13 @@ def extract_statement_ordering(
                 ast.unparse(node.value)
             )
 
+    return operations
+
+
+def _make_ordering_relations(
+    operations,
+    source_event,
+):
     return [
         {
             "before": before,
@@ -401,6 +399,54 @@ def extract_statement_ordering(
             operations[1:],
         )
     ]
+
+
+def extract_statement_ordering(
+    code,
+    source_event,
+):
+    if not isinstance(code, str):
+        return []
+
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return []
+
+    result = _make_ordering_relations(
+        _extract_block_operations(
+            tree.body
+        ),
+        source_event,
+    )
+
+    for node in tree.body:
+        if isinstance(node, ast.For):
+            result.extend(
+                _make_ordering_relations(
+                    _extract_block_operations(
+                        node.body
+                    ),
+                    source_event,
+                )
+            )
+            continue
+
+        if isinstance(node, ast.Try):
+            for child in node.body:
+                if not isinstance(child, ast.For):
+                    continue
+
+                result.extend(
+                    _make_ordering_relations(
+                        _extract_block_operations(
+                            child.body
+                        ),
+                        source_event,
+                    )
+                )
+
+    return result
 
 def extract_target_ordering(
     timeline,

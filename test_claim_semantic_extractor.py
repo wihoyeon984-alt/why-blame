@@ -465,6 +465,81 @@ class TestClaimSemanticExtractor(
         )
 
 
+
+
+    def test_statement_ordering_preserves_for_body_inside_try(self):
+        code = (
+            'try:\n'
+            '    for item in items:\n'
+            '        sock = create_socket()\n'
+            '        cleanup.append(sock)\n'
+            '        sock.configure()\n'
+            '        sock.bind(address)\n'
+            'except Exception:\n'
+            '    cleanup_failed()\n'
+        )
+
+        result = extract_statement_ordering(
+            code,
+            "abc123",
+        )
+
+        self.assertEqual(
+            result,
+            [
+                {
+                    "before": "create_socket()",
+                    "after": "cleanup.append(sock)",
+                    "source_event": "abc123",
+                },
+                {
+                    "before": "cleanup.append(sock)",
+                    "after": "sock.configure()",
+                    "source_event": "abc123",
+                },
+                {
+                    "before": "sock.configure()",
+                    "after": "sock.bind(address)",
+                    "source_event": "abc123",
+                },
+            ],
+        )
+
+    def test_statement_ordering_preserves_sequence_inside_for_body(self):
+        code = (
+            'for item in items:\n'
+            '    sock = create_socket()\n'
+            '    cleanup.append(sock)\n'
+            '    sock.configure()\n'
+            '    sock.bind(address)\n'
+        )
+
+        result = extract_statement_ordering(
+            code,
+            "abc123",
+        )
+
+        self.assertEqual(
+            result,
+            [
+                {
+                    "before": "create_socket()",
+                    "after": "cleanup.append(sock)",
+                    "source_event": "abc123",
+                },
+                {
+                    "before": "cleanup.append(sock)",
+                    "after": "sock.configure()",
+                    "source_event": "abc123",
+                },
+                {
+                    "before": "sock.configure()",
+                    "after": "sock.bind(address)",
+                    "source_event": "abc123",
+                },
+            ],
+        )
+
     def test_statement_ordering_does_not_cross_nested_control_flow(self):
         code = (
             'sock = create_socket()\n'
