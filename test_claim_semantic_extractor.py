@@ -287,6 +287,52 @@ class TestClaimSemanticExtractor(
         )
 
 
+
+    def test_direct_local_helper_preserves_direct_condition(self):
+        source = (
+            'def helper(value):\n'
+            '    if value:\n'
+            '        value = value.encode("utf-8")\n'
+            '\n'
+            'def caller(value):\n'
+            '    helper(value)\n'
+        )
+
+        result = extract_direct_local_helper_semantics(
+            source,
+            'helper(value)',
+            "abc123",
+        )
+
+        self.assertEqual(
+            len(result),
+            1,
+        )
+        self.assertEqual(
+            result[0]["action"],
+            "ENCODE",
+        )
+        self.assertEqual(
+            result[0]["subject"],
+            "value",
+        )
+        self.assertEqual(
+            result[0]["target"],
+            "UTF-8",
+        )
+        self.assertEqual(
+            result[0]["condition"],
+            "value",
+        )
+        self.assertEqual(
+            result[0]["field_evidence"]["condition"][0]["level"],
+            "DIRECT",
+        )
+        self.assertEqual(
+            result[0]["source_event"],
+            "abc123",
+        )
+
     def test_helper_semantics_do_not_expand_to_nested_helper(self):
         source = (
             'def nested_helper(value):\n'

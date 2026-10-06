@@ -197,6 +197,30 @@ def extract_statement_semantics(
                 encode_semantics
             )
 
+
+        if isinstance(node, ast.If):
+            condition = ast.unparse(node.test)
+
+            for child in node.body:
+                child_semantics = _extract_encode_assignment(
+                    child,
+                    source_event,
+                )
+
+                if not child_semantics:
+                    continue
+
+                child_semantics = dict(child_semantics)
+                child_semantics["condition"] = condition
+                child_semantics = attach_field_evidence(
+                    child_semantics,
+                    "condition",
+                    source="DIFF",
+                    ref=source_event,
+                    level=DIRECT,
+                )
+
+                result.append(child_semantics)
     return result
 
 
