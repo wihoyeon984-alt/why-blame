@@ -642,6 +642,7 @@ def compute_metrics(
     observable_supported = 0
     not_reached = 0
     unsafe_presented = 0
+    false_why = 0
     system_abstentions = 0
     withheld = 0
     safe_suppressions = 0
@@ -682,6 +683,9 @@ def compute_metrics(
 
             if status == "UNSAFE_PRESENTED":
                 unsafe_presented += 1
+
+                if claim.label != "SUPPORTED":
+                    false_why += 1
 
             if (
                 claim.label == "SUPPORTED"
@@ -748,6 +752,7 @@ def compute_metrics(
         "unsafe_presented": (
             unsafe_presented
         ),
+        "false_why": false_why,
         "completed_cases": (
             completed_cases
         ),

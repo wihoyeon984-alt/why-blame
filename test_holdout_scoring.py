@@ -290,6 +290,11 @@ class TestHoldoutScoring(unittest.TestCase):
             1.0,
         )
 
+        self.assertEqual(
+            metrics["false_why"],
+            0,
+        )
+
     def test_semantic_metrics_are_not_scoreable_when_annotation_incomplete(self):
         case = score_holdout.HoldoutCase(
             case_id="case_001",
@@ -595,6 +600,54 @@ class TestHoldoutScoring(unittest.TestCase):
         self.assertIn(
             "MISSED",
             score_holdout.VALID_EXPOSURE_STATUSES,
+        )
+
+
+    def test_unsafe_presented_unsupported_claim_is_false_why(self):
+        case = score_holdout.HoldoutCase(
+            case_id="case_001",
+            path=Path("case_001.yaml"),
+            frozen=True,
+            frozen_before_system_run=True,
+            implementation_commit="2c4bf34",
+            claims=(
+                score_holdout.GroundTruthClaim(
+                    claim_id="claim_001",
+                    label="UNSUPPORTED",
+                ),
+            ),
+            required_abstentions=1,
+        )
+
+        annotation = score_holdout.CaseAnnotation(
+            case_id="case_001",
+            completed=True,
+            failure_stage="",
+            failure_type="",
+            claims={
+                "claim_001": score_holdout.ClaimAnnotation(
+                    status="UNSAFE_PRESENTED",
+                    raw_evidence="unsupported WHY was presented",
+                ),
+            },
+        )
+
+        metrics = score_holdout.compute_metrics(
+            [case],
+            {"case_001": annotation},
+        )
+
+        self.assertEqual(
+            metrics["unsafe_presented"],
+            1,
+        )
+        self.assertEqual(
+            metrics["false_why"],
+            1,
+        )
+        self.assertEqual(
+            metrics["correct_abstentions"],
+            0,
         )
 
     def test_missed_supported_claim_is_observable_failure(self):
