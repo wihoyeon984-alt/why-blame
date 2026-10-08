@@ -8,6 +8,7 @@ from claim_evidence_mapping import (
     map_delta_to_event_evidence,
     map_predicate_to_evidence,
     map_ordering_to_evidence,
+    map_direct_ordering_candidate_to_fact,
 )
 from claim_predicate import (
     PREDICATE_NAME,
@@ -352,6 +353,93 @@ class TestClaimEvidenceMapping(unittest.TestCase):
         self.assertNotIn(
             "reason",
             result,
+        )
+
+
+    def test_direct_ordering_candidate_maps_to_structured_fact(self):
+        candidate = {
+            "status": CANDIDATE,
+            "before": "cleanup.append(sock)",
+            "after": "sock.bind(address)",
+            "source_event": "abc123",
+            "relation": "DIRECT_ORDER",
+        }
+
+        result = map_direct_ordering_candidate_to_fact(
+            candidate
+        )
+
+        self.assertEqual(
+            result,
+            {
+                "type": "ORDERING_FACT",
+                "before": "cleanup.append(sock)",
+                "after": "sock.bind(address)",
+                "source_event": "abc123",
+                "relation": "DIRECT_ORDER",
+            },
+        )
+
+        self.assertNotIn("cause", result)
+        self.assertNotIn("reason", result)
+        self.assertNotIn("why", result)
+
+
+    def test_ordering_fact_rejects_non_candidate_status(self):
+        candidate = {
+            "status": "SUPPORTED",
+            "before": "cleanup.append(sock)",
+            "after": "sock.bind(address)",
+            "source_event": "abc123",
+            "relation": "DIRECT_ORDER",
+        }
+        self.assertIsNone(
+            map_direct_ordering_candidate_to_fact(candidate)
+        )
+
+    def test_ordering_fact_rejects_transitive_order(self):
+        candidate = {
+            "status": CANDIDATE,
+            "before": "cleanup.append(sock)",
+            "after": "sock.bind(address)",
+            "source_event": "abc123",
+            "relation": "TRANSITIVE_ORDER",
+        }
+        self.assertIsNone(
+            map_direct_ordering_candidate_to_fact(candidate)
+        )
+
+    def test_ordering_fact_requires_before(self):
+        candidate = {
+            "status": CANDIDATE,
+            "after": "sock.bind(address)",
+            "source_event": "abc123",
+            "relation": "DIRECT_ORDER",
+        }
+        self.assertIsNone(
+            map_direct_ordering_candidate_to_fact(candidate)
+        )
+
+    def test_ordering_fact_requires_after(self):
+        candidate = {
+            "status": CANDIDATE,
+            "before": "cleanup.append(sock)",
+            "source_event": "abc123",
+            "relation": "DIRECT_ORDER",
+        }
+        self.assertIsNone(
+            map_direct_ordering_candidate_to_fact(candidate)
+        )
+
+    def test_ordering_fact_requires_source_event(self):
+        candidate = {
+            "status": CANDIDATE,
+            "before": "cleanup.append(sock)",
+            "after": "sock.bind(address)",
+            "relation": "DIRECT_ORDER",
+        }
+        self.assertIsNone(
+            map_direct_ordering_candidate_to_fact(candidate)
         )
 
 if __name__ == "__main__":

@@ -211,6 +211,31 @@ def map_ordering_to_evidence(ordering):
         "relation": "DIRECT_ORDER",
     }
 
+def map_direct_ordering_candidate_to_fact(candidate):
+    if not isinstance(candidate, dict):
+        return None
+
+    if candidate.get("status") != CANDIDATE:
+        return None
+
+    if candidate.get("relation") != "DIRECT_ORDER":
+        return None
+
+    before = candidate.get("before")
+    after = candidate.get("after")
+    source_event = candidate.get("source_event")
+
+    if not before or not after or not source_event:
+        return None
+
+    return {
+        "type": "ORDERING_FACT",
+        "before": before,
+        "after": after,
+        "source_event": source_event,
+        "relation": "DIRECT_ORDER",
+    }
+
 def map_predicate_to_evidence(
     predicate,
     evidence,
