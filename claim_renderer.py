@@ -1,3 +1,11 @@
+from claim_safety import (
+    SAFE_TO_RENDER,
+    with_semantic_safety,
+)
+from claim_safe_renderer import (
+    render_safe_semantics_list,
+)
+
 import re
 
 from claim_evidence import (
@@ -36,6 +44,34 @@ def render_behavior_claim(claim):
 
     if claim.get("status") != SUPPORTED:
         return claim.get("text", "")
+
+    structured_semantics = claim.get(
+        "structured_semantics",
+        [],
+    )
+
+    safe_semantics = []
+
+    for semantics in structured_semantics:
+        evaluated = with_semantic_safety(
+            semantics,
+            [],
+        )
+
+        if (
+            evaluated.get("semantic_safety")
+            == SAFE_TO_RENDER
+        ):
+            safe_semantics.append(evaluated)
+
+    rendered_semantics = (
+        render_safe_semantics_list(
+            safe_semantics
+        )
+    )
+
+    if rendered_semantics:
+        return " ".join(rendered_semantics)
 
     text = claim.get("text", "")
     code = _extract_added_code(text)

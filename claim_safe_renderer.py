@@ -134,6 +134,21 @@ def render_safe_semantics(semantics):
 
         return sentence + "."
 
+    if action == "RETURN":
+        if not target:
+            return None
+
+        sentence = (
+            f"{target} is returned"
+        )
+
+        if condition:
+            sentence += (
+                f" when {condition}"
+            )
+
+        return sentence + "."
+
     if action == "ADD":
         if not subject:
             return None

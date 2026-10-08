@@ -364,6 +364,51 @@ class TestClaimAdapter(unittest.TestCase):
             2,
         )
 
+
+    def test_final_event_preserves_direct_helper_semantics_on_behavior_claim(self):
+        timeline = [
+            {
+                "hash": "abc123",
+                "diff_lines": [
+                    "+ result = helper(item, expected)",
+                ],
+                "source": (
+                    'def helper(value, target):\n'
+                    '    if value.name == target:\n'
+                    '        return value\n'
+                    '    return fallback(value)\n'
+                    '\n'
+                    'result = helper(item, expected)\n'
+                ),
+                "ref_items": [],
+                "type": "UPDATE",
+            }
+        ]
+
+        claims = build_behavior_claims(timeline)
+
+        self.assertEqual(len(claims), 1)
+        self.assertIn(
+            "result = helper(item, expected)",
+            claims[0]["text"],
+        )
+
+        semantics = claims[0].get("structured_semantics", [])
+
+        self.assertTrue(
+            any(
+                item.get("action") == "RETURN"
+                and item.get("target") == "value"
+                and item.get("condition") == "value.name == target"
+                for item in semantics
+            )
+        )
+
+        self.assertNotEqual(
+            claims[0].get("status"),
+            SUPPORTED,
+        )
+
     def test_empty_timeline_has_no_target_behavior_event(self):
         events = select_target_behavior_events([])
 

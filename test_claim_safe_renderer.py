@@ -120,6 +120,27 @@ class TestClaimSafeRenderer(unittest.TestCase):
             result
         )
 
+
+    def test_return_with_direct_condition_template(self):
+        semantics = self.make_safe(
+            action="RETURN",
+            condition="co.co_filename == filename",
+            target="co",
+            source_event="abc123",
+        )
+
+        result = render_safe_semantics(
+            semantics
+        )
+
+        self.assertEqual(
+            result,
+            (
+                "co is returned when "
+                "co.co_filename == filename."
+            ),
+        )
+
     def test_unknown_action_is_not_rendered(self):
         semantics = self.make_safe(
             action="OPTIMIZE",

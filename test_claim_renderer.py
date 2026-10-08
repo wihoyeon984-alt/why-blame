@@ -50,6 +50,76 @@ class TestClaimRenderer(unittest.TestCase):
             "The code checks whether o is a string.",
         )
 
+
+    def test_supported_behavior_renders_safe_structured_semantics(self):
+        claim = make_claim(
+            "Added code: result = helper(item, expected)",
+            BEHAVIOR,
+            [],
+        )
+        claim["status"] = SUPPORTED
+        claim["structured_semantics"] = [
+            {
+                "type": "BEHAVIOR",
+                "action": "RETURN",
+                "subject": None,
+                "condition": "co.co_filename == filename",
+                "target": "co",
+                "scope": None,
+                "source_event": "abc123",
+                "field_evidence": {
+                    "action": [
+                        {"source": "DIFF", "ref": "abc123", "level": "DIRECT"}
+                    ],
+                    "target": [
+                        {"source": "DIFF", "ref": "abc123", "level": "DIRECT"}
+                    ],
+                    "condition": [
+                        {"source": "DIFF", "ref": "abc123", "level": "DIRECT"}
+                    ],
+                },
+                "entailment": "NONE",
+            }
+        ]
+
+        result = render_behavior_claim(claim)
+
+        self.assertEqual(
+            result,
+            "co is returned when co.co_filename == filename.",
+        )
+
+
+    def test_unsafe_structured_semantics_falls_back_to_original_claim(self):
+        original = "Added code: result = helper(item, expected)"
+
+        claim = make_claim(
+            original,
+            BEHAVIOR,
+            [],
+        )
+        claim["status"] = SUPPORTED
+        claim["structured_semantics"] = [
+            {
+                "type": "BEHAVIOR",
+                "action": "RETURN",
+                "subject": None,
+                "condition": "co.co_filename == filename",
+                "target": "co",
+                "scope": None,
+                "source_event": "abc123",
+                "field_evidence": {},
+                "entailment": "NONE",
+            }
+        ]
+
+        result = render_behavior_claim(claim)
+
+        self.assertEqual(
+            result,
+            original,
+        )
+
     def test_unknown_behavior_falls_back_to_original_claim(self):
         original = "Added code: custom_operation(value)"
 

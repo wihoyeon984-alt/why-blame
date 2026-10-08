@@ -1,3 +1,7 @@
+from claim_semantic_extractor import (
+    extract_direct_local_helper_semantics,
+)
+
 from claim_evidence import (
     BEHAVIOR,
     CAUSE,
@@ -86,6 +90,20 @@ def build_behavior_claims(timeline):
                 "unknown",
             )
             claim["target_relevant"] = True
+
+            source = item.get("source", "")
+            if source:
+                structured_semantics = (
+                    extract_direct_local_helper_semantics(
+                        source,
+                        code,
+                        item.get("hash", "unknown"),
+                    )
+                )
+                if structured_semantics:
+                    claim["structured_semantics"] = (
+                        structured_semantics
+                    )
 
             claims.append(claim)
 
