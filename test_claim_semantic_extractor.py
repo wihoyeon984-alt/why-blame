@@ -336,6 +336,32 @@ class TestClaimSemanticExtractor(
             "abc123",
         )
 
+
+    def test_direct_local_helper_extracts_conditional_return(self):
+        source = (
+            'def helper(value, target):\n'
+            '    if value.name == target:\n'
+            '        return value\n'
+            '    return fallback(value)\n'
+            '\n'
+            'result = helper(item, expected)\n'
+        )
+
+        result = extract_direct_local_helper_semantics(
+            source,
+            "result = helper(item, expected)",
+            "abc123",
+        )
+
+        self.assertTrue(
+            any(
+                item.get("action") == "RETURN"
+                and item.get("target") == "value"
+                and item.get("condition") == "value.name == target"
+                for item in result
+            )
+        )
+
     def test_helper_semantics_do_not_expand_to_nested_helper(self):
         source = (
             'def nested_helper(value):\n'

@@ -139,6 +139,41 @@ def _extract_encode_assignment(
     return semantics
 
 
+def _extract_return(
+    node,
+    source_event,
+):
+    if not isinstance(node, ast.Return):
+        return None
+
+    if node.value is None:
+        return None
+
+    target = ast.unparse(node.value)
+
+    if not target:
+        return None
+
+    semantics = make_behavior_semantics(
+        action="RETURN",
+        target=target,
+        source_event=source_event,
+    )
+
+    for field in (
+        "action",
+        "target",
+    ):
+        semantics = attach_field_evidence(
+            semantics,
+            field,
+            source="DIFF",
+            ref=source_event,
+            level=DIRECT,
+        )
+
+    return semantics
+
 def find_direct_local_helpers(source, target_statement):
     if not isinstance(source, str) or not isinstance(target_statement, str):
         return []
@@ -206,6 +241,12 @@ def extract_statement_semantics(
                     child,
                     source_event,
                 )
+
+                if not child_semantics:
+                    child_semantics = _extract_return(
+                        child,
+                        source_event,
+                    )
 
                 if not child_semantics:
                     continue
