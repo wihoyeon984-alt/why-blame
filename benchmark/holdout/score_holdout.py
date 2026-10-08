@@ -958,6 +958,10 @@ def print_report(
         f"Unsafe presented:        "
         f"{metrics['unsafe_presented']}"
     )
+    print(
+        f"False-WHY:              "
+        f"{metrics['false_why']}"
+    )
 
 
 def resolve_run_dirs(

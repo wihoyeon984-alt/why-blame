@@ -491,6 +491,7 @@ class TestHoldoutScoring(unittest.TestCase):
             "abstention_precision": 1.0,
             "abstention_recall": 1.0,
             "unsafe_presented": 0,
+            "false_why": 0,
             "annotated_cases": 1,
             "total_cases": 1,
             "annotated_claims": 2,
@@ -526,6 +527,11 @@ class TestHoldoutScoring(unittest.TestCase):
             rendered,
         )
 
+
+        self.assertIn(
+            "False-WHY:              0",
+            rendered,
+        )
 
     def test_withheld_is_valid_exposure_status(self):
         self.assertIn(
