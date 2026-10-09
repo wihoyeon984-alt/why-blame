@@ -174,6 +174,72 @@ def _extract_return(
 
     return semantics
 
+def _extract_append_call(
+    node,
+    source_event,
+):
+    if not isinstance(
+        node,
+        ast.Expr,
+    ):
+        return None
+
+    if not isinstance(
+        node.value,
+        ast.Call,
+    ):
+        return None
+
+    call = node.value
+
+    if not isinstance(
+        call.func,
+        ast.Attribute,
+    ):
+        return None
+
+    if call.func.attr != "append":
+        return None
+
+    if len(call.args) != 1:
+        return None
+
+    subject = _source_name(
+        call.args[0]
+    )
+
+    collection = _source_name(
+        call.func.value
+    )
+
+    if not subject:
+        return None
+
+    if not collection:
+        return None
+
+    semantics = make_behavior_semantics(
+        action="ADD",
+        subject=subject,
+        target=collection,
+        source_event=source_event,
+    )
+
+    for field in (
+        "action",
+        "subject",
+        "target",
+    ):
+        semantics = attach_field_evidence(
+            semantics,
+            field,
+            source="DIFF",
+            ref=source_event,
+            level=DIRECT,
+        )
+
+    return semantics
+
 def find_direct_local_helpers(source, target_statement):
     if not isinstance(source, str) or not isinstance(target_statement, str):
         return []
@@ -232,6 +298,17 @@ def extract_statement_semantics(
                 encode_semantics
             )
 
+        append_semantics = (
+            _extract_append_call(
+                node,
+                source_event,
+            )
+        )
+
+        if append_semantics:
+            result.append(
+                append_semantics
+            )
 
         if isinstance(node, ast.If):
             condition = ast.unparse(node.test)
