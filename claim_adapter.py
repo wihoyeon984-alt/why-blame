@@ -1,6 +1,16 @@
+import re
+
 from claim_semantic_extractor import (
+    derive_transitive_ordering,
     extract_direct_local_helper_semantics,
     extract_statement_semantics,
+    extract_target_ordering,
+)
+
+from claim_semantics import (
+    DIRECT,
+    attach_field_evidence,
+    make_behavior_semantics,
 )
 
 from claim_evidence import (
@@ -95,6 +105,8 @@ def build_behavior_claims(timeline):
             source = item.get("source", "")
             structured_semantics = []
 
+
+
             if source:
                 structured_semantics = (
                     extract_direct_local_helper_semantics(
@@ -112,13 +124,104 @@ def build_behavior_claims(timeline):
                     )
                 )
 
+
+
             if structured_semantics:
                 claim["structured_semantics"] = (
                     structured_semantics
                 )
 
             claims.append(claim)
+        ordering = derive_transitive_ordering(
+            extract_target_ordering([item])
+        )
 
+        for relation in ordering:
+            if (
+                relation.get("relation")
+                != "TRANSITIVE_ORDER"
+            ):
+                continue
+
+            before = relation.get("before", "")
+            after = relation.get("after", "")
+
+            append_match = re.fullmatch(
+                r"[A-Za-z_][A-Za-z0-9_]*"
+                r"\.append\("
+                r"([A-Za-z_][A-Za-z0-9_]*)"
+                r"\)",
+                before,
+            )
+
+            if not append_match:
+                continue
+
+            item_name = append_match.group(1)
+
+            if not after.startswith(
+                f"{item_name}.bind("
+            ):
+                continue
+
+            order_semantics = (
+                make_behavior_semantics(
+                    action="PRECEDE",
+                    subject=relation.get("before"),
+                    target=relation.get("after"),
+                    source_event=item.get(
+                        "hash",
+                        "unknown",
+                    ),
+                )
+            )
+
+            for field in (
+                "action",
+                "subject",
+                "target",
+            ):
+                order_semantics = (
+                    attach_field_evidence(
+                        order_semantics,
+                        field,
+                        source="DIFF",
+                        ref=item.get(
+                            "hash",
+                            "unknown",
+                        ),
+                        level=DIRECT,
+                    )
+                )
+
+            order_claim = make_claim(
+                text=(
+                    "Observed statement order: "
+                    f"{relation.get('before')} before "
+                    f"{relation.get('after')}"
+                ),
+                claim_type=BEHAVIOR,
+                evidence=[
+                    make_evidence(
+                        "DIFF",
+                        item.get(
+                            "hash",
+                            "unknown",
+                        ),
+                    )
+                ],
+            )
+
+            order_claim["source_event"] = item.get(
+                "hash",
+                "unknown",
+            )
+            order_claim["target_relevant"] = True
+            order_claim["structured_semantics"] = [
+                order_semantics
+            ]
+
+            claims.append(order_claim)
     return claims
 
 

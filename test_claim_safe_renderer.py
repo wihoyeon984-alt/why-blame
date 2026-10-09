@@ -219,5 +219,25 @@ class TestClaimSafeRenderer(unittest.TestCase):
         )
 
 
+    def test_precede_renders_direct_statement_order(self):
+        semantics = self.make_safe(
+            action="PRECEDE",
+            subject="sockets.append(sock)",
+            target="sock.bind((host, port))",
+            source_event="abc123",
+        )
+
+        result = render_safe_semantics(
+            semantics
+        )
+
+        self.assertEqual(
+            result,
+            (
+                "sockets.append(sock) occurs before "
+                "sock.bind((host, port))."
+            ),
+        )
+
 if __name__ == "__main__":
     unittest.main()

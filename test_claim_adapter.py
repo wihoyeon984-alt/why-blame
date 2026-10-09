@@ -425,5 +425,52 @@ class TestClaimAdapter(unittest.TestCase):
         )
 
 
+    def test_direct_statement_ordering_is_attached_to_after_claim(self):
+        timeline = [
+            {
+                "hash": "order123",
+                "diff_lines": [
+                    "+ except BaseException:",
+                    "+     cleanup()",
+                ],
+                "source": (
+                    "try:\n"
+                    "    for res in addresses:\n"
+                    "        sock = create_socket()\n"
+                    "        sockets.append(sock)\n"
+                    "        sock.setsockopt(level, option, 1)\n"
+                    "        sock.setblocking(False)\n"
+                    "        sock.bind((host, port))\n"
+                    "except BaseException:\n"
+                    "    cleanup()\n"
+                ),
+                "ref_items": [],
+                "type": "FEATURE",
+            }
+        ]
+
+        claims = build_behavior_claims(timeline)
+
+        ordering_claims = [
+            claim
+            for claim in claims
+            if any(
+                item.get("action") == "PRECEDE"
+                and item.get("subject")
+                == "sockets.append(sock)"
+                and item.get("target")
+                == "sock.bind((host, port))"
+                for item in claim.get(
+                    "structured_semantics",
+                    [],
+                )
+            )
+        ]
+
+        self.assertEqual(
+            len(ordering_claims),
+            1,
+        )
+
 if __name__ == "__main__":
     unittest.main()

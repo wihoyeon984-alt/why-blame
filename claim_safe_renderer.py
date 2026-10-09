@@ -134,6 +134,15 @@ def render_safe_semantics(semantics):
 
         return sentence + "."
 
+    if action == "PRECEDE":
+        if not subject or not target:
+            return None
+
+        return (
+            f"{subject} occurs before "
+            f"{target}."
+        )
+
     if action == "RETURN":
         if not target:
             return None

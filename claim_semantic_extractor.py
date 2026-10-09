@@ -540,6 +540,29 @@ def extract_statement_ordering(
     )
 
     for node in tree.body:
+        if isinstance(
+            node,
+            (
+                ast.ClassDef,
+                ast.FunctionDef,
+                ast.AsyncFunctionDef,
+            ),
+        ):
+            function_code = ast.unparse(
+                ast.Module(
+                    body=node.body,
+                    type_ignores=[],
+                )
+            )
+
+            result.extend(
+                extract_statement_ordering(
+                    function_code,
+                    source_event,
+                )
+            )
+            continue
+
         if isinstance(node, ast.For):
             result.extend(
                 _make_ordering_relations(
