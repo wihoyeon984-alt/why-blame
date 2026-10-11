@@ -10,11 +10,31 @@ authors = [
     { name = "Wi Ho-yeon" }
 ]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = []
 
 [project.scripts]
 why-blame = "main:main"
 
 [tool.setuptools]
-py-modules = ["main", "git_tracker", "github_client", "timeline", "viewer", "narrative", "consistency"]
+py-modules = [
+    "main",
+    "git_tracker",
+    "github_client",
+    "timeline",
+    "viewer",
+    "narrative",
+    "consistency",
+    "claim_adapter",
+    "claim_evidence",
+    "claim_policy",
+    "claim_renderer",
+    "claim_contradiction",
+    "claim_entailment",
+    "claim_predicate",
+    "claim_predicate_diff",
+    "claim_safe_renderer",
+    "claim_safety",
+    "claim_semantic_extractor",
+    "claim_semantics",
+]

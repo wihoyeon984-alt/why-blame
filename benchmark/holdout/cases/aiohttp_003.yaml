@@ -1,0 +1,328 @@
+﻿id: aiohttp_003
+
+repository:
+  owner: "aio-libs"
+  name: "aiohttp"
+  url: "https://github.com/aio-libs/aiohttp"
+
+revision:
+  commit: "dcac82ea3323605097d77ae2dde60d389546a9ba"
+
+target:
+  file: "aiohttp/client.py"
+  start_line: 1183
+  end_line: 1190
+
+selection:
+  selected_before_system_run: true
+  previously_used_for_development: false
+  notes: >
+    Holdout candidate selected from public Git history before running
+    why-blame. The target explicitly passes the negotiated compression
+    state to WebSocketReader.
+    Parent commit:
+    c0495df2d16e7a455d4dba34deb8cb78c306f143.
+
+history:
+  expected_shape: "original implementation event with maintained-branch cherry-picks"
+  relevant_events:
+    - "dcac82ea3323605097d77ae2dde60d389546a9ba"
+    - "14ca990100210f85c63637c27ff9e11799fb30ab"
+    - "47fb6ae354d4fa22048f4dbe7dbf82b625f0a2f6"
+
+ground_truth:
+  frozen: true
+  frozen_before_system_run: true
+
+  claims:
+
+    - id: claim_001
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        ClientSession passes the negotiated WebSocket compression state
+        explicitly to WebSocketReader.
+
+      semantics:
+        action: "PASS"
+        subject: "negotiated WebSocket compression state"
+        target: "WebSocketReader"
+        condition: ""
+        scope: "ClientSession WebSocket setup"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: NONE
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "dcac82ea3323605097d77ae2dde60d389546a9ba"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            ClientSession constructs WebSocketReader with the explicit
+            argument compress=bool(compress).
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The explicit propagation of the compression state is directly
+        visible in the selected production diff.
+
+    - id: claim_002
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        WebSocketReader no longer assumes that compression is enabled
+        when its compression state is not explicitly supplied.
+
+      semantics:
+        action: "REQUIRE"
+        subject: "WebSocket compression state"
+        target: "explicit WebSocketReader argument"
+        condition: ""
+        scope: "WebSocketReader initialization"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: NONE
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "dcac82ea3323605097d77ae2dde60d389546a9ba"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            WebSocketReader's compress parameter changes from
+            compress: bool = True to compress: bool, removing the
+            default-enabled compression assumption.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The removal of the True default directly requires callers to
+        provide the compression state.
+
+    - id: claim_003
+      type: CAUSE
+      label: SUPPORTED
+
+      text: >
+        The change prevents WebSocket frames from being decompressed
+        when permessage-deflate compression was not negotiated.
+
+      semantics:
+        action: "AVOID"
+        subject: "WebSocket frame decompression"
+        target: "frames without negotiated permessage-deflate"
+        condition: "permessage-deflate was not negotiated"
+        scope: "WebSocket client"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: COMMIT
+          ref: "dcac82ea3323605097d77ae2dde60d389546a9ba"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The commit explicitly states that the change fixes
+            decompressing frames without negotiation.
+
+        - channel: HISTORY
+          ref: "aiohttp 3.14.2 changelog"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The project changelog explicitly describes the fix as
+            preventing client frame decompression when
+            permessage-deflate was not negotiated.
+
+        - channel: DIFF
+          ref: "dcac82ea3323605097d77ae2dde60d389546a9ba"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: PARTIAL
+          note: >
+            The client now passes bool(compress) to WebSocketReader and
+            WebSocketReader no longer defaults compression to True.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The end-to-end motivation is explicitly documented by the
+        commit and project changelog and is consistent with the
+        production implementation.
+
+    - id: claim_004
+      type: BEHAVIOR
+      label: UNSUPPORTED
+
+      text: >
+        WebSocket frame decompression is always disabled after this
+        change.
+
+      semantics:
+        action: "DISABLE"
+        subject: "WebSocket frame decompression"
+        target: ""
+        condition: ""
+        scope: "WebSocket client"
+
+      field_entailment:
+        action: CONFLICTING
+        subject: DIRECT
+        target: NONE
+        condition: NONE
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "dcac82ea3323605097d77ae2dde60d389546a9ba"
+          relation: CONTRADICTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            Compression is controlled by the negotiated compress value;
+            it is not unconditionally disabled.
+
+      contradiction:
+        status: PRESENT
+        evidence:
+          - "dcac82ea3323605097d77ae2dde60d389546a9ba"
+
+      rationale: >
+        The change preserves conditional compression behavior and only
+        removes the assumption that compression is enabled by default.
+
+    - id: claim_005
+      type: BEHAVIOR
+      label: UNSUPPORTED
+
+      text: >
+        The change removes WebSocket compression support from aiohttp.
+
+      semantics:
+        action: "REMOVE"
+        subject: "WebSocket compression support"
+        target: "aiohttp"
+        condition: ""
+        scope: "WebSocket client"
+
+      field_entailment:
+        action: CONFLICTING
+        subject: DIRECT
+        target: DIRECT
+        condition: NONE
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "dcac82ea3323605097d77ae2dde60d389546a9ba"
+          relation: CONTRADICTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The implementation continues passing and consuming a
+            compression state. It does not remove compression support.
+
+      contradiction:
+        status: PRESENT
+        evidence:
+          - "dcac82ea3323605097d77ae2dde60d389546a9ba"
+
+      rationale: >
+        The semantic change concerns honoring negotiation state, not
+        removing the feature.
+
+    - id: claim_006
+      type: CAUSE
+      label: UNSUPPORTED
+
+      text: >
+        The change was introduced primarily to improve WebSocket
+        performance.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: NONE
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence: []
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The frozen evidence establishes correctness of negotiated
+        compression handling, not performance optimization as the
+        primary motivation.
+
+system_run:
+  executed: false
+  implementation_commit: "2c4bf34"
+  executed_at: ""
+  command: ""
+
+result:
+  raw_output_file: ""
+
+  presented_claims: []
+
+  counts:
+    ground_truth_supported: 3
+    recovered_supported: 0
+    presented_total: 0
+    unsupported_presented: 0
+    correct_attributions: 0
+    attribution_items: 0
+    correct_abstentions: 0
+    system_abstentions: 0
+    required_abstentions: 3
+
+  metrics:
+    claim_precision: null
+    supported_claim_recall: null
+    unsupported_claim_rate: null
+    false_why: null
+    evidence_attribution_accuracy: null
+    abstention_precision: null
+    abstention_recall: null
+
+review:
+  benchmark_failure: false
+  notes: ""
+

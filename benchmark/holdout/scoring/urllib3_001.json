@@ -1,0 +1,30 @@
+﻿{
+  "case_id": "urllib3_001",
+  "execution": {
+    "completed": false,
+    "failure_stage": "HISTORY_RENDERING",
+    "failure_type": "UnicodeEncodeError"
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The first-run output presents the exception cleanup block in CURRENT CODE, including `except BaseException`, the cleanup comment, and `for sock in sockets`, exposing the supported socket-cleanup behavior."
+    },
+    "claim_002": {
+      "status": "MISSED",
+      "raw_evidence": "The first-run output does not present the supported ordering that a newly created socket is appended to the cleanup collection before bind() is attempted."
+    },
+    "claim_003": {
+      "status": "PRESENTED",
+      "raw_evidence": "The first-run CURRENT CODE output presents the source comment stating that the caller retries on EADDRINUSE and that sockets created so far are closed rather than left to garbage collection."
+    },
+    "claim_004": {
+      "status": "ABSTAINED",
+      "raw_evidence": "The WHY output explicitly states that sufficient external evidence for a concrete reason is lacking and refuses to generate a concrete WHY, rather than asserting a production urllib3 HTTP client socket leak."
+    },
+    "claim_005": {
+      "status": "ABSTAINED",
+      "raw_evidence": "The WHY output explicitly refuses to generate a concrete WHY because sufficient external evidence was not verified, and does not assert network performance as the primary motivation."
+    }
+  }
+}

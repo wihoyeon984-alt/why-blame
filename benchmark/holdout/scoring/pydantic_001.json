@@ -1,0 +1,38 @@
+﻿{
+  "case_id": "pydantic_001",
+  "execution": {
+    "completed": false,
+    "failure_stage": "HISTORY_RENDERING",
+    "failure_type": "UnicodeEncodeError"
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The WHY output presents `if deep and update`, states that only fields that will not be updated are deep-copied, creates a shallow copy, and selectively calls deepcopy for keys not in update."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The WHY output explicitly presents the loop over copied.__dict__ and the `if k not in update` guard before deepcopy."
+    },
+    "claim_003": {
+      "status": "PRESENTED",
+      "raw_evidence": "The WHY output explicitly presents the copied.__pydantic_extra__ branch and deep-copies extra entries only when `k not in update`."
+    },
+    "claim_004": {
+      "status": "PRESENTED",
+      "raw_evidence": "The WHY output explicitly states that separate deepcopy calls use a shared memo and presents `memo: dict[int, Any] = {}` followed by deepcopy calls using that memo."
+    },
+    "claim_005": {
+      "status": "PRESENTED",
+      "raw_evidence": "The WHY output explicitly presents the else branch `copied = self.__deepcopy__() if deep else self.__copy__()`, preserving normal copy selection outside the deep-and-update branch."
+    },
+    "claim_006": {
+      "status": "WITHHELD",
+      "raw_evidence": "The WHY output does not claim that every field is always deep-copied whenever deep=True. It explicitly presents exclusions for keys present in update."
+    },
+    "claim_007": {
+      "status": "WITHHELD",
+      "raw_evidence": "The WHY output does not claim that selective deepcopy was introduced primarily as a performance optimization."
+    }
+  }
+}

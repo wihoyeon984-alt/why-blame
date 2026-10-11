@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from git_tracker import extract_git_history
+from git_tracker import extract_git_history, get_source_at_commit
 
 
 class TestGitTracker(unittest.TestCase):
@@ -296,6 +296,107 @@ diff --git a/service.py b/service.py
             ("wihoyeon984-alt", "why-blame"),
         )
 
+
+
+    @patch("git_tracker.subprocess.run")
+    def test_get_source_at_commit_uses_git_show(self, mock_run):
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stdout = (
+            'def helper(value):\n'
+            '    return value\n'
+        )
+        mock_result.stderr = ""
+        mock_run.return_value = mock_result
+
+        result = get_source_at_commit(
+            "abc123",
+            "service.py",
+        )
+
+        self.assertEqual(
+            result,
+            mock_result.stdout,
+        )
+        mock_run.assert_called_once_with(
+            [
+                "git",
+                "show",
+                "abc123:service.py",
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+
+
+    @patch("git_tracker.subprocess.run")
+    def test_get_source_at_commit_returns_empty_on_failure(self, mock_run):
+        mock_result = MagicMock()
+        mock_result.returncode = 128
+        mock_result.stdout = ""
+        mock_result.stderr = "fatal: path does not exist"
+        mock_run.return_value = mock_result
+
+        result = get_source_at_commit(
+            "abc123",
+            "missing.py",
+        )
+
+        self.assertEqual(
+            result,
+            "",
+        )
+
+
+    @patch("git_tracker.subprocess.run")
+    def test_extract_git_history_attaches_source_snapshot(self, mock_run):
+        sample_log = """commit abc1234
+Author: test
+Date: 2026-09-18
+
+    fix: normalize value
+
+diff --git a/service.py b/service.py
+--- a/service.py
++++ b/service.py
+@@ -1,1 +1,1 @@
++   helper(value)
+"""
+
+        log_result = MagicMock()
+        log_result.returncode = 0
+        log_result.stdout = sample_log
+        log_result.stderr = ""
+
+        source_result = MagicMock()
+        source_result.returncode = 0
+        source_result.stdout = (
+            'def helper(value):\n'
+            '    value = value.encode("utf-8")\n'
+        )
+        source_result.stderr = ""
+
+        mock_run.side_effect = [
+            log_result,
+            source_result,
+        ]
+
+        result = extract_git_history(
+            "service.py",
+            1,
+            1,
+        )
+
+        self.assertEqual(
+            len(result),
+            1,
+        )
+        self.assertEqual(
+            result[0]["source"],
+            source_result.stdout,
+        )
 
 if __name__ == "__main__":
     unittest.main()

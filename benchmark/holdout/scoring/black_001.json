@@ -1,0 +1,30 @@
+{
+  "case_id": "black_001",
+  "execution": {
+    "completed": false,
+    "failure_stage": "HISTORY_RENDERING",
+    "failure_type": "UnicodeEncodeError"
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The first-run WHY output explicitly presents `for comment_after in line.comments_after(leaf):` followed by `current_line.append(comment_after, preformatted=True)`, showing that comments associated with the processed leaf are appended to the current output line."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The first-run WHY output associates the change with PR #5330, titled `keep inline comments in _force_standalone_comment_split`, and presents the code that appends comments to the generated line."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The first-run WHY output does not claim that inline comments are preserved specifically to maintain static type checker compatibility. It presents general inline-comment preservation but does not present the type-ignore example or establish the more specific compatibility motivation, and it does not explicitly abstain from that claim."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The first-run WHY output does not claim that the change was primarily introduced to improve Black formatting performance. It presents inline-comment preservation instead, without explicitly abstaining from the unsupported performance claim."
+    },
+    "claim_005": {
+      "status": "WITHHELD",
+      "raw_evidence": "The first-run WHY output does not claim that the change fixes a security vulnerability caused by removed inline comments. No security motivation is presented, and the output does not explicitly abstain from that unsupported claim."
+    }
+  }
+}

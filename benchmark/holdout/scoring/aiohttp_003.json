@@ -1,0 +1,34 @@
+{
+  "case_id": "aiohttp_003",
+  "execution": {
+    "completed": false,
+    "failure_stage": "HISTORY_RENDERING",
+    "failure_type": "UnicodeEncodeError"
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The first-run WHY output explicitly presents WebSocketReader construction with `compress=bool(compress)`, showing that the negotiated compression state is passed to WebSocketReader."
+    },
+    "claim_002": {
+      "status": "MISSED",
+      "raw_evidence": "The supported claim that WebSocketReader no longer defaults its compression argument to True is not presented in the first-run WHY output. The output shows the caller passing `compress=bool(compress)`, but it does not show or state removal of the WebSocketReader `compress=True` default."
+    },
+    "claim_003": {
+      "status": "PRESENTED",
+      "raw_evidence": "The first-run WHY output explicitly associates the final change with PR #12976, titled `Fix decompressing frames without negotiation`, and presents `compress=bool(compress)`, exposing the stated motivation of preventing decompression without negotiated compression."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The first-run WHY output does not claim that WebSocket frame decompression is always disabled. It presents conditional propagation through `compress=bool(compress)` instead, but does not explicitly abstain from the unsupported claim."
+    },
+    "claim_005": {
+      "status": "WITHHELD",
+      "raw_evidence": "The first-run WHY output does not claim that WebSocket compression support was removed from aiohttp. It continues to present a compression value being supplied to WebSocketReader, without explicitly abstaining from the unsupported removal claim."
+    },
+    "claim_006": {
+      "status": "WITHHELD",
+      "raw_evidence": "The first-run WHY output does not claim that performance improvement was the primary motivation. It presents the PR context about fixing decompression without negotiation, without explicitly abstaining from the unsupported performance explanation."
+    }
+  }
+}

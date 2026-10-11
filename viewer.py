@@ -1,6 +1,54 @@
+import builtins
+import sys
 import textwrap
 
 from narrative import synthesize_narrative
+
+def _safe_print(*args, **kwargs):
+    stream = kwargs.get('file', sys.stdout)
+    encoding = getattr(stream, 'encoding', None) or 'utf-8'
+    safe_args = [str(arg).encode(encoding, errors='replace').decode(encoding) for arg in args]
+    builtins.print(*safe_args, **kwargs)
+
+
+def _wrap_preserving_lines(text, width=62):
+    rendered = []
+
+    for raw_line in text.splitlines():
+        if not raw_line.strip():
+            rendered.append("")
+            continue
+
+        if raw_line.startswith("- "):
+            wrapped = textwrap.wrap(
+                raw_line[2:],
+                width=max(width - 2, 1),
+                subsequent_indent="  ",
+            )
+
+            if not wrapped:
+                rendered.append("- ")
+                continue
+
+            rendered.append(
+                "- " + wrapped[0]
+            )
+            rendered.extend(
+                "  " + line
+                for line in wrapped[1:]
+            )
+            continue
+
+        wrapped = textwrap.wrap(
+            raw_line,
+            width=width,
+        )
+
+        rendered.extend(
+            wrapped or [""]
+        )
+
+    return rendered
 
 
 def render_card(
@@ -11,6 +59,7 @@ def render_card(
     timeline,
     stats,
 ):
+    print = _safe_print
     width = 64
     thick_line = "━" * width
     thin_line = "─" * width
@@ -117,11 +166,14 @@ def render_card(
 
     print(f"* {headline}\n")
 
-    for line in textwrap.wrap(
+    for line in _wrap_preserving_lines(
         narrative_body,
         width=62,
     ):
-        print(f"  {line}")
+        if line:
+            print(f"  {line}")
+        else:
+            print()
 
     print(thin_line)
 
@@ -348,15 +400,16 @@ def render_card(
         f"{stats.get('ambiguity', 'LOW')}"
     )
 
+    confidence = stats.get(
+        "confidence",
+        stats.get(
+            "grade",
+            "UNKNOWN",
+        ),
+    )
+
     print(
-        "CONFIDENCE:  "
-        f"{stats.get(
-            'confidence',
-            stats.get(
-                'grade',
-                'UNKNOWN',
-            ),
-        )}"
+        f"CONFIDENCE:  {confidence}"
     )
 
     print(thin_line)

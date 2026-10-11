@@ -538,5 +538,54 @@ class TestNarrative(unittest.TestCase):
         self.assertNotIn("Improve image rendering", headline)
 
 
+    def test_weak_confidence_preserves_safe_direct_behavior(self):
+        timeline = [
+            {
+                "date": "2026-09-18",
+                "hash": "weak001",
+                "message": "fix: initial behavior",
+                "type": "FIRST OBSERVED",
+                "diff_lines": [],
+                "ref_items": [],
+            },
+            {
+                "date": "2026-09-19",
+                "hash": "weak002",
+                "message": "fix: secret root cause",
+                "type": "BUG FIX",
+                "diff_lines": [
+                    '+ o = o.encode("utf-8")',
+                ],
+                "ref_items": [],
+            },
+        ]
+
+        stats = {
+            "confidence": "WEAK",
+            "consistency": "UNLINKED",
+            "is_blocked": False,
+        }
+
+        headline, body = synthesize_narrative(
+            timeline,
+            stats,
+        )
+
+        self.assertIn(
+            "\uc2e0\ub8b0\ud560 \uc218 \uc788\ub294 "
+            "\ubcc0\uacbd \uc0ac\uc720\ub97c "
+            "\ud655\uc815\ud558\uae30 \uc5b4\ub824\uc6c0",
+            headline,
+        )
+        self.assertIn(
+            "o is encoded as UTF-8.",
+            body,
+        )
+        self.assertNotIn(
+            "secret root cause",
+            body,
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,34 @@
+﻿{
+  "case_id": "aiohttp_003",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The current-run WHY output presents WebSocketReader construction with `compress=bool(compress)`, showing that the negotiated compression state is explicitly passed to WebSocketReader."
+    },
+    "claim_002": {
+      "status": "MISSED",
+      "raw_evidence": "The current-run output still does not present that WebSocketReader no longer defaults its compression argument to True. It presents the caller-side `compress=bool(compress)` change but does not expand to the WebSocketReader definition or state removal of the `compress=True` default."
+    },
+    "claim_003": {
+      "status": "PRESENTED",
+      "raw_evidence": "The current-run WHY output associates the final change with PR #12976, titled `Fix decompressing frames without negotiation`, and presents the explicit compression-state propagation."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The current-run output does not claim that WebSocket frame decompression is always disabled and does not explicitly abstain from that unsupported claim."
+    },
+    "claim_005": {
+      "status": "WITHHELD",
+      "raw_evidence": "The current-run output does not claim that WebSocket compression support was removed from aiohttp and does not explicitly abstain from that unsupported claim."
+    },
+    "claim_006": {
+      "status": "WITHHELD",
+      "raw_evidence": "The current-run output does not claim that performance improvement was the primary motivation and does not explicitly abstain from that unsupported explanation."
+    }
+  }
+}

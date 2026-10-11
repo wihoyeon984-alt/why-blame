@@ -1,0 +1,34 @@
+﻿{
+  "case_id": "aiohttp_004",
+  "execution": {
+    "completed": false,
+    "failure_stage": "HISTORY_RENDERING",
+    "failure_type": "UnicodeEncodeError"
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The first-run WHY output presents the restored list-comprehension code: Added code: return b\"\".join([self._read_nowait_chunk(-1) for _ in range(count)])."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The first-run output states that the code went through a rollback and explicitly says: An earlier change was explicitly reverted."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The unsupported current generator-expression claim was not presented. The output instead presents the current list-comprehension form, but it does not explicitly abstain from the unsupported claim."
+    },
+    "claim_004": {
+      "status": "ABSTAINED",
+      "raw_evidence": "The WHY output explicitly states that the concrete reason for the change is beyond the verified history and is not asserted."
+    },
+    "claim_005": {
+      "status": "ABSTAINED",
+      "raw_evidence": "The WHY output explicitly declines to establish a concrete revert cause, covering the unsupported excessive-memory explanation."
+    },
+    "claim_006": {
+      "status": "ABSTAINED",
+      "raw_evidence": "The WHY output explicitly declines to establish a concrete revert cause, covering the unsupported Python-compatibility explanation."
+    }
+  }
+}

@@ -1,0 +1,38 @@
+﻿{
+  "case_id": "django_001",
+  "execution": {
+    "completed": false,
+    "failure_stage": "HISTORY_RENDERING",
+    "failure_type": "UnicodeEncodeError"
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The WHY output presents the independent-comment feature condition, changed db_comment condition, _alter_column_comment_sql(), and post_actions.append()."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The WHY output presents `not supports_independent_comment_alteration` on the type-alteration path and the separate independent comment-alteration branch."
+    },
+    "claim_003": {
+      "status": "MISSED",
+      "raw_evidence": "The WHY output refers to supports_independent_comment_alteration but does not state that its base default is False or that Oracle and PostgreSQL explicitly enable it."
+    },
+    "claim_004": {
+      "status": "PRESENTED",
+      "raw_evidence": "The WHY output explicitly presents PR #20817 titled `Fixed #36947 -- Avoided altering column type when only db_comment changes.`"
+    },
+    "claim_005": {
+      "status": "WITHHELD",
+      "raw_evidence": "The WHY output does not claim that schema migration performance was the primary motivation."
+    },
+    "claim_006": {
+      "status": "WITHHELD",
+      "raw_evidence": "The WHY output does not claim that every Django database backend always performs column-comment changes independently."
+    },
+    "claim_007": {
+      "status": "WITHHELD",
+      "raw_evidence": "The WHY output does not claim that the change adds GeneratedField support to Django."
+    }
+  }
+}

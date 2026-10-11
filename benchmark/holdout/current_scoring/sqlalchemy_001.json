@@ -1,0 +1,38 @@
+﻿{
+  "case_id": "sqlalchemy_001",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The current-run output presents the final commit message `Don't apply a length to reflected TEXT / NTEXT` and Issue #13451 describing spurious reflected TEXT/NTEXT lengths."
+    },
+    "claim_002": {
+      "status": "MISSED",
+      "raw_evidence": "The current-run output does not present that reflected TEXT and NTEXT preserve their collation when a collation is present."
+    },
+    "claim_003": {
+      "status": "MISSED",
+      "raw_evidence": "The current-run output does not present that bounded SQL Server string and character types continue deriving their reflected lengths from max_length."
+    },
+    "claim_004": {
+      "status": "PRESENTED",
+      "raw_evidence": "The current-run output presents Issue #13451 titled `[mssql] reflection sets a spurious length on TEXT/NTEXT columns, yielding invalid TEXT(16) DDL` together with the final commit message `Don't apply a length to reflected TEXT / NTEXT`, exposing the supported spurious-length motivation."
+    },
+    "claim_005": {
+      "status": "PRESENTED",
+      "raw_evidence": "The current-run output presents Issue #13451 stating that the spurious reflected TEXT/NTEXT length yields invalid TEXT(16) DDL, exposing the supported invalid-DDL consequence."
+    },
+    "claim_006": {
+      "status": "WITHHELD",
+      "raw_evidence": "The current-run output does not generalize the change to all SQL Server string types and does not explicitly abstain from that unsupported claim."
+    },
+    "claim_007": {
+      "status": "WITHHELD",
+      "raw_evidence": "The current-run output does not claim that performance improvement was the primary motivation and does not explicitly abstain from that unsupported explanation."
+    }
+  }
+}

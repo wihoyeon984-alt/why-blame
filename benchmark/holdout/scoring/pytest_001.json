@@ -1,0 +1,30 @@
+﻿{
+  "case_id": "pytest_001",
+  "execution": {
+    "completed": false,
+    "failure_stage": "HISTORY_RENDERING",
+    "failure_type": "UnicodeEncodeError"
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The first-run WHY output explicitly presents the final code `return _fix_code_filename(co, str(source))`, showing that the loaded cached code object is passed through filename correction using the current source filename rather than presenting the earlier stale-cache rejection behavior."
+    },
+    "claim_002": {
+      "status": "MISSED",
+      "raw_evidence": "The supported helper behavior that _fix_code_filename returns the original code object unchanged when co.co_filename already equals the requested filename is not presented in the first-run WHY output."
+    },
+    "claim_003": {
+      "status": "MISSED",
+      "raw_evidence": "The supported implementation detail selecting _imp._fix_co_filename when available and otherwise using a pure-Python recursive replacement is not presented in the first-run WHY output."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The first-run WHY output does not present the superseded historical behavior in which a filename mismatch caused the cached code object to be rejected as stale. It presents the final _fix_code_filename behavior instead."
+    },
+    "claim_005": {
+      "status": "WITHHELD",
+      "raw_evidence": "The first-run WHY output does not claim that filename correction was introduced primarily as a performance improvement."
+    }
+  }
+}

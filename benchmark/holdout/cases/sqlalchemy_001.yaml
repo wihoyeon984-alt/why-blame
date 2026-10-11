@@ -1,0 +1,396 @@
+﻿id: sqlalchemy_001
+
+repository:
+  owner: "sqlalchemy"
+  name: "sqlalchemy"
+  url: "https://github.com/sqlalchemy/sqlalchemy"
+
+revision:
+  commit: "1730a092684f272c8ba9843f89f76e80b160324f"
+
+target:
+  file: "lib/sqlalchemy/dialects/mssql/base.py"
+  start_line: 3795
+  end_line: 3804
+
+selection:
+  selected_before_system_run: true
+  previously_used_for_development: false
+  notes: >
+    Holdout candidate selected from public Git history before running
+    why-blame. This revision is a cherry-pick of the original
+    implementation commit
+    325f71701a8a994c982c781f59bf34f42add88e7.
+    Parent commit:
+    fa4fd8bf266f73c7c3fd1679ac53e52b9542f32a.
+
+history:
+  expected_shape: "implementation commit cherry-picked into maintained branch"
+  relevant_events:
+    - "325f71701a8a994c982c781f59bf34f42add88e7"
+    - "1730a092684f272c8ba9843f89f76e80b160324f"
+
+ground_truth:
+  frozen: true
+  frozen_before_system_run: true
+
+  claims:
+
+    - id: claim_001
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        SQL Server TEXT and NTEXT columns are reflected without applying
+        sys.columns.max_length as their type length.
+
+      semantics:
+        action: "AVOID"
+        subject: "reflected TEXT and NTEXT type length"
+        target: "sys.columns.max_length"
+        condition: "the reflected SQL Server type is TEXT or NTEXT"
+        scope: "MSSQL column reflection"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "1730a092684f272c8ba9843f89f76e80b160324f"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            MSText and MSNText are removed from the branches that assign
+            kwargs["length"] from maxlen. They are handled in a separate
+            branch that does not assign a length.
+
+        - channel: COMMIT
+          ref: "1730a092684f272c8ba9843f89f76e80b160324f"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The commit explicitly states that reflected TEXT and NTEXT
+            should not have a spurious length applied.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The production diff directly separates TEXT and NTEXT from
+        bounded string types whose reflected length is calculated from
+        max_length.
+
+    - id: claim_002
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        Reflected TEXT and NTEXT columns preserve their collation when
+        a collation is present.
+
+      semantics:
+        action: "PRESERVE"
+        subject: "TEXT and NTEXT collation"
+        target: "reflected type"
+        condition: "collation is present"
+        scope: "MSSQL column reflection"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "1730a092684f272c8ba9843f89f76e80b160324f"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The new MSText and MSNText branch continues assigning
+            kwargs["collation"] when collation is present while omitting
+            a length assignment.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The new type-specific branch explicitly retains collation
+        handling.
+
+    - id: claim_003
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        Bounded SQL Server string and character types continue to derive
+        their reflected length from max_length.
+
+      semantics:
+        action: "SET"
+        subject: "bounded string type length"
+        target: "max_length"
+        condition: "the reflected type is a bounded string or character type"
+        scope: "MSSQL column reflection"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "1730a092684f272c8ba9843f89f76e80b160324f"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            MSString and MSChar retain their existing maxlen-based
+            length calculation, and MSNVarchar and MSNChar retain their
+            maxlen-based calculation adjusted for their representation.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The implementation selectively removes length handling from
+        TEXT and NTEXT rather than removing length reflection from all
+        SQL Server string types.
+
+    - id: claim_004
+      type: CAUSE
+      label: SUPPORTED
+
+      text: >
+        The change fixes spurious reflected lengths for SQL Server TEXT
+        and NTEXT columns because sys.columns.max_length reports the
+        in-row LOB pointer size for those unlengthed types rather than a
+        character length.
+
+      semantics:
+        action: "AVOID"
+        subject: "spurious reflected TEXT and NTEXT lengths"
+        target: "LOB pointer size interpreted as character length"
+        condition: "reflecting SQL Server TEXT or NTEXT"
+        scope: "MSSQL reflection"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: COMMIT
+          ref: "1730a092684f272c8ba9843f89f76e80b160324f"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The commit message explicitly explains that TEXT and NTEXT
+            are unlengthed LOB types and that max_length reports the
+            in-row LOB pointer size rather than a character length.
+
+        - channel: ISSUE
+          ref: "#13451"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The reported bug describes reflected TEXT(16) and NTEXT(8)
+            lengths and explains that these values come from SQL Server
+            metadata rather than representing valid character lengths.
+
+        - channel: DIFF
+          ref: "1730a092684f272c8ba9843f89f76e80b160324f"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The production implementation removes TEXT and NTEXT from
+            the max_length-based branches.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The causal explanation is explicitly documented by both the
+        commit and issue and matches the selected production change.
+
+    - id: claim_005
+      type: CAUSE
+      label: SUPPORTED
+
+      text: >
+        Removing the spurious TEXT and NTEXT lengths allows reflected
+        table definitions to be recreated without emitting invalid
+        width-qualified TEXT or NTEXT DDL.
+
+      semantics:
+        action: "AVOID"
+        subject: "invalid width-qualified TEXT and NTEXT DDL"
+        target: "reflected table recreation"
+        condition: "a reflected TEXT or NTEXT type is emitted as DDL"
+        scope: "MSSQL reflection round trip"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: COMMIT
+          ref: "1730a092684f272c8ba9843f89f76e80b160324f"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The commit explicitly states that the corrected reflected
+            types have length None so a reflected table emits valid DDL
+            when recreated.
+
+        - channel: ISSUE
+          ref: "#13451"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The issue demonstrates that reflection could produce
+            TEXT(16) and NTEXT(8), which SQL Server rejects when the
+            reflected schema is emitted again.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        This is a documented consequence of the reflection bug rather
+        than an inferred performance or stylistic motivation.
+
+    - id: claim_006
+      type: BEHAVIOR
+      label: UNSUPPORTED
+
+      text: >
+        SQLAlchemy no longer reflects lengths for SQL Server string
+        types.
+
+      semantics:
+        action: "AVOID"
+        subject: "reflected string lengths"
+        target: "all SQL Server string types"
+        condition: ""
+        scope: "MSSQL column reflection"
+
+      field_entailment:
+        action: PARTIAL
+        subject: PARTIAL
+        target: CONFLICTING
+        condition: NONE
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "1730a092684f272c8ba9843f89f76e80b160324f"
+          relation: CONTRADICTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            Only MSText and MSNText are separated from max_length-based
+            handling. Bounded string and character types retain their
+            reflected length calculations.
+
+      contradiction:
+        status: PRESENT
+        evidence:
+          - "1730a092684f272c8ba9843f89f76e80b160324f"
+
+      rationale: >
+        Generalizing the change to all SQL Server string types would
+        contradict the production diff.
+
+    - id: claim_007
+      type: CAUSE
+      label: UNSUPPORTED
+
+      text: >
+        The reflection change was introduced primarily to improve
+        SQLAlchemy performance.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: NONE
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence: []
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The frozen evidence establishes reflection correctness and DDL
+        round-trip validity, not performance optimization as the reason
+        for the change.
+
+system_run:
+  executed: false
+  implementation_commit: "2c4bf34"
+  executed_at: ""
+  command: ""
+
+result:
+  raw_output_file: ""
+
+  presented_claims: []
+
+  counts:
+    ground_truth_supported: 5
+    recovered_supported: 0
+    presented_total: 0
+    unsupported_presented: 0
+    correct_attributions: 0
+    attribution_items: 0
+    correct_abstentions: 0
+    system_abstentions: 0
+    required_abstentions: 2
+
+  metrics:
+    claim_precision: null
+    supported_claim_recall: null
+    unsupported_claim_rate: null
+    false_why: null
+    evidence_attribution_accuracy: null
+    abstention_precision: null
+    abstention_recall: null
+
+review:
+  benchmark_failure: false
+  notes: ""
+

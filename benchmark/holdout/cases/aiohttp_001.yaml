@@ -1,0 +1,230 @@
+﻿id: aiohttp_001
+
+repository:
+  owner: "aio-libs"
+  name: "aiohttp"
+  url: "https://github.com/aio-libs/aiohttp"
+
+revision:
+  commit: "c67c9e4622d5a30a76e1b7b2e2d255eff6ec6640"
+
+target:
+  file: "aiohttp/multipart.py"
+  start_line: 286
+  end_line: 290
+
+selection:
+  selected_before_system_run: true
+  previously_used_for_development: false
+  notes: >
+    Holdout candidate selected from public Git history before running why-blame.
+    The target adds validation for multipart Content-Length values.
+    Parent commit:
+    04f3a5fa2a786f26b30426a69c7a97d9d47c9e75.
+
+history:
+  expected_shape: "single implementation event with linked PR context"
+  relevant_events:
+    - "c67c9e4622d5a30a76e1b7b2e2d255eff6ec6640"
+
+ground_truth:
+  frozen: true
+  frozen_before_system_run: true
+
+  claims:
+
+    - id: claim_001
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        When Content-Length is present but is not composed only of
+        ASCII decimal digits, the multipart body-part reader raises
+        ValueError.
+
+      semantics:
+        action: "RAISE"
+        subject: "multipart Content-Length validation"
+        target: "ValueError"
+        condition: >
+          Content-Length is present and is not composed only of
+          ASCII decimal digits
+        scope: "BodyPartReader"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "c67c9e4622d5a30a76e1b7b2e2d255eff6ec6640"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The added condition checks that length is not None and
+            requires both isascii() and isdigit(); otherwise it raises
+            ValueError.
+
+        - channel: COMMIT
+          ref: "c67c9e4622d5a30a76e1b7b2e2d255eff6ec6640"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: PARTIAL
+          note: >
+            Commit message states that non-digit Content-Length values
+            in multipart body parts are rejected.
+
+        - channel: PR
+          ref: "#12794"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: PARTIAL
+          note: >
+            The implementation commit is explicitly associated with
+            pull request #12794.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The target diff directly establishes the condition and the
+        ValueError behavior. No causal explanation is needed to support
+        this behavior claim.
+
+    - id: claim_002
+      type: CAUSE
+      label: SUPPORTED
+
+      text: >
+        The validation was introduced to make multipart Content-Length
+        parsing stricter and align it with the main request parser and
+        RFC 9110 Section 8.6 requirements.
+
+      semantics:
+        action: ""
+        subject: "multipart Content-Length validation"
+        target: "stricter Content-Length parsing"
+        condition: ""
+        scope: "multipart body parts"
+
+      field_entailment:
+        action: NONE
+        subject: DIRECT
+        target: DIRECT
+        condition: NONE
+        scope: DIRECT
+
+      evidence:
+        - channel: COMMIT
+          ref: "c67c9e4622d5a30a76e1b7b2e2d255eff6ec6640"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: PARTIAL
+          note: >
+            The commit explicitly describes rejecting non-digit
+            Content-Length values.
+
+        - channel: HISTORY
+          ref: "aiohttp 3.14.2 changelog"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The project changelog explicitly describes rejecting
+            non-plain-digit Content-Length values to match the
+            strictness of the main request parser and RFC 9110
+            Section 8.6.
+
+        - channel: DIFF
+          ref: "c67c9e4622d5a30a76e1b7b2e2d255eff6ec6640"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: PARTIAL
+          note: >
+            The added source comment directly references RFC 9110
+            Section 8.6.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        Unlike claim_001, this is contextual rather than merely
+        observable behavior. The project changelog and source comment
+        provide explicit support for the stricter parsing and RFC
+        alignment.
+
+    - id: claim_003
+      type: CAUSE
+      label: UNSUPPORTED
+
+      text: >
+        The validation was added to fix a specific security
+        vulnerability or HTTP request-smuggling exploit.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: NONE
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence: []
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        Such a security motivation may sound plausible for strict
+        Content-Length validation, but the frozen evidence gathered for
+        this case does not establish a specific vulnerability or
+        request-smuggling exploit as the reason for the change.
+
+system_run:
+  executed: false
+  implementation_commit: "2c4bf34"
+  executed_at: ""
+  command: ""
+
+result:
+  raw_output_file: ""
+
+  presented_claims: []
+
+  counts:
+    ground_truth_supported: 2
+    recovered_supported: 0
+    presented_total: 0
+    unsupported_presented: 0
+    correct_attributions: 0
+    attribution_items: 0
+    correct_abstentions: 0
+    system_abstentions: 0
+    required_abstentions: 1
+
+  metrics:
+    claim_precision: null
+    supported_claim_recall: null
+    unsupported_claim_rate: null
+    false_why: null
+    evidence_attribution_accuracy: null
+    abstention_precision: null
+    abstention_recall: null
+
+review:
+  benchmark_failure: false
+  notes: ""
+

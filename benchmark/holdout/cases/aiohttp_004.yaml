@@ -1,0 +1,355 @@
+﻿id: aiohttp_004
+
+repository:
+  owner: "aio-libs"
+  name: "aiohttp"
+  url: "https://github.com/aio-libs/aiohttp"
+
+revision:
+  commit: "59684b5c270d03f7e87614a6cebeb660cd6340df"
+
+target:
+  file: "aiohttp/streams.py"
+  start_line: 552
+  end_line: 552
+
+selection:
+  selected_before_system_run: true
+  previously_used_for_development: false
+  notes: >
+    Holdout candidate selected from public Git history before running
+    why-blame. This case contains an explicit revert that restores the
+    list-comprehension form previously replaced by a generator
+    expression.
+    Revert parent:
+    d9f3ec73abe5c4d1b3a3f84b43a0bd51f292481d.
+    Original change:
+    69dff14d94b11c81bca6df3982c09a1176a1ca12.
+    Original-change parent:
+    93a2b1c369d69ca6fcdabea9a7c29cfc7947817c.
+
+history:
+  expected_shape: "behavior change followed by an explicit revert"
+  relevant_events:
+    - "69dff14d94b11c81bca6df3982c09a1176a1ca12"
+    - "d9f3ec73abe5c4d1b3a3f84b43a0bd51f292481d"
+    - "59684b5c270d03f7e87614a6cebeb660cd6340df"
+
+ground_truth:
+  frozen: true
+  frozen_before_system_run: true
+
+  claims:
+
+    - id: claim_001
+      type: BEHAVIOR
+      label: SUPPORTED
+
+      text: >
+        When multiple buffered chunks are read in this path,
+        StreamReader passes a list comprehension of the chunks to
+        bytes.join().
+
+      semantics:
+        action: "JOIN"
+        subject: "buffered chunks collected by a list comprehension"
+        target: "bytes result"
+        condition: "more than one buffered chunk is handled by this path"
+        scope: "StreamReader"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: DIFF
+          ref: "59684b5c270d03f7e87614a6cebeb660cd6340df"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The selected revision explicitly returns
+            b"".join([self._read_nowait_chunk(-1) for _ in range(count)]).
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The current list-comprehension behavior is directly observable
+        at the selected target revision.
+
+    - id: claim_002
+      type: REVERT_FACT
+      label: SUPPORTED
+
+      text: >
+        Commit 59684b5c2 reverts the earlier change that replaced the
+        list comprehension passed to bytes.join() with a generator
+        expression.
+
+      semantics:
+        action: "REVERT"
+        subject: "generator-expression join change"
+        target: "list-comprehension join behavior"
+        condition: ""
+        scope: "StreamReader"
+
+      field_entailment:
+        action: DIRECT
+        subject: DIRECT
+        target: DIRECT
+        condition: NONE
+        scope: DIRECT
+
+      evidence:
+        - channel: REVERT
+          ref: "59684b5c270d03f7e87614a6cebeb660cd6340df"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The commit is explicitly titled
+            Revert "Drop list compression (#12857)" (#12861).
+
+        - channel: HISTORY
+          ref: "69dff14d94b11c81bca6df3982c09a1176a1ca12"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The earlier commit replaced the list comprehension with a
+            generator expression.
+
+        - channel: DIFF
+          ref: "59684b5c270d03f7e87614a6cebeb660cd6340df"
+          relation: SUPPORTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The revert diff performs the exact inverse change and
+            restores the list-comprehension form.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        Both the commit metadata and the inverse production diff
+        directly establish the revert fact.
+
+    - id: claim_003
+      type: BEHAVIOR
+      label: UNSUPPORTED
+
+      text: >
+        StreamReader currently passes a generator expression directly
+        to bytes.join() in this path.
+
+      semantics:
+        action: "JOIN"
+        subject: "generator expression of buffered chunks"
+        target: "bytes result"
+        condition: "multiple buffered chunks are handled"
+        scope: "StreamReader"
+
+      field_entailment:
+        action: DIRECT
+        subject: CONFLICTING
+        target: DIRECT
+        condition: DIRECT
+        scope: DIRECT
+
+      evidence:
+        - channel: HISTORY
+          ref: "69dff14d94b11c81bca6df3982c09a1176a1ca12"
+          relation: SUPPORTS_HISTORICAL_ONLY
+          relevance: HIGH
+          sufficiency: LOW
+          note: >
+            The generator-expression behavior existed after the
+            original change but before the explicit revert.
+
+        - channel: DIFF
+          ref: "59684b5c270d03f7e87614a6cebeb660cd6340df"
+          relation: CONTRADICTS
+          relevance: HIGH
+          sufficiency: HIGH
+          note: >
+            The selected target revision restores the list
+            comprehension and therefore contradicts the generator
+            expression as current behavior.
+
+      contradiction:
+        status: PRESENT
+        evidence:
+          - "59684b5c270d03f7e87614a6cebeb660cd6340df"
+
+      rationale: >
+        This statement was historically true during an intermediate
+        revision but is false at the frozen target revision.
+        Presenting it as current behavior would be historical
+        pollution.
+
+    - id: claim_004
+      type: REVERT_CAUSE
+      label: AMBIGUOUS
+
+      text: >
+        The generator-expression change was reverted because it caused
+        a performance regression.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: NONE
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence:
+        - channel: REVERT
+          ref: "59684b5c270d03f7e87614a6cebeb660cd6340df"
+          relation: RELATED
+          relevance: HIGH
+          sufficiency: LOW
+          note: >
+            The commit proves that the earlier change was reverted, but
+            the gathered commit metadata does not establish a
+            performance regression as the reason.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        The revert fact is explicit, but the frozen evidence gathered
+        so far does not establish why the change was reverted.
+        Performance must not be inferred merely from the form of the
+        code change.
+
+    - id: claim_005
+      type: REVERT_CAUSE
+      label: AMBIGUOUS
+
+      text: >
+        The generator-expression change was reverted because it caused
+        excessive memory usage.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: NONE
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence:
+        - channel: REVERT
+          ref: "59684b5c270d03f7e87614a6cebeb660cd6340df"
+          relation: RELATED
+          relevance: HIGH
+          sufficiency: LOW
+          note: >
+            The revert establishes reversal of the earlier code change
+            but does not establish excessive memory usage as the cause.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        A plausible explanation must not be promoted to a verified
+        revert cause without explicit supporting evidence.
+
+    - id: claim_006
+      type: REVERT_CAUSE
+      label: AMBIGUOUS
+
+      text: >
+        The generator-expression change was reverted because of Python
+        compatibility problems.
+
+      semantics:
+        action: ""
+        subject: ""
+        target: ""
+        condition: ""
+        scope: ""
+
+      field_entailment:
+        action: NONE
+        subject: NONE
+        target: NONE
+        condition: NONE
+        scope: NONE
+
+      evidence:
+        - channel: REVERT
+          ref: "59684b5c270d03f7e87614a6cebeb660cd6340df"
+          relation: RELATED
+          relevance: HIGH
+          sufficiency: LOW
+          note: >
+            The frozen evidence proves the revert itself but does not
+            establish Python compatibility as the reason.
+
+      contradiction:
+        status: NONE
+        evidence: []
+
+      rationale: >
+        REVERT_FACT and REVERT_CAUSE are intentionally separated.
+        No specific compatibility cause should be asserted from the
+        revert alone.
+
+system_run:
+  executed: false
+  implementation_commit: "2c4bf34"
+  executed_at: ""
+  command: ""
+
+result:
+  raw_output_file: ""
+
+  presented_claims: []
+
+  counts:
+    ground_truth_supported: 2
+    recovered_supported: 0
+    presented_total: 0
+    unsupported_presented: 0
+    correct_attributions: 0
+    attribution_items: 0
+    correct_abstentions: 0
+    system_abstentions: 0
+    required_abstentions: 4
+
+  metrics:
+    claim_precision: null
+    supported_claim_recall: null
+    unsupported_claim_rate: null
+    false_why: null
+    evidence_attribution_accuracy: null
+    abstention_precision: null
+    abstention_recall: null
+
+review:
+  benchmark_failure: false
+  notes: ""
+

@@ -1,0 +1,22 @@
+﻿{
+  "case_id": "aiohttp_001",
+  "execution": {
+    "completed": false,
+    "failure_stage": "HISTORY_RENDERING",
+    "failure_type": "UnicodeEncodeError"
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The first-run WHY output explicitly presents the added condition requiring Content-Length to be present and fail the isascii()/isdigit() checks, followed by raise ValueError(f\"invalid Content-Length: {length!r}\")."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The first-run WHY output presents PR #12794 ('reject non-digit Content-Length in multipart body parts') and the added source comment referencing RFC 9110 Section 8.6, supporting the stricter multipart Content-Length parsing and RFC-alignment claim."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The first-run WHY output does not claim that the validation fixed a specific security vulnerability or HTTP request-smuggling exploit. It presents the implementation, PR, and RFC context without asserting that unsupported security cause, but it does not explicitly abstain from that claim."
+    }
+  }
+}
