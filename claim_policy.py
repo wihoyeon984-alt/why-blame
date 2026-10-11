@@ -1,9 +1,14 @@
+from claim_safety import (
+    SAFE_TO_RENDER,
+    with_semantic_safety,
+)
+
 from claim_evidence import (
+    BEHAVIOR,
     CONFLICTING,
     REVERT_CAUSE,
     SUPPORTED,
 )
-
 
 DIRECT = "DIRECT"
 CONSERVATIVE = "CONSERVATIVE"
@@ -20,6 +25,38 @@ MEDIUM_CONFIDENCE = {
     "MODERATE",
 }
 
+def _is_safe_direct_behavior(claim):
+    if claim.get("type") != BEHAVIOR:
+        return False
+
+    if claim.get("target_relevant") is not True:
+        return False
+
+    supporting_sources = {
+        item.get("source")
+        for item in claim.get("evidence", [])
+        if item.get("supports") is True
+    }
+
+    if "DIFF" not in supporting_sources:
+        return False
+
+    semantics_items = claim.get(
+        "structured_semantics",
+        [],
+    )
+
+    if not semantics_items:
+        return False
+
+    return all(
+        with_semantic_safety(
+            item,
+            [],
+        ).get("semantic_safety")
+        == SAFE_TO_RENDER
+        for item in semantics_items
+    )
 
 def get_claim_visibility(claim, stats):
     """
@@ -66,6 +103,12 @@ def get_claim_visibility(claim, stats):
         return DIRECT
 
     if confidence in MEDIUM_CONFIDENCE:
+        return CONSERVATIVE
+
+    if (
+        confidence in {"WEAK", "LOW"}
+        and _is_safe_direct_behavior(claim)
+    ):
         return CONSERVATIVE
 
     return HIDDEN

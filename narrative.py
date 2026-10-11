@@ -242,6 +242,12 @@ def synthesize_narrative(timeline, stats):
                 "부족하므로 구체적인 WHY는 생성하지 않습니다."
             )
 
+        body = append_supported_claims(
+            body,
+            timeline,
+            stats,
+        )
+
         return headline, body
 
     total = len(timeline)

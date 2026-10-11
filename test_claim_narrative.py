@@ -81,7 +81,7 @@ class TestClaimNarrative(unittest.TestCase):
             "Base narrative.",
         )
 
-    def test_low_confidence_does_not_append_claim(self):
+    def test_low_confidence_appends_safe_direct_behavior_conservatively(self):
         timeline = [
             {
                 "hash": "old1234",
@@ -113,7 +113,11 @@ class TestClaimNarrative(unittest.TestCase):
 
         self.assertEqual(
             result,
-            "Base narrative.",
+            (
+                "Base narrative. "
+                "\ud655\uc778\ub41c \uc774\ub825 \ubc94\uc704\uc5d0\uc11c \uad00\ucc30\ub418\ub294 \ucf54\ub4dc \ub3d9\uc791: "
+                "o is encoded as UTF-8."
+            ),
         )
 
     def test_medium_confidence_uses_conservative_label(self):

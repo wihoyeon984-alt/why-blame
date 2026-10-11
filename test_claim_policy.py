@@ -1,5 +1,11 @@
 import unittest
 
+from claim_semantics import (
+    DIRECT as DIRECT_EVIDENCE,
+    attach_field_evidence,
+    make_behavior_semantics,
+)
+
 from claim_evidence import (
     BEHAVIOR,
     CONFLICTING,
@@ -168,6 +174,56 @@ class TestClaimPolicy(unittest.TestCase):
             HIDDEN,
         )
 
+    def test_weak_confidence_preserves_safe_direct_behavior(self):
+        claim = self.make_supported_behavior()
+        claim["target_relevant"] = True
+        claim["evidence"] = [
+            {
+                "source": "DIFF",
+                "ref": "abc123",
+                "supports": True,
+            }
+        ]
+
+        semantics = make_behavior_semantics(
+            action="PRECEDE",
+            subject="sockets.append(sock)",
+            target="sock.bind((host, port))",
+            source_event="abc123",
+        )
+
+        for field in (
+            "action",
+            "subject",
+            "target",
+        ):
+            semantics = attach_field_evidence(
+                semantics,
+                field,
+                source="DIFF",
+                ref="abc123",
+                level=DIRECT_EVIDENCE,
+            )
+
+        claim["structured_semantics"] = [
+            semantics
+        ]
+
+        stats = {
+            "confidence": "WEAK",
+            "consistency": "HIGH",
+            "is_blocked": False,
+        }
+
+        result = get_claim_visibility(
+            claim,
+            stats,
+        )
+
+        self.assertEqual(
+            result,
+            CONSERVATIVE,
+        )
     def test_revert_cause_is_not_direct_even_with_high_confidence(self):
         claim = make_claim(
             "The change was reverted because it introduced a bug.",
