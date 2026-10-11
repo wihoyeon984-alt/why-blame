@@ -11,6 +11,46 @@ def _safe_print(*args, **kwargs):
     builtins.print(*safe_args, **kwargs)
 
 
+def _wrap_preserving_lines(text, width=62):
+    rendered = []
+
+    for raw_line in text.splitlines():
+        if not raw_line.strip():
+            rendered.append("")
+            continue
+
+        if raw_line.startswith("- "):
+            wrapped = textwrap.wrap(
+                raw_line[2:],
+                width=max(width - 2, 1),
+                subsequent_indent="  ",
+            )
+
+            if not wrapped:
+                rendered.append("- ")
+                continue
+
+            rendered.append(
+                "- " + wrapped[0]
+            )
+            rendered.extend(
+                "  " + line
+                for line in wrapped[1:]
+            )
+            continue
+
+        wrapped = textwrap.wrap(
+            raw_line,
+            width=width,
+        )
+
+        rendered.extend(
+            wrapped or [""]
+        )
+
+    return rendered
+
+
 def render_card(
     file_name,
     line_range_str,
@@ -126,11 +166,14 @@ def render_card(
 
     print(f"* {headline}\n")
 
-    for line in textwrap.wrap(
+    for line in _wrap_preserving_lines(
         narrative_body,
         width=62,
     ):
-        print(f"  {line}")
+        if line:
+            print(f"  {line}")
+        else:
+            print()
 
     print(thin_line)
 

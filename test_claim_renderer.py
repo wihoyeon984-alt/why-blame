@@ -230,5 +230,90 @@ class TestClaimRenderer(unittest.TestCase):
         )
 
 
+    def test_supported_claims_preserve_individual_structured_semantic_sentences(self):
+        claim = make_claim(
+            "Added code: result = helper(value)",
+            BEHAVIOR,
+            [],
+        )
+        claim["status"] = SUPPORTED
+        claim["structured_semantics"] = [
+            {
+                "type": "BEHAVIOR",
+                "action": "RETURN",
+                "subject": None,
+                "condition": None,
+                "target": "co",
+                "scope": None,
+                "source_event": "abc123",
+                "field_evidence": {
+                    "action": [
+                        {
+                            "source": "DIFF",
+                            "ref": "abc123",
+                            "level": "DIRECT",
+                        }
+                    ],
+                    "target": [
+                        {
+                            "source": "DIFF",
+                            "ref": "abc123",
+                            "level": "DIRECT",
+                        }
+                    ],
+                },
+                "entailment": "NONE",
+            },
+            {
+                "type": "BEHAVIOR",
+                "action": "USE",
+                "subject": "_replace_code_filenames",
+                "condition": None,
+                "target": "Pure-Python recursive fallback",
+                "scope": None,
+                "source_event": "abc123",
+                "field_evidence": {
+                    "action": [
+                        {
+                            "source": "DIFF",
+                            "ref": "abc123",
+                            "level": "DIRECT",
+                        }
+                    ],
+                    "subject": [
+                        {
+                            "source": "DIFF",
+                            "ref": "abc123",
+                            "level": "DIRECT",
+                        }
+                    ],
+                    "target": [
+                        {
+                            "source": "DIFF",
+                            "ref": "abc123",
+                            "level": "DIRECT",
+                        }
+                    ],
+                },
+                "entailment": "NONE",
+            },
+        ]
+
+        result = render_supported_claims(
+            [claim]
+        )
+
+        self.assertEqual(
+            result,
+            [
+                "co is returned.",
+                (
+                    "_replace_code_filenames is used for "
+                    "Pure-Python recursive fallback."
+                ),
+            ],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

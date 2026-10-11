@@ -110,6 +110,41 @@ def render_behavior_claim(claim):
     return text
 
 
+def _render_behavior_claim_items(claim):
+    structured = claim.get(
+        "structured_semantics",
+        [],
+    )
+
+    safe = []
+
+    for semantics in structured:
+        evaluated = with_semantic_safety(
+            semantics,
+            [],
+        )
+
+        if (
+            evaluated.get("semantic_safety")
+            == SAFE_TO_RENDER
+        ):
+            safe.append(evaluated)
+
+    rendered = render_safe_semantics_list(
+        safe
+    )
+
+    if rendered:
+        return rendered
+
+    text = render_behavior_claim(claim)
+
+    if text:
+        return [text]
+
+    return []
+
+
 def render_supported_claims(claims):
     """
     SUPPORTED Claim 리스트를 사용자에게 표시 가능한
@@ -124,11 +159,14 @@ def render_supported_claims(claims):
             continue
 
         if claim.get("type") == BEHAVIOR:
-            text = render_behavior_claim(
-                claim
+            rendered.extend(
+                _render_behavior_claim_items(
+                    claim
+                )
             )
-        else:
-            text = claim.get("text", "")
+            continue
+
+        text = claim.get("text", "")
 
         if text:
             rendered.append(text)
