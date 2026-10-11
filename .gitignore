@@ -1,19 +1,52 @@
+# Python bytecode
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+
+# Virtual environments
 .venv/
+.venv-*/
 venv/
+
+# Local environment
 .env
-__pycache__/
-*.pyc
 
-__pycache__/
-*.pyc
+# Build and package metadata
+*.egg-info/
+build/
+dist/
 
+# IDE files
+.vs/
+.vscode/
+
+# Why-Blame local cache
 .why_blame_cache.json
 
-*.egg-info/
+# Local backups and patches
+*.bak
+*.before_*
+*.patch
 
-*.egg-info/
+# Holdout working clones and temporary runs
+benchmark/holdout/*_work/
+benchmark/holdout/*_work_v*/
+benchmark/holdout/*_probe/
+benchmark/holdout/tmp_*/
+benchmark/holdout/*_single_case/
 
-.vs/
+# Holdout experimental outputs and evaluations
+benchmark/holdout/*_output/
+benchmark/holdout/*_output_v*/
+benchmark/holdout/*_eval/
+benchmark/holdout/candidate_run_auth/
+benchmark/holdout/current_run_old/
+
+# Preserve tracked benchmark definitions, baselines, and reports.
+!benchmark/holdout/cases/
+!benchmark/holdout/current_run/
+!benchmark/holdout/current_scoring/
+!benchmark/holdout/results/
+!benchmark/holdout/scoring/
+!benchmark/holdout/*.py
+!benchmark/holdout/*.md
