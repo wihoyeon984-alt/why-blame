@@ -143,7 +143,7 @@ Four SUPPORTED claims remain unrecovered in Holdout v1.
 
 Requirements:
 
-- Python 3.8 or later
+- Python 3.9 or later
 - Git
 
 Clone and install the current development branch:
