@@ -139,6 +139,21 @@ Four SUPPORTED claims remain unrecovered in Holdout v1.
 - `sqlalchemy_001 / claim_003`
 
 
+## Latest release
+
+The latest stable release is
+[why-blame v0.2.4](https://github.com/wihoyeon984-alt/why-blame/releases/tag/v0.2.4).
+
+Release highlights:
+
+- 278 unit tests passed
+- 10/10 holdout cases completed
+- 87.5% strict supported recall
+- 0 unsafe presented claims
+- 0 False-WHY results
+- Windows and Linux CI support
+- Python 3.9, 3.11, and 3.14 support
+
 ## Installation
 
 Requirements:
