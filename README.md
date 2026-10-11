@@ -78,15 +78,15 @@ Current:   55 / 55 claims
 | Metric | First-run | Current |
 |---|---:|---:|
 | E2E completion | 0.000 | **1.000** |
-| Strict supported recall | 0.688 | **0.781** |
-| Observed supported recall | 0.688 | **0.781** |
+| Strict supported recall | 0.688 | **0.875** |
+| Observed supported recall | 0.688 | **0.875** |
 | Unobservable claim rate | 0.000 | 0.000 |
-| Safe claim coverage | 0.400 | **0.455** |
+| Safe claim coverage | 0.400 | **0.509** |
 | Abstention precision | 0.778 | **1.000** |
 | Abstention recall | **0.304** | 0.130 |
 | Unsafe presented | **0** | **0** |
 
-Supported-claim recovery improved from `22 / 32` to `25 / 32`.
+Supported-claim recovery improved from `22 / 32` to `28 / 32`.
 
 E2E completion improved from `0 / 10` to `10 / 10`, while `unsafe_presented`
 remained zero.
@@ -126,27 +126,71 @@ For detailed methodology, annotations, trade-offs, and failure analysis, see `be
 
 ## Current Known Failure Classes
 
-Seven SUPPORTED claims remain unrecovered in Holdout v1.
+Four SUPPORTED claims remain unrecovered in Holdout v1.
 
 ### Bounded semantic scope expansion
 
 - `aiohttp_003 / claim_002`
 - `django_001 / claim_003`
-- `pytest_001 / claim_002`
-- `pytest_001 / claim_003`
 
 ### Semantic-detail recovery
 
 - `sqlalchemy_001 / claim_002`
 - `sqlalchemy_001 / claim_003`
 
-### Ordering and control-flow semantics
 
-- `urllib3_001 / claim_002`
+## Installation
+
+Requirements:
+
+- Python 3.8 or later
+- Git
+
+Clone and install the current development branch:
+
+```powershell
+git clone https://github.com/wihoyeon984-alt/why-blame.git
+cd why-blame
+git switch claim-recovery-v1
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e .
+```
+
+The editable installation was verified in a clean virtual environment.
+The installed CLI was also verified outside the repository directory.
+
+## Usage
+
+Show CLI help:
+
+```powershell
+why-blame --help
+```
+
+Supported forms:
+
+```text
+why-blame FILE:LINE
+why-blame FILE:START-END
+why-blame FILE LINE
+why-blame FILE START END
+```
+
+Examples:
+
+```powershell
+why-blame service.py:10
+why-blame service.py:1-3
+why-blame service.py 10
+why-blame service.py 1 3
+```
+
+The target file should belong to a Git repository with relevant history.
 
 ## Testing
 
-The project currently passes `226 / 226` tests.
+The project currently passes `277 / 277` tests.
 
 The Holdout scorer-specific suite passes `18 / 18` tests.
 
