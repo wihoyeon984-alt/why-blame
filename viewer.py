@@ -357,15 +357,16 @@ def render_card(
         f"{stats.get('ambiguity', 'LOW')}"
     )
 
+    confidence = stats.get(
+        "confidence",
+        stats.get(
+            "grade",
+            "UNKNOWN",
+        ),
+    )
+
     print(
-        "CONFIDENCE:  "
-        f"{stats.get(
-            'confidence',
-            stats.get(
-                'grade',
-                'UNKNOWN',
-            ),
-        )}"
+        f"CONFIDENCE:  {confidence}"
     )
 
     print(thin_line)
