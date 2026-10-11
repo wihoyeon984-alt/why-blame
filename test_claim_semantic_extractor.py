@@ -780,5 +780,44 @@ class TestClaimSemanticExtractor(
             ],
         )
 
+    def test_direct_local_helper_extracts_guarded_use_and_fallback_return(self):
+        source = (
+            "def _fix_code_filename(co, filename):\n"
+            "    if co.co_filename == filename:\n"
+            "        return co\n"
+            "    if _imp_fix_co_filename is not None:\n"
+            "        _imp_fix_co_filename(co, filename)\n"
+            "        return co\n"
+            "    return _replace_code_filenames(co, filename)\n"
+            "\n"
+            "result = _fix_code_filename(co, filename)\n"
+        )
+
+        result = extract_direct_local_helper_semantics(
+            source,
+            "result = _fix_code_filename(co, filename)",
+            "abc123",
+        )
+
+        self.assertTrue(
+            any(
+                item.get("action") == "USE"
+                and item.get("subject")
+                == "_imp_fix_co_filename"
+                and item.get("condition")
+                == "_imp_fix_co_filename is not None"
+                for item in result
+            )
+        )
+
+        self.assertTrue(
+            any(
+                item.get("action") == "RETURN"
+                and item.get("target")
+                == "_replace_code_filenames(co, filename)"
+                for item in result
+            )
+        )
+
 if __name__ == "__main__":
     unittest.main()

@@ -240,6 +240,50 @@ def _extract_append_call(
 
     return semantics
 
+def _extract_call_use(
+    node,
+    source_event,
+):
+    if not isinstance(
+        node,
+        ast.Expr,
+    ):
+        return None
+
+    if not isinstance(
+        node.value,
+        ast.Call,
+    ):
+        return None
+
+    subject = ast.unparse(
+        node.value.func
+    )
+
+    if not subject:
+        return None
+
+    semantics = make_behavior_semantics(
+        action="USE",
+        subject=subject,
+        source_event=source_event,
+    )
+
+    for field in (
+        "action",
+        "subject",
+    ):
+        semantics = attach_field_evidence(
+            semantics,
+            field,
+            source="DIFF",
+            ref=source_event,
+            level=DIRECT,
+        )
+
+    return semantics
+
+
 def find_direct_local_helpers(source, target_statement):
     if not isinstance(source, str) or not isinstance(target_statement, str):
         return []
@@ -310,6 +354,16 @@ def extract_statement_semantics(
                 append_semantics
             )
 
+        return_semantics = _extract_return(
+            node,
+            source_event,
+        )
+
+        if return_semantics:
+            result.append(
+                return_semantics
+            )
+
         if isinstance(node, ast.If):
             condition = ast.unparse(node.test)
 
@@ -318,6 +372,12 @@ def extract_statement_semantics(
                     child,
                     source_event,
                 )
+
+                if not child_semantics:
+                    child_semantics = _extract_call_use(
+                        child,
+                        source_event,
+                    )
 
                 if not child_semantics:
                     child_semantics = _extract_return(
