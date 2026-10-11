@@ -229,6 +229,18 @@ class TestHoldoutScoring(unittest.TestCase):
             metrics["safe_claim_coverage"],
             1.0,
         )
+        self.assertEqual(
+            metrics["total_presentations"],
+            1,
+        )
+        self.assertEqual(
+            metrics["claim_precision"],
+            1.0,
+        )
+        self.assertEqual(
+            metrics["unsafe_presentation_rate"],
+            0.0,
+        )
         self.assertTrue(
             metrics["annotation_complete"]
         )
@@ -488,6 +500,9 @@ class TestHoldoutScoring(unittest.TestCase):
             "observed_supported_recall": 1.0,
             "unobservable_claim_rate": 0.0,
             "safe_claim_coverage": 0.5,
+            "claim_precision": 1.0,
+            "unsafe_presentation_rate": 0.0,
+            "total_presentations": 1,
             "abstention_precision": 1.0,
             "abstention_recall": 1.0,
             "unsafe_presented": 0,
@@ -524,6 +539,18 @@ class TestHoldoutScoring(unittest.TestCase):
         )
         self.assertIn(
             "Abstention recall:",
+            rendered,
+        )
+        self.assertIn(
+            "Claim precision:         1.000",
+            rendered,
+        )
+        self.assertIn(
+            "Unsafe presentation rate: 0.000",
+            rendered,
+        )
+        self.assertIn(
+            "Total presentations:     1",
             rendered,
         )
 
@@ -600,6 +627,16 @@ class TestHoldoutScoring(unittest.TestCase):
             metrics["required_abstentions"],
             1,
         )
+        self.assertEqual(
+            metrics["total_presentations"],
+            0,
+        )
+        self.assertIsNone(
+            metrics["claim_precision"]
+        )
+        self.assertIsNone(
+            metrics["unsafe_presentation_rate"]
+        )
 
 
     def test_missed_is_valid_exposure_status(self):
@@ -650,6 +687,18 @@ class TestHoldoutScoring(unittest.TestCase):
         self.assertEqual(
             metrics["false_why"],
             1,
+        )
+        self.assertEqual(
+            metrics["total_presentations"],
+            1,
+        )
+        self.assertEqual(
+            metrics["claim_precision"],
+            0.0,
+        )
+        self.assertEqual(
+            metrics["unsafe_presentation_rate"],
+            1.0,
         )
         self.assertEqual(
             metrics["correct_abstentions"],
