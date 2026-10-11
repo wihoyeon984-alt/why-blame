@@ -114,9 +114,10 @@ class TestClaimNarrative(unittest.TestCase):
         self.assertEqual(
             result,
             (
-                "Base narrative. "
-                "\ud655\uc778\ub41c \uc774\ub825 \ubc94\uc704\uc5d0\uc11c \uad00\ucc30\ub418\ub294 \ucf54\ub4dc \ub3d9\uc791: "
-                "o is encoded as UTF-8."
+                "Base narrative.\n\n"
+                "\ud655\uc778\ub41c \uc774\ub825 \ubc94\uc704\uc5d0\uc11c "
+                "\uad00\ucc30\ub418\ub294 \ucf54\ub4dc \ub3d9\uc791:\n"
+                "- o is encoded as UTF-8."
             ),
         )
 

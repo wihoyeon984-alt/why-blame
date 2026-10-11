@@ -91,6 +91,33 @@ def get_verified_ref(item):
 
     return None
 
+def _format_claim_section(title, rendered_claims):
+    unique_claims = []
+    seen = set()
+
+    for claim in rendered_claims:
+        if not isinstance(claim, str):
+            continue
+
+        claim = claim.strip()
+
+        if not claim or claim in seen:
+            continue
+
+        seen.add(claim)
+        unique_claims.append(claim)
+
+    if not unique_claims:
+        return ""
+
+    bullets = "\n".join(
+        f"- {claim}"
+        for claim in unique_claims
+    )
+
+    return f"{title}:\n{bullets}"
+
+
 def append_supported_claims(body, timeline, stats):
     """
     Timeline에서 직접 검증된 Claim만 Narrative에 추가합니다.
@@ -150,22 +177,30 @@ def append_supported_claims(body, timeline, stats):
 
     parts = []
 
-    if rendered_direct:
-        parts.append(
-            " 확인된 코드 동작: "
-            + " ".join(rendered_direct)
-        )
+    direct_section = _format_claim_section(
+        "확인된 코드 동작",
+        rendered_direct,
+    )
 
-    if rendered_conservative:
-        parts.append(
-            " 확인된 이력 범위에서 관찰되는 코드 동작: "
-            + " ".join(rendered_conservative)
-        )
+    if direct_section:
+        parts.append(direct_section)
+
+    conservative_section = _format_claim_section(
+        "확인된 이력 범위에서 관찰되는 코드 동작",
+        rendered_conservative,
+    )
+
+    if conservative_section:
+        parts.append(conservative_section)
 
     if not parts:
         return body
 
-    return body + "".join(parts)
+    return (
+        body.rstrip()
+        + "\n\n"
+        + "\n\n".join(parts)
+    )
 def synthesize_narrative(timeline, stats):
     """
     Timeline과 Confidence Model의 결과를 바탕으로
