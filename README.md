@@ -190,7 +190,7 @@ The target file should belong to a Git repository with relevant history.
 
 ## Testing
 
-The project currently passes `277 / 277` tests.
+The project currently passes `278 / 278` tests.
 
 The Holdout scorer-specific suite passes `18 / 18` tests.
 
