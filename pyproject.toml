@@ -29,4 +29,12 @@ py-modules = [
     "claim_evidence",
     "claim_policy",
     "claim_renderer",
+    "claim_contradiction",
+    "claim_entailment",
+    "claim_predicate",
+    "claim_predicate_diff",
+    "claim_safe_renderer",
+    "claim_safety",
+    "claim_semantic_extractor",
+    "claim_semantics",
 ]
