@@ -819,5 +819,45 @@ class TestClaimSemanticExtractor(
             )
         )
 
+    def test_direct_returned_helper_can_prove_recursive_python_fallback(self):
+        source = (
+            "def _replace_code_filenames(co, filename):\n"
+            '    """Pure-Python fallback: rebuild the code object tree."""\n'
+            "    return co.replace(\n"
+            "        co_consts=tuple(\n"
+            "            _replace_code_filenames(c, filename)\n"
+            "            if isinstance(c, types.CodeType)\n"
+            "            else c\n"
+            "            for c in co.co_consts\n"
+            "        ),\n"
+            "    )\n"
+            "\n"
+            "def _fix_code_filename(co, filename):\n"
+            "    if _imp_fix_co_filename is not None:\n"
+            "        _imp_fix_co_filename(co, filename)\n"
+            "        return co\n"
+            "    return _replace_code_filenames(co, filename)\n"
+            "\n"
+            "result = _fix_code_filename(co, filename)\n"
+        )
+
+        result = extract_direct_local_helper_semantics(
+            source,
+            "result = _fix_code_filename(co, filename)",
+            "abc123",
+        )
+
+        self.assertTrue(
+            any(
+                item.get("action") == "USE"
+                and item.get("subject")
+                == "_replace_code_filenames"
+                and item.get("target")
+                == "Pure-Python recursive fallback"
+                for item in result
+            )
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

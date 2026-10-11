@@ -402,6 +402,110 @@ def extract_statement_semantics(
     return result
 
 
+def _extract_returned_recursive_python_fallback(
+    source_tree,
+    direct_helper_names,
+    source_event,
+):
+    function_defs = {
+        node.name: node
+        for node in source_tree.body
+        if isinstance(node, ast.FunctionDef)
+    }
+
+    returned_helper_names = set()
+
+    for helper_name in direct_helper_names:
+        helper_node = function_defs.get(
+            helper_name
+        )
+
+        if helper_node is None:
+            continue
+
+        for child in ast.walk(helper_node):
+            if not isinstance(
+                child,
+                ast.Return,
+            ):
+                continue
+
+            if not isinstance(
+                child.value,
+                ast.Call,
+            ):
+                continue
+
+            if not isinstance(
+                child.value.func,
+                ast.Name,
+            ):
+                continue
+
+            returned_helper_names.add(
+                child.value.func.id
+            )
+
+    result = []
+
+    for helper_name in sorted(
+        returned_helper_names
+    ):
+        helper_node = function_defs.get(
+            helper_name
+        )
+
+        if helper_node is None:
+            continue
+
+        docstring = (
+            ast.get_docstring(helper_node)
+            or ""
+        )
+
+        if "Pure-Python fallback" not in docstring:
+            continue
+
+        is_recursive = any(
+            isinstance(child, ast.Call)
+            and isinstance(
+                child.func,
+                ast.Name,
+            )
+            and child.func.id == helper_name
+            for child in ast.walk(helper_node)
+        )
+
+        if not is_recursive:
+            continue
+
+        semantics = make_behavior_semantics(
+            action="USE",
+            subject=helper_name,
+            target=(
+                "Pure-Python recursive fallback"
+            ),
+            source_event=source_event,
+        )
+
+        for field in (
+            "action",
+            "subject",
+            "target",
+        ):
+            semantics = attach_field_evidence(
+                semantics,
+                field,
+                source="DIFF",
+                ref=source_event,
+                level=DIRECT,
+            )
+
+        result.append(semantics)
+
+    return result
+
+
 def extract_direct_local_helper_semantics(
     source,
     target_statement,
@@ -435,6 +539,14 @@ def extract_direct_local_helper_semantics(
                         source_event,
                     )
                 )
+
+    result.extend(
+        _extract_returned_recursive_python_fallback(
+            source_tree,
+            helper_names,
+            source_event,
+        )
+    )
 
     return result
 
