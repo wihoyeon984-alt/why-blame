@@ -1,0 +1,17 @@
+{
+  "schema_version": 2,
+  "case_id": "project_001",
+  "repository": {
+    "url": "https://github.com/owner/project.git",
+    "commit": "full-immutable-commit-sha"
+  },
+  "frozen": true,
+  "claims": {
+    "claim_001": {
+      "label": "SUPPORTED"
+    },
+    "claim_002": {
+      "label": "UNSUPPORTED"
+    }
+  }
+}
