@@ -1,0 +1,36 @@
+﻿{
+  "schema_version": 2,
+  "candidate_id": "project_001",
+  "repository": {
+    "url": "https://github.com/owner/project.git",
+    "commit": "0000000000000000000000000000000000000000"
+  },
+  "target": {
+    "file": "src/module.py",
+    "start_line": 1,
+    "end_line": 20
+  },
+  "status": "PROPOSED",
+  "selection": {
+    "rationale": "Describe the evaluation value without considering system output.",
+    "proposed_at": "2026-10-12",
+    "proposed_by": "Wi Ho-yeon"
+  },
+  "exclusion": {
+    "code": "",
+    "reason": ""
+  },
+  "integrity": {
+    "overlaps_holdout_v1": false,
+    "overlap_details": "",
+    "ground_truth_frozen": false,
+    "system_executed": false,
+    "annotation_complete": false
+  },
+  "artifacts": {
+    "case_file": "",
+    "result_file": "",
+    "annotation_file": ""
+  },
+  "notes": ""
+}
