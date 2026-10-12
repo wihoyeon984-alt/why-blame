@@ -1,0 +1,20 @@
+﻿{
+  "schema_version": 2,
+  "case_id": "fixture_001",
+  "repository": {
+    "url": "https://github.com/example/project.git",
+    "commit": "abc123def456"
+  },
+  "frozen": true,
+  "claims": {
+    "claim_001": {
+      "label": "SUPPORTED"
+    },
+    "claim_002": {
+      "label": "SUPPORTED"
+    },
+    "claim_003": {
+      "label": "UNSUPPORTED"
+    }
+  }
+}
