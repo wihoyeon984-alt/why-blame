@@ -36,10 +36,40 @@ def make_case():
         "frozen": True,
         "claims": {
             "claim_001": {
+                "type": "BEHAVIOR",
                 "label": "SUPPORTED",
+                "text": (
+                    "The pinned fixture directly "
+                    "establishes the behavior."
+                ),
+                "evidence": [
+                    {
+                        "channel": "DIFF",
+                        "ref": "abc123",
+                        "relation": "SUPPORTS",
+                        "note": (
+                            "The frozen fixture diff "
+                            "directly shows the behavior."
+                        ),
+                    },
+                ],
+                "rationale": (
+                    "The behavior is directly observable "
+                    "in the frozen evidence."
+                ),
             },
             "claim_002": {
+                "type": "CAUSE",
                 "label": "UNSUPPORTED",
+                "text": (
+                    "The change was introduced primarily "
+                    "for performance."
+                ),
+                "evidence": [],
+                "rationale": (
+                    "The frozen evidence does not establish "
+                    "this motivation."
+                ),
             },
         },
     }

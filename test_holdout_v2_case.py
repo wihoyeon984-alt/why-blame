@@ -23,10 +23,25 @@ def make_case():
         "frozen": True,
         "claims": {
             "claim_001": {
+                "type": "BEHAVIOR",
                 "label": "SUPPORTED",
+                "text": "The pinned diff directly establishes the behavior.",
+                "evidence": [
+                    {
+                        "channel": "DIFF",
+                        "ref": "abc123def456",
+                        "relation": "SUPPORTS",
+                        "note": "The behavior is visible in the frozen diff.",
+                    },
+                ],
+                "rationale": "The behavior is directly observable.",
             },
             "claim_002": {
+                "type": "CAUSE",
                 "label": "UNSUPPORTED",
+                "text": "The change was introduced primarily for performance.",
+                "evidence": [],
+                "rationale": "The frozen evidence does not establish this motivation.",
             },
         },
     }
@@ -73,6 +88,22 @@ class TestHoldoutV2Case(unittest.TestCase):
         self.assertEqual(
             case.claims["claim_001"].label,
             "SUPPORTED",
+        )
+        self.assertEqual(
+            case.claims["claim_001"].claim_type,
+            "BEHAVIOR",
+        )
+        self.assertEqual(
+            case.claims["claim_001"].text,
+            "The pinned diff directly establishes the behavior.",
+        )
+        self.assertEqual(
+            len(case.claims["claim_001"].evidence),
+            1,
+        )
+        self.assertEqual(
+            case.claims["claim_001"].evidence[0].reference,
+            "abc123def456",
         )
 
     def test_rejects_wrong_schema_version(self):
@@ -122,6 +153,58 @@ class TestHoldoutV2Case(unittest.TestCase):
     def test_rejects_empty_claims(self):
         data = make_case()
         data["claims"] = {}
+
+        with self.assertRaises(CaseError):
+            self.load_data(data)
+
+
+    def test_rejects_missing_claim_type(self):
+        data = make_case()
+        del data["claims"]["claim_001"]["type"]
+
+        with self.assertRaises(CaseError):
+            self.load_data(data)
+
+    def test_rejects_invalid_claim_type(self):
+        data = make_case()
+        data["claims"]["claim_001"]["type"] = "OPINION"
+
+        with self.assertRaises(CaseError):
+            self.load_data(data)
+
+    def test_rejects_empty_claim_text(self):
+        data = make_case()
+        data["claims"]["claim_001"]["text"] = ""
+
+        with self.assertRaises(CaseError):
+            self.load_data(data)
+
+    def test_rejects_non_array_evidence(self):
+        data = make_case()
+        data["claims"]["claim_001"]["evidence"] = {}
+
+        with self.assertRaises(CaseError):
+            self.load_data(data)
+
+    def test_rejects_supported_claim_without_evidence(self):
+        data = make_case()
+        data["claims"]["claim_001"]["evidence"] = []
+
+        with self.assertRaises(CaseError):
+            self.load_data(data)
+
+    def test_rejects_invalid_evidence_relation(self):
+        data = make_case()
+        data["claims"]["claim_001"]["evidence"][0][
+            "relation"
+        ] = "MAYBE_SUPPORTS"
+
+        with self.assertRaises(CaseError):
+            self.load_data(data)
+
+    def test_rejects_empty_claim_rationale(self):
+        data = make_case()
+        data["claims"]["claim_001"]["rationale"] = ""
 
         with self.assertRaises(CaseError):
             self.load_data(data)

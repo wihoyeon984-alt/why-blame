@@ -10,15 +10,38 @@ VALID_CLAIM_LABELS = {
     "CONFLICTING",
 }
 
+VALID_CLAIM_TYPES = {
+    "BEHAVIOR",
+    "CAUSE",
+}
+
+VALID_EVIDENCE_RELATIONS = {
+    "SUPPORTS",
+    "CONTRADICTS",
+    "CONTEXT",
+}
+
 
 class CaseError(ValueError):
     pass
 
 
 @dataclass(frozen=True)
+class ClaimEvidence:
+    channel: str
+    reference: str
+    relation: str
+    note: str
+
+
+@dataclass(frozen=True)
 class GroundTruthClaim:
     claim_id: str
     label: str
+    claim_type: str = ""
+    text: str = ""
+    evidence: tuple[ClaimEvidence, ...] = ()
+    rationale: str = ""
 
 
 @dataclass(frozen=True)
@@ -135,6 +158,16 @@ def load_case(path: Path) -> HoldoutCase:
                 f"{claim_id} must be an object"
             )
 
+        claim_type = _require_nonempty_string(
+            claim_data.get("type"),
+            f"{claim_id}.type",
+        )
+
+        if claim_type not in VALID_CLAIM_TYPES:
+            raise CaseError(
+                f"{claim_id}: invalid type"
+            )
+
         label = claim_data.get("label")
 
         if label not in VALID_CLAIM_LABELS:
@@ -142,9 +175,78 @@ def load_case(path: Path) -> HoldoutCase:
                 f"{claim_id}: invalid label"
             )
 
+        claim_text = _require_nonempty_string(
+            claim_data.get("text"),
+            f"{claim_id}.text",
+        )
+
+        evidence_data = claim_data.get("evidence")
+
+        if not isinstance(evidence_data, list):
+            raise CaseError(
+                f"{claim_id}.evidence must be an array"
+            )
+
+        evidence = []
+
+        for index, item in enumerate(evidence_data):
+            field_prefix = (
+                f"{claim_id}.evidence[{index}]"
+            )
+
+            if not isinstance(item, dict):
+                raise CaseError(
+                    f"{field_prefix} must be an object"
+                )
+
+            channel = _require_nonempty_string(
+                item.get("channel"),
+                f"{field_prefix}.channel",
+            )
+            reference = _require_nonempty_string(
+                item.get("ref"),
+                f"{field_prefix}.ref",
+            )
+            relation = _require_nonempty_string(
+                item.get("relation"),
+                f"{field_prefix}.relation",
+            )
+            note = _require_nonempty_string(
+                item.get("note"),
+                f"{field_prefix}.note",
+            )
+
+            if relation not in VALID_EVIDENCE_RELATIONS:
+                raise CaseError(
+                    f"{field_prefix}: invalid relation"
+                )
+
+            evidence.append(
+                ClaimEvidence(
+                    channel=channel,
+                    reference=reference,
+                    relation=relation,
+                    note=note,
+                )
+            )
+
+        if label == "SUPPORTED" and not evidence:
+            raise CaseError(
+                f"{claim_id}: SUPPORTED claim requires evidence"
+            )
+
+        rationale = _require_nonempty_string(
+            claim_data.get("rationale"),
+            f"{claim_id}.rationale",
+        )
+
         claims[claim_id] = GroundTruthClaim(
             claim_id=claim_id,
             label=label,
+            claim_type=claim_type,
+            text=claim_text,
+            evidence=tuple(evidence),
+            rationale=rationale,
         )
 
     return HoldoutCase(

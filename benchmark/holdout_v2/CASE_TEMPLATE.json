@@ -8,10 +8,25 @@
   "frozen": true,
   "claims": {
     "claim_001": {
-      "label": "SUPPORTED"
+      "type": "BEHAVIOR",
+      "label": "SUPPORTED",
+      "text": "Describe one concrete Ground Truth behavior.",
+      "evidence": [
+        {
+          "channel": "DIFF",
+          "ref": "full-immutable-reference",
+          "relation": "SUPPORTS",
+          "note": "Describe how the frozen public evidence establishes the claim."
+        }
+      ],
+      "rationale": "Explain why the evidence is sufficient without using system output."
     },
     "claim_002": {
-      "label": "UNSUPPORTED"
+      "type": "CAUSE",
+      "label": "UNSUPPORTED",
+      "text": "Describe one causal claim that the public evidence does not establish.",
+      "evidence": [],
+      "rationale": "Explain why the frozen evidence is insufficient for this causal claim."
     }
   }
 }
