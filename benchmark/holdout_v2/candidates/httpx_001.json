@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "candidate_id": "httpx_001",
+  "repository": {
+    "url": "https://github.com/encode/httpx.git",
+    "commit": "336204f0121a9aefdebac5cacd81f912bafe8057"
+  },
+  "target": {
+    "file": "httpx/_transports/default.py",
+    "start_line": 355,
+    "end_line": 359
+  },
+  "status": "FROZEN",
+  "selection": {
+    "rationale": "This public HTTPX change provides a compact, independently reviewable error-message behavior case. The target was selected from its frozen diff and public pull-request evidence before running Why-Blame.",
+    "proposed_at": "2026-10-13",
+    "proposed_by": "Wi Ho-yeon"
+  },
+  "exclusion": {
+    "code": "",
+    "reason": ""
+  },
+  "integrity": {
+    "overlaps_holdout_v1": false,
+    "overlap_details": "HTTPX does not appear in Holdout v1 or the existing development benchmark repository set.",
+    "ground_truth_frozen": true,
+    "system_executed": false,
+    "annotation_complete": false
+  },
+  "artifacts": {
+    "case_file": "cases/httpx_001.json",
+    "result_file": "",
+    "annotation_file": ""
+  },
+  "notes": "Ground Truth was defined from commit 336204f and pull request #3571. Why-Blame had not been executed for this candidate at freeze time."
+}

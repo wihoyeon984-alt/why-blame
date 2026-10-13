@@ -1,0 +1,59 @@
+{
+  "schema_version": 2,
+  "case_id": "httpx_001",
+  "repository": {
+    "url": "https://github.com/encode/httpx.git",
+    "commit": "336204f0121a9aefdebac5cacd81f912bafe8057"
+  },
+  "frozen": true,
+  "claims": {
+    "claim_001": {
+      "type": "BEHAVIOR",
+      "label": "SUPPORTED",
+      "text": "When an unsupported proxy protocol is supplied, the raised ValueError includes the evaluated representation of proxy.url.scheme instead of displaying the literal placeholder text.",
+      "evidence": [
+        {
+          "channel": "DIFF",
+          "ref": "336204f0121a9aefdebac5cacd81f912bafe8057",
+          "relation": "SUPPORTS",
+          "note": "The frozen diff changes the second error-message fragment from a normal string to an f-string, causing proxy.url.scheme to be evaluated."
+        }
+      ],
+      "rationale": "The error-message interpolation behavior follows directly from the one-line frozen source change."
+    },
+    "claim_002": {
+      "type": "CAUSE",
+      "label": "SUPPORTED",
+      "text": "The change was made so that the actual proxy protocol scheme is displayed in the error message.",
+      "evidence": [
+        {
+          "channel": "COMMIT",
+          "ref": "336204f0121a9aefdebac5cacd81f912bafe8057",
+          "relation": "SUPPORTS",
+          "note": "The commit message states: Display proxy protocol scheme on error."
+        },
+        {
+          "channel": "PR",
+          "ref": "#3571",
+          "relation": "SUPPORTS",
+          "note": "The pull-request summary says that the change evaluates proxy.url.scheme in the error message."
+        }
+      ],
+      "rationale": "The commit title, pull-request title, and pull-request summary explicitly identify displaying the evaluated scheme in the error message as the purpose of the change."
+    },
+    "claim_003": {
+      "type": "CAUSE",
+      "label": "UNSUPPORTED",
+      "text": "The change was primarily introduced to improve HTTPX proxy performance.",
+      "evidence": [],
+      "rationale": "The frozen diff only changes error-message interpolation, and the commit and pull-request evidence do not mention a performance objective."
+    },
+    "claim_004": {
+      "type": "BEHAVIOR",
+      "label": "UNSUPPORTED",
+      "text": "The change adds support for a new proxy protocol scheme.",
+      "evidence": [],
+      "rationale": "The accepted proxy protocol list is unchanged. The frozen change only renders the rejected scheme value in the error message."
+    }
+  }
+}
