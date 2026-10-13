@@ -1,0 +1,35 @@
+﻿{
+    "schema_version":  2,
+    "candidate_id":  "httpx_001",
+    "first_run":  true,
+    "freeze_commit":  "7678a66f7082831daba6f6d1737f469fa86b0b18",
+    "repository":  {
+                       "url":  "https://github.com/encode/httpx.git",
+                       "requested_commit":  "336204f0121a9aefdebac5cacd81f912bafe8057",
+                       "checked_out_commit":  "336204f0121a9aefdebac5cacd81f912bafe8057"
+                   },
+    "target":  {
+                   "file":  "httpx/_transports/default.py",
+                   "start_line":  355,
+                   "end_line":  359
+               },
+    "command":  {
+                    "executable":  "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+                    "arguments":  [
+                                      "C:\\Users\\user\\source\\repos\\why-blame\\main.py",
+                                      "httpx/_transports/default.py",
+                                      "355",
+                                      "359"
+                                  ],
+                    "working_directory":  "C:\\Users\\user\\AppData\\Local\\Temp\\why-blame-holdout-v2-httpx-001"
+                },
+    "execution":  {
+                      "started_at_utc":  "2026-10-13T01:34:37.3849853Z",
+                      "finished_at_utc":  "2026-10-13T01:34:41.4309693Z",
+                      "exit_code":  0
+                  },
+    "artifacts":  {
+                      "stdout_file":  "results/httpx_001/stdout.txt",
+                      "stderr_file":  "results/httpx_001/stderr.txt"
+                  }
+}

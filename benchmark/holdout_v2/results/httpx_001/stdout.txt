@@ -1,0 +1,96 @@
+
+WHY-BLAME
+¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬
+TARGET: httpx/_transports/default.py:355-359
+REPO:   encode/httpx
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+CURRENT CODE
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+>         else:  # pragma: no cover
+>             raise ValueError(
+>                 "Proxy protocol must be either 'http', 'ht...
+>                 f" but got {proxy.url.scheme!r}."
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+WHY (ÄÚµåÀÇ º¯°æ ÀÌ·Â°ú Á¤Âø °úÁ¤)
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+* ÃÑ 6´Ü°èÀÇ º¯°æ ÀÌ·ÂÀÌ È®ÀÎµÈ ÄÚµå
+
+  È®ÀÎµÈ ÀÌ·Â»ó 2021-01-08
+  Ä¿¹Ô(89fb0cbc69ea07b123dd7b36dc1ed9151c5d398f)¿¡¼­ Ã³À½ °üÂûµÇ¾ú½À´Ï´Ù. ÀÌÈÄ
+  ±â´É Ãß°¡ 1È¸(12be5c44caa7a34bfe19f82eace5150ddeba2612) µîÀÇ º¯°æ ´Ü°è¸¦
+  °ÅÃÆ½À´Ï´Ù. ÃÖÁ¾ÀûÀ¸·Î 2025-06-02
+  Ä¿¹Ô(336204f0121a9aefdebac5cacd81f912bafe8057)¿¡¼­ PR
+  #3571('Display proxy protocol scheme on error')¿Í ¿¬°áµÈ º¯°æÀÌ È®ÀÎµÇ¸ç,
+  ÇöÀç ÇüÅÂÀÇ º¯°æÀÌ °üÂûµË´Ï´Ù.
+
+  È®ÀÎµÈ ÄÚµå µ¿ÀÛ:
+  - Added code: f" but got {proxy.url.scheme!r}."
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+HISTORY (Å¸ÀÓ¶óÀÎ »ó¼¼)
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+¡Ü 2021-01-08  ? FIRST OBSERVED (89fb0cb)
+  Add `HTTPTransport` and `AsyncHTTPTransport` (#1399)  * Add 
+  + )
+  ? PR #1399 ('Add `HTTPTransport` and `Asy...')
+    ? Context: "Closes #1302 Two points to note here... 1. I've not ..."
+    ? https://github.com/encode/httpx/pull/1399
+
+¡Ü 2022-01-19  ? UPDATE (8dc9b6b)
+  SOCKS proxy support (#2034)
+  + else:  # pragma: nocover
+  + raise ValueError(
+  ? PR #2034 ('SOCKS proxy support')
+    ? Context: "Integration against `httpcore` 0.14.5, which adds SO..."
+    ? https://github.com/encode/httpx/pull/2034
+
+¡Ü 2022-11-29  ? UPDATE (16e2830)
+  use # pragma: no cover instead of # pragma: nocover (#2471) 
+  - else:  # pragma: nocover
+  + else:  # pragma: no cover
+  ? PR #2471 ('use `# pragma: no cover` ins...')
+    ? Context: "We have a mix of both. Although coverage [accepts bo..."
+    ? https://github.com/encode/httpx/pull/2471
+
+¡Ü 2023-11-29  ? UPDATE (fd60b18)
+  Ruff linter: Use the default line-length (#2922)  Co-authore
+  - f"Proxy protocol must be either 'http', 'https', or 'socks
+  + "Proxy protocol must be either 'http', 'https', or 'socks5
+  ? PR #2922 ('Ruff linter: Use the default...')
+    ? Context: "A prototype to avoid using strings and comments long..."
+    ? https://github.com/encode/httpx/pull/2922
+
+¡Ü 2024-10-29  ? FEATURE (12be5c4)
+  add socks5h proxy support (#3178)  Signed-off-by: bin liu <l
+  - "Proxy protocol must be either 'http', 'https', or 'socks5
+  + "Proxy protocol must be either 'http', 'https', 'socks5', 
+  ? PR #3178 ('add socks5h proxy support')
+    ? Context: "In some case socks5h is needed to resolve the hostna..."
+    ? https://github.com/encode/httpx/pull/3178
+
+¡Ü 2025-06-02  ? UPDATE (336204f)
+  Display proxy protocol scheme on error (#3571)
+  - " but got {proxy.url.scheme!r}."
+  + f" but got {proxy.url.scheme!r}."
+  ? PR #3571 ('Display proxy protocol schem...')
+    ? Context: "<!-- Thanks for contributing to HTTPX! ? Given this ..."
+    ? https://github.com/encode/httpx/pull/3571
+
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+EVIDENCE EVALUATION (4Â÷¿ø ½Å·Úµµ ÁöÇ¥)
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+[?] Commit message (À¯ÀÇ¹ÌÇÑ Ä¿¹Ô ¸Þ½ÃÁö)
+[?] Code diff (¹°¸®Àû ÄÚµå º¯°æ Áõ¸í)
+[?] Linked PR (GitHub¿¡¼­ È®ÀÎµÈ PR)
+[?] PR Context (º»¹® »ó¼¼ ¸Æ¶ô)
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+COVERAGE:    100% (VERY HIGH [12/12Á¡])
+CONSISTENCY: ? HIGH (µµ¸ÞÀÎ ¹× º¯°æ ¸Æ¶ô ÀÏÄ¡)
+AMBIGUITY:   MODERATE (´Ù´Ü°è º¯°æ ÀÌ·Â)
+CONFIDENCE:  VERY HIGH
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+LIMITATION
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+º» ºÐ¼®Àº Git History¿Í GitHub °ø°³ ¸ÞÅ¸µ¥ÀÌÅÍ¸¦ ±Ù°Å·Î º¹¿øµÇ¾ú½À´Ï´Ù.
+±â·ÏµÇÁö ¾ÊÀº °³¹ßÀÚÀÇ ½ÇÁ¦ ÀÇµµ´Â ÀÚÀÇÀûÀ¸·Î ´ÜÁ¤ÇÏÁö ¾Ê½À´Ï´Ù.
+¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬
+
