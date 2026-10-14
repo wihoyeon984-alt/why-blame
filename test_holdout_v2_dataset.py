@@ -68,7 +68,30 @@ def write_case(root, case_id="httpx_001"):
             "frozen": True,
             "claims": {
                 "claim_001": {
+                    "type": "BEHAVIOR",
                     "label": "SUPPORTED",
+                    "text": (
+                        "The target performs the "
+                        "observed behavior."
+                    ),
+                    "evidence": [
+                        {
+                            "channel": "DIFF",
+                            "ref": (
+                                "https://example.com/"
+                                "commit/aaaaaaaa"
+                            ),
+                            "relation": "SUPPORTS",
+                            "note": (
+                                "The frozen diff directly "
+                                "shows the behavior."
+                            ),
+                        },
+                    ],
+                    "rationale": (
+                        "The frozen public diff directly "
+                        "establishes the behavior."
+                    ),
                 },
             },
         },
