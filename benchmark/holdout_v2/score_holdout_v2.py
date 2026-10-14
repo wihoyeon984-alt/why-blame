@@ -126,7 +126,7 @@ def build_parser():
         "--scoring-dir",
         type=Path,
         default=Path(
-            "benchmark/holdout_v2/scoring"
+            "benchmark/holdout_v2/annotations"
         ),
     )
 
