@@ -1,0 +1,31 @@
+﻿{
+    "schema_version":  2,
+    "case_id":  "requests_002",
+    "execution":  {
+                      "completed":  true,
+                      "failure_stage":  "",
+                      "failure_type":  ""
+                  },
+    "confidence":  {
+                       "level":  "VERY_HIGH",
+                       "source":  "Preserved first-run stdout reports CONFIDENCE: VERY HIGH."
+                   },
+    "claims":  {
+                   "claim_001":  {
+                                     "status":  "PRESENTED",
+                                     "raw_evidence":  "The preserved first-run output presents the added resp.history = hist[:] behavior before hist.append(resp), and links the current form to the redirect-history self-reference fix."
+                                 },
+                   "claim_002":  {
+                                     "status":  "PRESENTED",
+                                     "raw_evidence":  "The preserved first-run output links the change to commit ef439eb7 and PR #7328, titled Prevent Response self-reference in redirect history, and identifies the change as a bug fix."
+                                 },
+                   "claim_003":  {
+                                     "status":  "WITHHELD",
+                                     "raw_evidence":  "The preserved first-run output does not claim that redirect processing performance improvement was the primary reason for the change."
+                                 },
+                   "claim_004":  {
+                                     "status":  "WITHHELD",
+                                     "raw_evidence":  "The preserved first-run output does not claim that the change introduced support for a new redirect protocol."
+                                 }
+               }
+}

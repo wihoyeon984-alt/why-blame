@@ -24,8 +24,8 @@
     "overlaps_holdout_v1": false,
     "overlap_details": "No overlap identified with frozen Holdout v1 cases.",
     "ground_truth_frozen": true,
-    "system_executed": false,
-    "annotation_complete": false
+    "system_executed": true,
+    "annotation_complete": true
   },
   "artifacts": {
     "case_file": "cases/requests_002.json",
