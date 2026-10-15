@@ -1,0 +1,20 @@
+{
+  "schema_version": 2,
+  "candidate_id": "urllib3_001",
+  "first_run": true,
+  "freeze_commit": "261fded",
+  "repository": {
+    "url": "https://github.com/urllib3/urllib3.git",
+    "requested_commit": "a164d79c8cf760f222daa2dc7f67d0e1ca7fb17c",
+    "checked_out_commit": "a164d79c8cf760f222daa2dc7f67d0e1ca7fb17c"
+  },
+  "target": {
+    "file": "src/urllib3/http2/probe.py",
+    "start_line": 49,
+    "end_line": 52
+  },
+  "artifacts": {
+    "stdout_file": "results/urllib3_001/stdout.txt",
+    "stderr_file": "results/urllib3_001/stderr.txt"
+  }
+}
