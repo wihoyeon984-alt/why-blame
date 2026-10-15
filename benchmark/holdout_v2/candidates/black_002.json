@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "candidate_id": "black_002",
+  "repository": {
+    "url": "https://github.com/psf/black.git",
+    "commit": "8ec61a7fb6f1961377afd28bbe71f8a2095916ac"
+  },
+  "target": {
+    "file": "src/black/files.py",
+    "start_line": 261,
+    "end_line": 264
+  },
+  "status": "FROZEN",
+  "selection": {
+    "rationale": "This public Black change provides a compact, independently reviewable .gitignore parsing behavior case. The target was selected from the frozen source diff, changelog, and regression test before running Why-Blame.",
+    "proposed_at": "2026-10-15",
+    "proposed_by": "Wi Ho-yeon"
+  },
+  "exclusion": {
+    "code": "",
+    "reason": ""
+  },
+  "integrity": {
+    "overlaps_holdout_v1": false,
+    "overlap_details": "Black does not appear in Holdout v1 or the existing development benchmark repository set.",
+    "ground_truth_frozen": true,
+    "system_executed": false,
+    "annotation_complete": false
+  },
+  "artifacts": {
+    "case_file": "cases/black_002.json",
+    "result_file": "results/black_002/stdout.txt",
+    "annotation_file": "annotations/black_002.json"
+  },
+  "notes": "Ground Truth was defined from commit 8ec61a7fb6f1961377afd28bbe71f8a2095916ac and its public source diff, changelog entry, and regression test. Why-Blame had not been executed for this candidate at freeze time."
+}
