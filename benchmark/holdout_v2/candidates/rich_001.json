@@ -10,7 +10,7 @@
                    "start_line":  681,
                    "end_line":  691
                },
-    "status":  "FROZEN",
+    "status":  "ANNOTATED",
     "selection":  {
                       "rationale":  "This public Rich revert provides a compact case with revert-related evidence, retained regression tests, and separate tuple and non-tuple traversal behavior. The target was selected from the frozen Git diff and test source before running Why-Blame.",
                       "proposed_at":  "2026-10-16",
@@ -24,8 +24,8 @@
                       "overlaps_holdout_v1":  false,
                       "overlap_details":  "Rich does not appear in the frozen Holdout v1 cases or the existing Holdout v2 cases.",
                       "ground_truth_frozen":  true,
-                      "system_executed":  false,
-                      "annotation_complete":  false
+                      "system_executed":  true,
+                      "annotation_complete":  true
                   },
     "artifacts":  {
                       "case_file":  "cases/rich_001.json",
