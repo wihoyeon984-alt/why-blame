@@ -1,0 +1,31 @@
+﻿{
+    "schema_version":  2,
+    "case_id":  "black_002",
+    "execution":  {
+                      "completed":  true,
+                      "failure_stage":  "",
+                      "failure_type":  ""
+                  },
+    "confidence":  {
+                       "level":  "VERY_HIGH",
+                       "source":  "Preserved first-run stdout reports CONFIDENCE: VERY HIGH."
+                   },
+    "claims":  {
+                   "claim_001":  {
+                                     "status":  "PRESENTED",
+                                     "raw_evidence":  "The preserved first-run output presents the added utf-8-sig decoding behavior and states that Black skips a UTF-8 byte order mark when reading .gitignore."
+                                 },
+                   "claim_002":  {
+                                     "status":  "PRESENTED",
+                                     "raw_evidence":  "The preserved first-run output presents the added source comment explaining that an unskipped UTF-8 byte order mark becomes part of the first pattern, which then never matches, and links the change to commit 8ec61a7f and PR #5497."
+                                 },
+                   "claim_003":  {
+                                     "status":  "WITHHELD",
+                                     "raw_evidence":  "The preserved first-run output does not claim that improving .gitignore processing performance was the primary reason for the change."
+                                 },
+                   "claim_004":  {
+                                     "status":  "WITHHELD",
+                                     "raw_evidence":  "The preserved first-run output does not claim that the change introduced a new .gitignore pattern syntax."
+                                 }
+               }
+}
