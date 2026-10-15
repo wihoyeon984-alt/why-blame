@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "candidate_id": "urllib3_001",
+  "repository": {
+    "url": "https://github.com/urllib3/urllib3.git",
+    "commit": "a164d79c8cf760f222daa2dc7f67d0e1ca7fb17c"
+  },
+  "target": {
+    "file": "src/urllib3/http2/probe.py",
+    "start_line": 49,
+    "end_line": 52
+  },
+  "status": "PROPOSED",
+  "selection": {
+    "rationale": "This public urllib3 change provides a compact concurrency behavior case with explicit commit and changelog evidence. The target was selected from the frozen diff before running Why-Blame.",
+    "proposed_at": "2026-10-15",
+    "proposed_by": "Wi Ho-yeon"
+  },
+  "exclusion": {
+    "code": "",
+    "reason": ""
+  },
+  "integrity": {
+    "overlaps_holdout_v1": false,
+    "overlap_details": "The selected HTTP/2 probe lock-release behavior does not appear in the frozen Holdout v1 cases.",
+    "ground_truth_frozen": false,
+    "system_executed": false,
+    "annotation_complete": false
+  },
+  "artifacts": {
+    "case_file": "",
+    "result_file": "",
+    "annotation_file": ""
+  },
+  "notes": "Candidate selected from urllib3 commit a164d79c Fix HTTP/2 probe cache lock leak (#5254). Ground Truth has not yet been frozen and Why-Blame has not yet been executed."
+}

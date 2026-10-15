@@ -1,0 +1,59 @@
+{
+  "schema_version": 2,
+  "case_id": "urllib3_001",
+  "repository": {
+    "url": "https://github.com/urllib3/urllib3.git",
+    "commit": "a164d79c8cf760f222daa2dc7f67d0e1ca7fb17c"
+  },
+  "frozen": true,
+  "claims": {
+    "claim_001": {
+      "type": "BEHAVIOR",
+      "label": "SUPPORTED",
+      "text": "When acquire_and_get() observes that a cached probe result is already available, it releases the per-key lock before returning that cached value.",
+      "evidence": [
+        {
+          "channel": "DIFF",
+          "ref": "a164d79c8cf760f222daa2dc7f67d0e1ca7fb17c",
+          "relation": "SUPPORTS",
+          "note": "The frozen change adds key_lock.release() immediately before returning a non-null cached probe result."
+        }
+      ],
+      "rationale": "The behavior follows directly from the added lock-release statement."
+    },
+    "claim_002": {
+      "type": "CAUSE",
+      "label": "SUPPORTED",
+      "text": "The change was introduced to prevent waiting threads from remaining blocked after an HTTP/2 probe result had already been cached.",
+      "evidence": [
+        {
+          "channel": "COMMIT",
+          "ref": "a164d79c8cf760f222daa2dc7f67d0e1ca7fb17c",
+          "relation": "SUPPORTS",
+          "note": "Commit title: Fix HTTP/2 probe cache lock leak."
+        },
+        {
+          "channel": "CHANGELOG",
+          "ref": "5206.bugfix.rst",
+          "relation": "SUPPORTS",
+          "note": "The changelog states that waiting connection threads could remain blocked after the probe result was cached."
+        }
+      ],
+      "rationale": "Both commit and changelog explicitly describe the blocked-thread problem being fixed."
+    },
+    "claim_003": {
+      "type": "CAUSE",
+      "label": "UNSUPPORTED",
+      "text": "The change was primarily introduced to improve HTTP request throughput.",
+      "evidence": [],
+      "rationale": "Neither the diff, commit message, nor changelog identifies throughput improvement as the primary purpose."
+    },
+    "claim_004": {
+      "type": "BEHAVIOR",
+      "label": "UNSUPPORTED",
+      "text": "The change enables HTTP/3 support.",
+      "evidence": [],
+      "rationale": "The frozen change only modifies lock handling in the HTTP/2 probe cache."
+    }
+  }
+}
