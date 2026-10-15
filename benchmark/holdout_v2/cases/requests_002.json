@@ -1,0 +1,53 @@
+{
+  "schema_version": 2,
+  "case_id": "requests_002",
+  "repository": {
+    "url": "https://github.com/psf/requests.git",
+    "commit": "ef439eb779c1eba7cbdeeeb302b11e1e061b4b7d"
+  },
+  "frozen": true,
+  "claims": {
+    "claim_001": {
+      "type": "BEHAVIOR",
+      "label": "SUPPORTED",
+      "text": "Redirect responses no longer contain themselves within their own redirect history chains.",
+      "evidence": [
+        {
+          "channel": "DIFF",
+          "ref": "ef439eb779c1eba7cbdeeeb302b11e1e061b4b7d",
+          "relation": "SUPPORTS",
+          "note": "The change assigns resp.history before appending resp to the history list."
+        }
+      ],
+      "rationale": "The new ordering prevents a response from appearing inside its own history."
+    },
+    "claim_002": {
+      "type": "CAUSE",
+      "label": "SUPPORTED",
+      "text": "The change was introduced to prevent self-references in Response redirect history.",
+      "evidence": [
+        {
+          "channel": "COMMIT",
+          "ref": "ef439eb779c1eba7cbdeeeb302b11e1e061b4b7d",
+          "relation": "SUPPORTS",
+          "note": "The commit title explicitly states the self-reference prevention goal."
+        }
+      ],
+      "rationale": "The stated purpose in the commit message directly matches the behavior."
+    },
+    "claim_003": {
+      "type": "CAUSE",
+      "label": "UNSUPPORTED",
+      "text": "The change was primarily introduced to improve redirect processing performance.",
+      "evidence": [],
+      "rationale": "No performance objective appears in the commit or diff."
+    },
+    "claim_004": {
+      "type": "BEHAVIOR",
+      "label": "UNSUPPORTED",
+      "text": "The change adds support for a new redirect protocol.",
+      "evidence": [],
+      "rationale": "The change only affects redirect history bookkeeping."
+    }
+  }
+}
