@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "case_id": "black_001",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "confidence": {
+    "level": "HIGH",
+    "source": "Preserved first-run stdout reports CONFIDENCE: HIGH."
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The preserved first-run output presents the added whitespace handling for PEP 695 type parameter lists and shows that NO is returned for the LSQB case."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The preserved first-run output links the change to commit c45f21d and PR #5504 and includes context describing whitespace handling being moved into whitespace() to prevent incorrect formatting during rebuilt-line processing."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that formatter performance improvement was the primary motivation."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that a new Python syntax feature was added."
+    }
+  }
+}

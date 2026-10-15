@@ -10,7 +10,7 @@
     "start_line": 419,
     "end_line": 427
   },
-  "status": "PROPOSED",
+  "status": "ANNOTATED",
   "selection": {
     "rationale": "This public Black change provides a compact formatting-behavior case with explicit commit and PR rationale. The target was selected from the frozen diff before running Why-Blame.",
     "proposed_at": "2026-10-15",
@@ -23,14 +23,15 @@
   "integrity": {
     "overlaps_holdout_v1": false,
     "overlap_details": "The selected PEP 695 whitespace handling change does not appear in existing Holdout v1 cases.",
-    "ground_truth_frozen": false,
-    "system_executed": false,
-    "annotation_complete": false
+    "ground_truth_frozen": true,
+    "system_executed": true,
+    "annotation_complete": true
   },
   "artifacts": {
-    "case_file": "",
-    "result_file": "",
-    "annotation_file": ""
+    "case_file": "cases/black_001.json",
+    "result_file": "results/black_001/stdout.txt",
+    "annotation_file": "annotations/black_001.json"
   },
   "notes": "Candidate selected from Black commit c45f21d Handle PEP 695 type parameter whitespace in whitespace() (#5504)."
 }
+
