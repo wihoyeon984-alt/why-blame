@@ -1,0 +1,53 @@
+{
+  "schema_version": 2,
+  "case_id": "black_001",
+  "repository": {
+    "url": "https://github.com/psf/black.git",
+    "commit": "c45f21d0399747189eedcc6c9a1614b3cf49dc0f"
+  },
+  "frozen": true,
+  "claims": {
+    "claim_001": {
+      "type": "BEHAVIOR",
+      "label": "SUPPORTED",
+      "text": "For PEP 695 type parameter syntax, whitespace() returns no space before the opening '[' token of a type parameter list.",
+      "evidence": [
+        {
+          "channel": "DIFF",
+          "ref": "c45f21d0399747189eedcc6c9a1614b3cf49dc0f",
+          "relation": "SUPPORTS",
+          "note": "The change adds handling for syms.typeparams that returns NO when the token is LSQB."
+        }
+      ],
+      "rationale": "The behavior follows directly from the newly added whitespace rule."
+    },
+    "claim_002": {
+      "type": "CAUSE",
+      "label": "SUPPORTED",
+      "text": "The change was introduced to prevent unwanted whitespace from being reintroduced in PEP 695 type parameter formatting when lines are rebuilt during string processing.",
+      "evidence": [
+        {
+          "channel": "COMMIT",
+          "ref": "c45f21d0399747189eedcc6c9a1614b3cf49dc0f",
+          "relation": "SUPPORTS",
+          "note": "The commit message explains that whitespace() should directly handle the cases because rebuilt lines could reintroduce spaces."
+        }
+      ],
+      "rationale": "The commit description explicitly identifies incorrect whitespace reintroduction as the motivation."
+    },
+    "claim_003": {
+      "type": "CAUSE",
+      "label": "UNSUPPORTED",
+      "text": "The change was primarily introduced to improve formatter performance.",
+      "evidence": [],
+      "rationale": "No performance objective is stated in the diff or commit description."
+    },
+    "claim_004": {
+      "type": "BEHAVIOR",
+      "label": "UNSUPPORTED",
+      "text": "The change adds support for a new Python language syntax feature.",
+      "evidence": [],
+      "rationale": "The change adjusts formatting behavior for existing PEP 695 syntax rather than introducing parser support for new syntax."
+    }
+  }
+}
