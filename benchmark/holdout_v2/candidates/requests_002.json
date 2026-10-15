@@ -10,7 +10,7 @@
     "start_line": 181,
     "end_line": 183
   },
-  "status": "FROZEN",
+  "status": "ANNOTATED",
   "selection": {
     "rationale": "Redirect history behavior change with explicit test coverage and clear causal rationale.",
     "proposed_at": "2026-10-15",
