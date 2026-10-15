@@ -1,0 +1,75 @@
+﻿{
+    "schema_version":  2,
+    "case_id":  "rich_002",
+    "repository":  {
+                       "url":  "https://github.com/Textualize/rich.git",
+                       "commit":  "482dcee134c4de5c49db781f100e1e99ad84a3fd"
+                   },
+    "frozen":  true,
+    "claims":  {
+                   "claim_001":  {
+                                     "type":  "BEHAVIOR",
+                                     "label":  "SUPPORTED",
+                                     "text":  "Text.expand_tabs calculates tab stops independently for each line by resetting the cell position when processing every line that contains a tab.",
+                                     "evidence":  [
+                                                      {
+                                                          "channel":  "DIFF",
+                                                          "ref":  "482dcee134c4de5c49db781f100e1e99ad84a3fd",
+                                                          "relation":  "SUPPORTS",
+                                                          "note":  "The frozen implementation initializes cell_position to zero inside the per-line tab-processing branch and calculates each tab remainder from that line-local cell position."
+                                                      },
+                                                      {
+                                                          "channel":  "TEST",
+                                                          "ref":  "482dcee134c4de5c49db781f100e1e99ad84a3fd",
+                                                          "relation":  "SUPPORTS",
+                                                          "note":  "The multiline tab-expansion tests verify independent expansion after newline boundaries."
+                                                      }
+                                                  ],
+                                     "rationale":  "The line-local cell_position initialization and multiline regression cases directly establish that tab stops are recalculated for each line."
+                                 },
+                   "claim_002":  {
+                                     "type":  "BEHAVIOR",
+                                     "label":  "SUPPORTED",
+                                     "text":  "Text.expand_tabs preserves and extends style spans when replacing tabs with spaces, including styled text containing double-width characters.",
+                                     "evidence":  [
+                                                      {
+                                                          "channel":  "DIFF",
+                                                          "ref":  "482dcee134c4de5c49db781f100e1e99ad84a3fd",
+                                                          "relation":  "SUPPORTS",
+                                                          "note":  "The frozen implementation expands styled parts with extend_style, joins the transformed Text objects, and replaces the original spans with the resulting spans."
+                                                      },
+                                                      {
+                                                          "channel":  "TEST",
+                                                          "ref":  "482dcee134c4de5c49db781f100e1e99ad84a3fd",
+                                                          "relation":  "SUPPORTS",
+                                                          "note":  "The parameterized tests verify the exact expanded text and Span ranges for styled tabs, multiline text, and double-width characters."
+                                                      },
+                                                      {
+                                                          "channel":  "CHANGELOG",
+                                                          "ref":  "482dcee134c4de5c49db781f100e1e99ad84a3fd",
+                                                          "relation":  "SUPPORTS",
+                                                          "note":  "The changelog states that Text.expand_tabs not expanding spans was fixed."
+                                                      }
+                                                  ],
+                                     "rationale":  "The source transfers spans from the joined expanded result, while the regression tests and changelog independently document span preservation across tab expansion."
+                                 },
+                   "claim_003":  {
+                                     "type":  "CAUSE",
+                                     "label":  "UNSUPPORTED",
+                                     "text":  "The tab-expansion change was primarily introduced to reduce Rich\u0027s memory usage.",
+                                     "evidence":  [
+
+                                                  ],
+                                     "rationale":  "The frozen source, tests, commit sequence, and changelog focus on tab positioning and style-span correctness rather than memory reduction."
+                                 },
+                   "claim_004":  {
+                                     "type":  "BEHAVIOR",
+                                     "label":  "UNSUPPORTED",
+                                     "text":  "The change adds a new Rich markup syntax for representing tab characters.",
+                                     "evidence":  [
+
+                                                  ],
+                                     "rationale":  "The change modifies internal Text tab expansion and style-span handling without adding or changing Rich markup syntax."
+                                 }
+               }
+}
