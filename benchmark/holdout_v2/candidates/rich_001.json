@@ -1,0 +1,36 @@
+﻿{
+    "schema_version":  2,
+    "candidate_id":  "rich_001",
+    "repository":  {
+                       "url":  "https://github.com/Textualize/rich.git",
+                       "commit":  "4ae2be62f62863034cbaa11dfc1b397499c971d8"
+                   },
+    "target":  {
+                   "file":  "rich/pretty.py",
+                   "start_line":  681,
+                   "end_line":  691
+               },
+    "status":  "FROZEN",
+    "selection":  {
+                      "rationale":  "This public Rich revert provides a compact case with revert-related evidence, retained regression tests, and separate tuple and non-tuple traversal behavior. The target was selected from the frozen Git diff and test source before running Why-Blame.",
+                      "proposed_at":  "2026-10-16",
+                      "proposed_by":  "Wi Ho-yeon"
+                  },
+    "exclusion":  {
+                      "code":  "",
+                      "reason":  ""
+                  },
+    "integrity":  {
+                      "overlaps_holdout_v1":  false,
+                      "overlap_details":  "Rich does not appear in the frozen Holdout v1 cases or the existing Holdout v2 cases.",
+                      "ground_truth_frozen":  true,
+                      "system_executed":  false,
+                      "annotation_complete":  false
+                  },
+    "artifacts":  {
+                      "case_file":  "cases/rich_001.json",
+                      "result_file":  "results/rich_001/stdout.txt",
+                      "annotation_file":  "annotations/rich_001.json"
+                  },
+    "notes":  "Candidate selected from Rich commit 4ae2be62, which restores separate tuple and non-tuple traversal branches. Ground Truth was defined from the source diff, the reverted commit 833c912b, and retained test source before Why-Blame execution."
+}
