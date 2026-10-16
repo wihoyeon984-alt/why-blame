@@ -97,6 +97,15 @@ def _read_http_error_body(error):
     except Exception:
         return ""
 
+    finally:
+        close = getattr(error, "close", None)
+
+        if callable(close):
+            try:
+                close()
+            except Exception:
+                pass
+
 
 def _extract_error_message(body):
     """

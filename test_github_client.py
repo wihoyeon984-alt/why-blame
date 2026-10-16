@@ -184,6 +184,7 @@ class TestGitHubClient(unittest.TestCase):
 
         self.assertEqual(status, "FORBIDDEN")
         self.assertEqual(message, "Forbidden")
+        self.assertTrue(error.fp.closed)
 
     def test_403_with_remaining_zero_is_rate_limit(self):
         """
@@ -209,6 +210,7 @@ class TestGitHubClient(unittest.TestCase):
             "rate limit",
             message.lower(),
         )
+        self.assertTrue(error.fp.closed)
 
     def test_429_is_rate_limit(self):
         """HTTP 429는 RATE_LIMIT으로 분류한다."""
@@ -231,6 +233,7 @@ class TestGitHubClient(unittest.TestCase):
             message,
             "Too many requests",
         )
+        self.assertTrue(error.fp.closed)
 
     @patch("github_client.urllib.request.urlopen")
     def test_network_error_is_not_treated_as_unlinked(
