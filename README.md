@@ -142,7 +142,7 @@ Four SUPPORTED claims remain unrecovered in Holdout v1.
 ## Latest release
 
 The latest stable release is
-[why-blame v0.3.0](https://github.com/wihoyeon984-alt/why-blame/releases/tag/v0.3.0).
+[why-blame v0.3.1](https://github.com/wihoyeon984-alt/why-blame/releases/tag/v0.3.1).
 
 Release highlights:
 

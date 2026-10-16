@@ -2,6 +2,23 @@
 
 All notable changes to Why-Blame are documented in this file.
 
+## [0.3.1] - 2026-10-16
+
+### Fixed
+
+- Closes consumed GitHub HTTP error response streams after
+  reading their response bodies.
+- Removes HTTPError 403, 404, and 429 ResourceWarning
+  messages during test cleanup.
+- Preserves the existing conservative GitHub HTTP error
+  classification behavior.
+
+### Validation
+
+- 374 unit tests pass.
+- HTTP ResourceWarning count is zero.
+- GitHub Actions passes on Windows and Ubuntu with Python
+  3.9, 3.11, and 3.14.
 ## [0.3.0] - 2026-10-16
 
 ### Added
