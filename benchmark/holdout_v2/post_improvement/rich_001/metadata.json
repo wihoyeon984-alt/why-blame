@@ -24,7 +24,7 @@
     "stdout_file": "post_improvement/rich_001/stdout.txt",
     "stderr_file": "post_improvement/rich_001/stderr.txt",
     "annotation_file": "post_improvement/annotations/rich_001.json",
-    "stdout_sha256": "16cad31d3dd3deb189280841ac8d10e4f3de672ec16bf99d9fd3e894a09960b1"
+    "stdout_sha256": "0dc8e3832061baf84b541cc178b800a7aa8e7f864e66cd32b050b462ff4ab004"
   },
   "comparison": {
     "improved_claim": "claim_002",

@@ -261,8 +261,13 @@ def _validate_metadata(
         {},
     ).get("stdout_sha256")
 
+    canonical_stdout_bytes = stdout_bytes.replace(
+        b"\r\n",
+        b"\n",
+    )
+
     actual_hash = hashlib.sha256(
-        stdout_bytes
+        canonical_stdout_bytes
     ).hexdigest()
 
     if actual_hash != expected_hash:
