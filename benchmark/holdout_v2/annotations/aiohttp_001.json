@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "case_id": "aiohttp_001",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "confidence": {
+    "level": "MEDIUM",
+    "source": "Preserved first-run stdout reports CONFIDENCE: MODERATE with 58% coverage, moderate consistency, and low ambiguity. Holdout v2 records this runtime MODERATE result under the standard MEDIUM confidence tier."
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The preserved first-run output directly lists the multi-member loop, reading unused_data, creating a fresh decompressor, decompressing the unused bytes, and appending the resulting chunk."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The preserved first-run output directly lists the bounded output condition, subtraction from max_length, the max_length <= 0 branch, assignment of unused bytes to _pending_unused_data, and the following break."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that the change recovers successfully from every form of malformed or corrupted gzip input."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that reducing memory usage or improving performance was the primary reason for the change."
+    }
+  }
+}
