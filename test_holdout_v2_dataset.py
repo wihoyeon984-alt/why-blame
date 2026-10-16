@@ -135,6 +135,37 @@ def write_result(root):
     )
 
 
+def write_result_directory(root):
+    result_dir = (
+        Path(root)
+        / "results"
+        / "httpx_001"
+    )
+    result_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    stdout_path = (
+        result_dir / "stdout.txt"
+    )
+    stdout_path.write_text(
+        "Observed output",
+        encoding="utf-8",
+    )
+
+    write_json(
+        root,
+        "results/httpx_001/metadata.json",
+        {
+            "schema_version": 2,
+            "case_id": "httpx_001",
+        },
+    )
+
+    return stdout_path
+
+
 class TestHoldoutV2Dataset(unittest.TestCase):
 
     def test_validates_complete_dataset(self):
@@ -160,6 +191,31 @@ class TestHoldoutV2Dataset(unittest.TestCase):
 
             self.assertIsNotNone(
                 dataset.artifacts[0].annotation,
+            )
+
+    def test_accepts_metadata_for_registered_result_directory(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as temp:
+            write_case(temp)
+            write_result_directory(temp)
+            write_annotation(temp)
+
+            dataset = validate_dataset(
+                [
+                    make_candidate(
+                        result_file=(
+                            "results/httpx_001/"
+                            "stdout.txt"
+                        ),
+                    ),
+                ],
+                temp,
+            )
+
+            self.assertEqual(
+                len(dataset.artifacts),
+                1,
             )
 
     def test_rejects_missing_result_file(self):

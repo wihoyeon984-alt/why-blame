@@ -178,16 +178,31 @@ def validate_dataset(
         )
 
         if result_file:
+            result_path = _resolve_registered_path(
+                holdout_dir,
+                result_file,
+                "artifacts.result_file",
+            )
+
             registered_paths.add(
                 _relative_key(
                     holdout_dir,
-                    _resolve_registered_path(
-                        holdout_dir,
-                        result_file,
-                        "artifacts.result_file",
-                    ),
+                    result_path,
                 )
             )
+
+            metadata_path = (
+                result_path.parent
+                / "metadata.json"
+            )
+
+            if metadata_path.is_file():
+                registered_paths.add(
+                    _relative_key(
+                        holdout_dir,
+                        metadata_path,
+                    )
+                )
 
         annotation_file = (
             candidate.artifacts.annotation_file
