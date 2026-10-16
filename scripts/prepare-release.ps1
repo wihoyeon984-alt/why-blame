@@ -101,11 +101,25 @@ try {
         throw "Remote release tag already exists."
     }
 
-    gh release view "v$Version" `
-        --json tagName `
-        2>$null
+    $releaseJson = gh release list `
+        --limit 100 `
+        --json tagName
 
-    if ($LASTEXITCODE -eq 0) {
+    Assert-LastExitCode `
+        "Unable to inspect GitHub Releases."
+
+    $releases = @(
+        ConvertFrom-Json -InputObject $releaseJson
+    )
+
+    $matchingRelease = @(
+        $releases |
+            Where-Object {
+                $_.tagName -eq "v$Version"
+            }
+    )
+
+    if ($matchingRelease.Count -gt 0) {
         throw "GitHub Release already exists."
     }
 
