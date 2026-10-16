@@ -44,12 +44,15 @@ function Test-Diff {
 }
 
 function Test-UnitSuite {
-    Write-Step "Running unit tests"
+    Write-Step "Running unit tests with ResourceWarning checks"
 
-    python -m unittest discover -v
-    Assert-LastExitCode "Unit tests failed."
+    python .\scripts\check_resource_warnings.py
+
+    Assert-LastExitCode `
+        "Unit tests or ResourceWarning checks failed."
 
     Write-Success "Unit tests passed."
+    Write-Success "HTTP ResourceWarning count is zero."
 }
 
 function Test-Holdout {
