@@ -235,6 +235,38 @@ try {
     }
 
     if (-not $NoWait) {
+        Write-Step "Waiting for check registration"
+
+        $checksRegistered = $false
+
+        for ($attempt = 1; $attempt -le 18; $attempt++) {
+            $statusJson = gh pr view $prNumber `
+                --json statusCheckRollup
+
+            Assert-LastExitCode `
+                "Unable to read pull request checks."
+
+            $status = ConvertFrom-Json `
+                -InputObject $statusJson
+
+            $checkCount = @(
+                $status.statusCheckRollup
+            ).Count
+
+            Write-Host "Check registration attempt ${attempt}/18: $checkCount checks"
+
+            if ($checkCount -gt 0) {
+                $checksRegistered = $true
+                break
+            }
+
+            Start-Sleep -Seconds 10
+        }
+
+        if (-not $checksRegistered) {
+            throw "Pull request checks were not registered."
+        }
+
         Write-Step "Waiting for pull request checks"
 
         gh pr checks $prNumber `
