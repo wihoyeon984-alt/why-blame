@@ -10,7 +10,7 @@
     "start_line": 237,
     "end_line": 246
   },
-  "status": "PROPOSED",
+  "status": "ANNOTATED",
   "selection": {
     "rationale": "Evaluates whether the system distinguishes directly observable file-like object detection and read behavior from broader claims about intent, compatibility, or complete proxy support.",
     "proposed_at": "2026-10-16",
@@ -22,15 +22,15 @@
   },
   "integrity": {
     "overlaps_holdout_v1": false,
-    "overlap_details": "",
-    "ground_truth_frozen": false,
-    "system_executed": false,
-    "annotation_complete": false
+    "overlap_details": "No overlap identified with frozen Holdout v1 cases.",
+    "ground_truth_frozen": true,
+    "system_executed": true,
+    "annotation_complete": true
   },
   "artifacts": {
-    "case_file": "",
-    "result_file": "",
-    "annotation_file": ""
+    "case_file": "cases/requests_003.json",
+    "result_file": "results/requests_003/stdout.txt",
+    "annotation_file": "annotations/requests_003.json"
   },
-  "notes": "Selected before system execution. The target includes the input-type branches surrounding the expanded read detection."
+  "notes": "Selected from Requests commit 6f205ff4 fixing _encode_files detection for __getattr__-based file wrappers. Ground truth was frozen before the preserved first system execution."
 }

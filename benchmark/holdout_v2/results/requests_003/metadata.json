@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "candidate_id": "requests_003",
+  "first_run": true,
+  "freeze_commit": "71d0d93",
+  "started_at": "2026-10-16T04:18:01.288814+00:00",
+  "completed_at": "2026-10-16T04:18:06.800302+00:00",
+  "exit_code": 0,
+  "repository": {
+    "url": "https://github.com/psf/requests.git",
+    "requested_commit": "6f205ff422bccd5e4c4fc0b64c5f3e7df5181db6",
+    "checked_out_commit": "6f205ff422bccd5e4c4fc0b64c5f3e7df5181db6"
+  },
+  "target": {
+    "file": "src/requests/models.py",
+    "start_line": 237,
+    "end_line": 246
+  },
+  "artifacts": {
+    "stdout_file": "results/requests_003/stdout.txt",
+    "stderr_file": "results/requests_003/stderr.txt"
+  }
+}

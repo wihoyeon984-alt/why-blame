@@ -1,0 +1,129 @@
+
+WHY-BLAME
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET: src/requests/models.py:237-246
+REPO:   psf/requests
+────────────────────────────────────────────────────────────────
+CURRENT CODE
+────────────────────────────────────────────────────────────────
+>             if isinstance(fp, (str, bytes, bytearray)):
+>                 fdata = fp
+>             # data that proxies attributes to underlying o...
+>             # defensive check for untyped callers
+────────────────────────────────────────────────────────────────
+WHY (코드의 변경 이력과 정착 과정)
+────────────────────────────────────────────────────────────────
+* ⚠️ 증거 불일치로 변경 사유를 확정할 수 없음
+
+  수집된 커밋 메시지와 연관 PR/Issue의 맥락이 서로 일치하지 않습니다. 충돌이 확인된 근거: Commit
+  ''or content' does us no g' <-> PR #1667 'Second time lucky
+  for jso'. False-WHY 생성을 방지하기 위해 구체적인 변경 사유를 제시하지 않습니다.
+────────────────────────────────────────────────────────────────
+HISTORY (타임라인 상세)
+────────────────────────────────────────────────────────────────
+● 2012-12-15  🌱 FIRST OBSERVED (2161d8f)
+  encode files
+  + new_fields.append((k, (fn, fp.read())))
+
+● 2013-01-09  📦 UPDATE (20b10ae)
+  Allow for third argument in file dict value to support expli
+  + if ft:
+  + new_v = (fn, fp.read(), ft)
+  ↳ PR #1091 ('Allow for explicit file cont...')
+    💬 Context: "urllib3 allows for explicit content types to be spec..."
+    🔗 https://github.com/psf/requests/pull/1091
+
+● 2013-09-30  📦 UPDATE (af4fb8c)
+  Accept per-file headers in multipart file POST messages.  - 
+  - if ft:
+  - new_v = (fn, fp.read(), ft)
+  ↳ PR #1640 ('Accept per-file headers in m...')
+    💬 Context: "- Each file in the `files` argument can now be a 4-t..."
+    🔗 https://github.com/psf/requests/pull/1640
+
+● 2013-10-12  📦 UPDATE (bea2060)
+  'or content' does us no good.
+  - rf = RequestField(name=k, data=fp.read(),
+  + rf = RequestField(name=k, data=fp.read(),
+  ↳ PR #1667 ('Second time lucky for json r...')
+    💬 Context: "Following discussion on #1665. =)..."
+    🔗 https://github.com/psf/requests/pull/1667
+
+● 2015-03-04  📦 UPDATE (ec700a9)
+  Avoid duplicating files data when creating a Request with st
+  - rf = RequestField(name=k, data=fp.read(),
+  + if isinstance(fp, (str, bytes, bytearray)):
+  ↳ PR #2472 ('Avoid data duplication when ...')
+    💬 Context: "I've worked on the idea discussed in #2468 regarding..."
+    🔗 https://github.com/psf/requests/pull/2472
+
+● Unknown  📦 UPDATE (makes t)
+  
+  - else:
+  + elif hasattr(fp, 'read'):
+
+● 2017-05-23  🐛 BUG FIX (8546a15)
+  The library raises NoneType error when file-pointer (fp) res
+  ↳ PR #4050 ('AttributeError error raised ...')
+    💬 Context: "The library raises NoneType error when file-pointer ..."
+    🔗 https://github.com/psf/requests/pull/4050
+
+● 2022-04-29  ✨ FEATURE (2a6f290)
+  Add automatic code formatting to Requests (#6095)
+  - elif hasattr(fp, 'read'):
+  + elif hasattr(fp, "read"):
+  ↳ PR #6095 ('Add automatic code formattin...')
+    💬 Context: "This is a draft PR for adding standardized code form..."
+    🔗 https://github.com/psf/requests/pull/6095
+
+● 2026-05-03  ✨ FEATURE (561e4b6)
+  Add inline types to Requests (#7272)
+  - elif hasattr(fp, "read"):
+  + elif isinstance(fp, _SupportsRead):  # type: ignore[report
+  ↳ PR #7272 ('Add inline types to Requests')
+    💬 Context: "> [!IMPORTANT] > We want feedback from people who ac..."
+    🔗 https://github.com/psf/requests/pull/7272
+
+● 2026-06-04  🐛 BUG FIX (e50e594)
+  Improve static typing of 3rd party imports  (#7496)  * Add m
+  - elif fp is None:  # type: ignore[reportUnnecessaryComparis
+  + elif fp is None:  # defensive check for untyped callers
+  ↳ PR #7496 ('Improve static typing of 3rd...')
+    💬 Context: "This adds `chardet`, `cryptography`, and `PyOpenSSL`..."
+    🔗 https://github.com/psf/requests/pull/7496
+
+● 2026-06-08  📦 UPDATE (661970d)
+  Disable commonly ignored Pyright linting rules (#7497)
+  - elif isinstance(fp, _SupportsRead):  # type: ignore[report
+  + elif isinstance(fp, _SupportsRead):  # defensive check for
+  ↳ PR #7497 ('Disable commonly ignored Pyr...')
+    💬 Context: "I noticed that some Pyright error codes were often i..."
+    🔗 https://github.com/psf/requests/pull/7497
+
+● 2026-06-08  🐛 BUG FIX (6f205ff)
+  Fix `_encode_files` detection for `__getattr__`-based file w
+  - elif isinstance(fp, _SupportsRead):  # defensive check for
+  + # data that proxies attributes to underlying objects needs
+  ↳ PR #7502 ('Fix `_encode_files` detectio...')
+    🔗 https://github.com/psf/requests/pull/7502
+
+────────────────────────────────────────────────────────────────
+EVIDENCE EVALUATION (4차원 신뢰도 지표)
+────────────────────────────────────────────────────────────────
+[✓] Commit message (유의미한 커밋 메시지)
+[✓] Code diff (물리적 코드 변경 증명)
+[✓] Linked PR (GitHub에서 확인된 PR)
+[✓] PR Context (본문 상세 맥락)
+────────────────────────────────────────────────────────────────
+COVERAGE:    100% (VERY HIGH [12/12점])
+CONSISTENCY: ⚠️ INCONSISTENT (Commit과 PR의 맥락 충돌)
+AMBIGUITY:   MODERATE (다단계 변경 이력)
+CONFIDENCE:  LOW (증거 불일치)
+────────────────────────────────────────────────────────────────
+LIMITATION
+────────────────────────────────────────────────────────────────
+- Evidence 간 맥락 불일치가 확인되어 신뢰도가 낮아졌으며 WHY 생성을 차단합니다.
+본 분석은 Git History와 GitHub 공개 메타데이터를 근거로 복원되었습니다.
+기록되지 않은 개발자의 실제 의도는 자의적으로 단정하지 않습니다.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
