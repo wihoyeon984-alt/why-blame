@@ -20,6 +20,7 @@ from claim_semantic_extractor import (
     extract_target_ordering,
     derive_transitive_ordering,
     extract_conditional_assignment_flows,
+    extract_else_branch_assignment_flows,
 )
 from claim_semantics import (
     DIRECT,
@@ -536,6 +537,88 @@ class TestClaimSemanticExtractor(
                     }
                 ],
             )
+
+    def test_else_branch_flow_extracts_direct_use_semantics(self):
+        source = (
+            "if _safe_isinstance(arg, tuple):\n"
+            "    key, child = arg\n"
+            "    child_node = _traverse(child, depth=depth + 1)\n"
+            "    child_node.key_repr = key\n"
+            "    append(child_node)\n"
+            "else:\n"
+            "    child_node = _traverse(arg, depth=depth + 1)\n"
+            "    child_node.last = last\n"
+            "    append(child_node)\n"
+        )
+
+        result = extract_else_branch_assignment_flows(
+            source,
+            "else001",
+        )
+
+        self.assertEqual(
+            len(result),
+            1,
+        )
+
+        semantics = result[0]
+
+        self.assertEqual(
+            semantics["action"],
+            "USE",
+        )
+        self.assertEqual(
+            semantics["subject"],
+            "_traverse(arg, depth=depth + 1)",
+        )
+        self.assertEqual(
+            semantics["condition"],
+            "not _safe_isinstance(arg, tuple)",
+        )
+        self.assertEqual(
+            semantics["target"],
+            "append(child_node)",
+        )
+        self.assertEqual(
+            semantics["source_event"],
+            "else001",
+        )
+
+        for field in (
+            "action",
+            "subject",
+            "condition",
+            "target",
+        ):
+            self.assertEqual(
+                semantics["field_evidence"][field],
+                [
+                    {
+                        "source": "DIFF",
+                        "ref": "else001",
+                        "level": DIRECT,
+                    }
+                ],
+            )
+
+    def test_else_branch_flow_rejects_unrelated_consumer(self):
+        source = (
+            "if is_keyed(arg):\n"
+            "    consume_keyed(arg)\n"
+            "else:\n"
+            "    child_node = traverse(arg)\n"
+            "    append(other_node)\n"
+        )
+
+        result = extract_else_branch_assignment_flows(
+            source,
+            "else002",
+        )
+
+        self.assertEqual(
+            result,
+            [],
+        )
 
     def test_statement_ordering_preserves_direct_call_sequence(self):
         code = (

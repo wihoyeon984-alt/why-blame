@@ -425,6 +425,86 @@ class TestClaimAdapter(unittest.TestCase):
         )
 
 
+    def test_else_branch_flow_is_attached_to_behavior_claim(self):
+        timeline = [
+            {
+                "hash": "else001",
+                "diff_lines": [
+                    "+         else:",
+                    (
+                        "+             child_node = "
+                        "_traverse(arg, depth=depth + 1)"
+                    ),
+                    "+             append(child_node)",
+                ],
+                "source": (
+                    "if _safe_isinstance(arg, tuple):\n"
+                    "    key, child = arg\n"
+                    "    child_node = _traverse("
+                    "child, depth=depth + 1)\n"
+                    "    child_node.key_repr = key\n"
+                    "    append(child_node)\n"
+                    "else:\n"
+                    "    child_node = _traverse("
+                    "arg, depth=depth + 1)\n"
+                    "    child_node.last = last\n"
+                    "    append(child_node)\n"
+                ),
+                "ref_items": [],
+                "type": "REVERT",
+            }
+        ]
+
+        claims = build_behavior_claims(timeline)
+
+        flow_claims = [
+            claim
+            for claim in claims
+            if any(
+                semantics.get("action") == "USE"
+                and semantics.get("subject")
+                == "_traverse(arg, depth=depth + 1)"
+                and semantics.get("target")
+                == "append(child_node)"
+                for semantics in claim.get(
+                    "structured_semantics",
+                    [],
+                )
+            )
+        ]
+
+        self.assertEqual(
+            len(flow_claims),
+            1,
+        )
+
+        claim = flow_claims[0]
+
+        self.assertTrue(
+            claim["target_relevant"],
+        )
+        self.assertEqual(
+            claim["source_event"],
+            "else001",
+        )
+        self.assertEqual(
+            claim["evidence"],
+            [
+                {
+                    "source": "DIFF",
+                    "ref": "else001",
+                    "supports": True,
+                }
+            ],
+        )
+
+        semantics = claim["structured_semantics"][0]
+
+        self.assertEqual(
+            semantics["condition"],
+            "not _safe_isinstance(arg, tuple)",
+        )
+
     def test_conditional_assignment_flow_is_attached_to_behavior_claim(self):
         timeline = [
             {
