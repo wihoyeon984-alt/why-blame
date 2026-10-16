@@ -19,6 +19,7 @@ from claim_semantic_extractor import (
     extract_statement_ordering,
     extract_target_ordering,
     derive_transitive_ordering,
+    extract_conditional_assignment_flows,
 )
 from claim_semantics import (
     DIRECT,
@@ -462,6 +463,79 @@ class TestClaimSemanticExtractor(
             [],
         )
 
+
+    def test_conditional_assignment_flow_extracts_direct_use_semantics(self):
+        source = (
+            "if isinstance(fp, (str, bytes, bytearray)):\n"
+            "    fdata = fp\n"
+            "elif isinstance(fp, _SupportsRead) or hasattr(fp, "
+            "\"read\"):\n"
+            "    fdata = fp.read()\n"
+            "elif fp is None:\n"
+            "    continue\n"
+            "else:\n"
+            "    fdata = fp\n"
+            "\n"
+            "rf = RequestField(\n"
+            "    name=k,\n"
+            "    data=fdata,\n"
+            "    filename=fn,\n"
+            "    headers=fh,\n"
+            ")\n"
+        )
+
+        result = extract_conditional_assignment_flows(
+            source,
+            "flow001",
+        )
+
+        self.assertEqual(
+            len(result),
+            1,
+        )
+
+        semantics = result[0]
+
+        self.assertEqual(
+            semantics["action"],
+            "USE",
+        )
+        self.assertEqual(
+            semantics["subject"],
+            "fp.read()",
+        )
+        self.assertEqual(
+            semantics["condition"],
+            (
+                "isinstance(fp, _SupportsRead) "
+                "or hasattr(fp, 'read')"
+            ),
+        )
+        self.assertEqual(
+            semantics["target"],
+            "RequestField data",
+        )
+        self.assertEqual(
+            semantics["source_event"],
+            "flow001",
+        )
+
+        for field in (
+            "action",
+            "subject",
+            "condition",
+            "target",
+        ):
+            self.assertEqual(
+                semantics["field_evidence"][field],
+                [
+                    {
+                        "source": "DIFF",
+                        "ref": "flow001",
+                        "level": DIRECT,
+                    }
+                ],
+            )
 
     def test_statement_ordering_preserves_direct_call_sequence(self):
         code = (

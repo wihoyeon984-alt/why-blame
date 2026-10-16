@@ -5,6 +5,7 @@ from claim_semantic_extractor import (
     extract_direct_local_helper_semantics,
     extract_statement_semantics,
     extract_target_ordering,
+    extract_conditional_assignment_flows,
 )
 
 from claim_semantics import (
@@ -132,6 +133,69 @@ def build_behavior_claims(timeline):
                 )
 
             claims.append(claim)
+
+        source = item.get("source", "")
+        source_event = item.get(
+            "hash",
+            "unknown",
+        )
+
+        if source:
+            flow_semantics = (
+                extract_conditional_assignment_flows(
+                    source,
+                    source_event,
+                )
+            )
+
+            for semantics in flow_semantics:
+                subject = semantics.get(
+                    "subject",
+                    "",
+                )
+                target = semantics.get(
+                    "target",
+                    "",
+                )
+                condition = semantics.get(
+                    "condition",
+                    "",
+                )
+
+                if not subject or not target:
+                    continue
+
+                flow_text = (
+                    "Observed conditional data flow: "
+                    f"{subject} is used for {target}"
+                )
+
+                if condition:
+                    flow_text += (
+                        f" when {condition}"
+                    )
+
+                flow_claim = make_claim(
+                    text=flow_text,
+                    claim_type=BEHAVIOR,
+                    evidence=[
+                        make_evidence(
+                            "DIFF",
+                            source_event,
+                        )
+                    ],
+                )
+
+                flow_claim["source_event"] = (
+                    source_event
+                )
+                flow_claim["target_relevant"] = True
+                flow_claim["structured_semantics"] = [
+                    semantics
+                ]
+
+                claims.append(flow_claim)
+
         ordering = derive_transitive_ordering(
             extract_target_ordering([item])
         )

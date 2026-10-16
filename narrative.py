@@ -248,6 +248,12 @@ def synthesize_narrative(timeline, stats):
                 "변경 사유를 제시하지 않습니다."
             )
 
+        body = append_supported_claims(
+            body,
+            timeline,
+            stats,
+        )
+
         return headline, body
 
     # ---------------------------------------------------------

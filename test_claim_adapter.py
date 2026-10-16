@@ -425,6 +425,96 @@ class TestClaimAdapter(unittest.TestCase):
         )
 
 
+    def test_conditional_assignment_flow_is_attached_to_behavior_claim(self):
+        timeline = [
+            {
+                "hash": "flow001",
+                "diff_lines": [
+                    (
+                        "+ elif isinstance(fp, _SupportsRead) "
+                        'or hasattr(fp, "read"):'
+                    ),
+                ],
+                "source": (
+                    "if isinstance(fp, (str, bytes, bytearray)):\n"
+                    "    fdata = fp\n"
+                    "elif isinstance(fp, _SupportsRead) or "
+                    "hasattr(fp, \"read\"):\n"
+                    "    fdata = fp.read()\n"
+                    "elif fp is None:\n"
+                    "    continue\n"
+                    "else:\n"
+                    "    fdata = fp\n"
+                    "\n"
+                    "rf = RequestField(\n"
+                    "    name=k,\n"
+                    "    data=fdata,\n"
+                    "    filename=fn,\n"
+                    "    headers=fh,\n"
+                    ")\n"
+                ),
+                "ref_items": [],
+                "type": "BUG FIX",
+            }
+        ]
+
+        claims = build_behavior_claims(timeline)
+
+        flow_claims = [
+            claim
+            for claim in claims
+            if any(
+                semantics.get("action") == "USE"
+                and semantics.get("subject") == "fp.read()"
+                and semantics.get("target")
+                == "RequestField data"
+                for semantics in claim.get(
+                    "structured_semantics",
+                    [],
+                )
+            )
+        ]
+
+        self.assertEqual(
+            len(flow_claims),
+            1,
+        )
+
+        claim = flow_claims[0]
+
+        self.assertEqual(
+            claim["status"],
+            "UNVERIFIED",
+        )
+        self.assertTrue(
+            claim["target_relevant"],
+        )
+        self.assertEqual(
+            claim["source_event"],
+            "flow001",
+        )
+
+        self.assertEqual(
+            claim["evidence"],
+            [
+                {
+                    "source": "DIFF",
+                    "ref": "flow001",
+                    "supports": True,
+                }
+            ],
+        )
+
+        semantics = claim["structured_semantics"][0]
+
+        self.assertEqual(
+            semantics["condition"],
+            (
+                "isinstance(fp, _SupportsRead) "
+                "or hasattr(fp, 'read')"
+            ),
+        )
+
     def test_direct_statement_ordering_is_attached_to_after_claim(self):
         timeline = [
             {
