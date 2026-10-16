@@ -2,6 +2,18 @@
 
 All notable changes to Why-Blame are documented in this file.
 
+## [0.3.4] - 2026-10-16
+
+### Changed
+
+- 실제 변경 내용을 한 문장으로 설명
+
+### Validation
+
+- Full verification passes.
+- HTTP ResourceWarning count is zero.
+- Holdout v1 integrity verification passes.
+- Holdout v2 post-improvement scoring passes.
 ## [0.3.3] - 2026-10-16
 
 ### Changed
