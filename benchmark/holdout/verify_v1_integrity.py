@@ -36,8 +36,13 @@ def main():
             )
             continue
 
+        canonical_bytes = path.read_bytes().replace(
+            b"\r\n",
+            b"\n",
+        )
+
         actual = sha256(
-            path.read_bytes()
+            canonical_bytes
         ).hexdigest()
 
         if actual != expected:
