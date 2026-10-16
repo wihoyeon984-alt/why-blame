@@ -1,0 +1,77 @@
+
+WHY-BLAME
+¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬
+TARGET: aiohttp/compression_utils.py:295-315
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+CURRENT CODE
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+>         # Handle concatenated gzip/deflate streams (multi-...
+>         # After a member ends, unused_data holds the start...
+>         # Create a fresh decompressor for each subsequent ...
+>         while self._decompressor.eof and self._decompresso...
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+WHY (ÄÚµåÀÇ º¯°æ ÀÌ·Â°ú Á¤Âø °úÁ¤)
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+* ÇöÀç È®ÀÎµÈ ÀÌ·Â»ó º¯°æ ´Ü°è°¡ ÇÏ³ªÀÎ ÄÚµå
+
+  ÇöÀç È®ÀÎµÈ Git ÀÌ·Â»ó 2026-05-31
+  Ä¿¹Ô(e8832aee7f694979292740b9b56a9c98fb0afc1a)¿¡¼­ Ã³À½ °üÂûµÇ¾ú½À´Ï´Ù. ÀÌÈÄ
+  Ãß°¡ÀûÀÎ º¯°æ »çÀ¯¸¦ È®Á¤ÇÒ ¼ö ÀÖ´Â ±Ù°Å´Â Á¦ÇÑÀûÀÔ´Ï´Ù.
+
+  È®ÀÎµÈ ÀÌ·Â ¹üÀ§¿¡¼­ °üÂûµÇ´Â ÄÚµå µ¿ÀÛ:
+  - Added code: # Handle concatenated gzip/deflate streams
+      (multi-member).
+  - Added code: # After a member ends, unused_data holds the
+      start of the next member.
+  - Added code: # Create a fresh decompressor for each
+      subsequent member.
+  - Added code: while self._decompressor.eof and
+      self._decompressor.unused_data:
+  - Added code: unused = self._decompressor.unused_data
+  - Added code: self._decompressor =
+      self._zlib_backend.decompressobj(wbits=self._mode)
+  - Added code: if max_length != ZLIB_MAX_LENGTH_UNLIMITED:
+  - Added code: max_length -= len(result)
+  - Added code: if max_length <= 0:
+  - Added code: self._pending_unused_data = unused
+  - Added code: break
+  - Added code: chunk = self._decompressor.decompress(unused,
+      max_length)
+  - Added code: self._last_empty = chunk == b""
+  - Added code: result += chunk
+  - Added code: # Member ended exactly at chunk boundary ? no
+      unused_data, but the
+  - Added code: # next feed_data() call would fail on the spent
+      decompressor.
+  - Added code: # Only reset for gzip; deflate's feed_eof()
+      relies on eof=True to
+  - Added code: # confirm the stream is complete.
+  - Added code: if self._decompressor.eof and self._mode >
+      self._zlib_backend.MAX_WBITS:
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+HISTORY (Å¸ÀÓ¶óÀÎ »ó¼¼)
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+¡Ü 2026-05-31  ? FIRST OBSERVED (e8832ae)
+  Fix ZLibDecompressor dropping data past the first gzip membe
+  + # Handle concatenated gzip/deflate streams (multi-member).
+  + # After a member ends, unused_data holds the start of the 
+
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+EVIDENCE EVALUATION (4Â÷¿ø ½Å·Úµµ ÁöÇ¥)
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+[?] Commit message (À¯ÀÇ¹ÌÇÑ Ä¿¹Ô ¸Þ½ÃÁö)
+[?] Code diff (¹°¸®Àû ÄÚµå º¯°æ Áõ¸í)
+[?] Linked PR (GitHub¿¡¼­ È®ÀÎµÈ PR)
+[?] PR Context (º»¹® »ó¼¼ ¸Æ¶ô)
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+COVERAGE:    58% (MODERATE [7/12Á¡])
+CONSISTENCY: ¡â MODERATE (ºÎºÐ ÀÏÄ¡ ¶Ç´Â Ãß°¡ °ËÁõ ÇÊ¿ä)
+AMBIGUITY:   LOW (´Ü¼ø º¯°æ ÀÌ·Â)
+CONFIDENCE:  MODERATE
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+LIMITATION
+¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+º» ºÐ¼®Àº Git History¿Í GitHub °ø°³ ¸ÞÅ¸µ¥ÀÌÅÍ¸¦ ±Ù°Å·Î º¹¿øµÇ¾ú½À´Ï´Ù.
+±â·ÏµÇÁö ¾ÊÀº °³¹ßÀÚÀÇ ½ÇÁ¦ ÀÇµµ´Â ÀÚÀÇÀûÀ¸·Î ´ÜÁ¤ÇÏÁö ¾Ê½À´Ï´Ù.
+¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬¦¬
+

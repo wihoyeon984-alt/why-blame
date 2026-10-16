@@ -1,0 +1,77 @@
+
+WHY-BLAME
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET: aiohttp/compression_utils.py:295-315
+────────────────────────────────────────────────────────────────
+CURRENT CODE
+────────────────────────────────────────────────────────────────
+>         # Handle concatenated gzip/deflate streams (multi-...
+>         # After a member ends, unused_data holds the start...
+>         # Create a fresh decompressor for each subsequent ...
+>         while self._decompressor.eof and self._decompresso...
+────────────────────────────────────────────────────────────────
+WHY (코드의 변경 이력과 정착 과정)
+────────────────────────────────────────────────────────────────
+* 현재 확인된 이력상 변경 단계가 하나인 코드
+
+  현재 확인된 Git 이력상 2026-05-31
+  커밋(e8832aee7f694979292740b9b56a9c98fb0afc1a)에서 처음 관찰되었습니다. 이후
+  추가적인 변경 사유를 확정할 수 있는 근거는 제한적입니다.
+
+  확인된 이력 범위에서 관찰되는 코드 동작:
+  - Added code: # Handle concatenated gzip/deflate streams
+      (multi-member).
+  - Added code: # After a member ends, unused_data holds the
+      start of the next member.
+  - Added code: # Create a fresh decompressor for each
+      subsequent member.
+  - Added code: while self._decompressor.eof and
+      self._decompressor.unused_data:
+  - Added code: unused = self._decompressor.unused_data
+  - Added code: self._decompressor =
+      self._zlib_backend.decompressobj(wbits=self._mode)
+  - Added code: if max_length != ZLIB_MAX_LENGTH_UNLIMITED:
+  - Added code: max_length -= len(result)
+  - Added code: if max_length <= 0:
+  - Added code: self._pending_unused_data = unused
+  - Added code: break
+  - Added code: chunk = self._decompressor.decompress(unused,
+      max_length)
+  - Added code: self._last_empty = chunk == b""
+  - Added code: result += chunk
+  - Added code: # Member ended exactly at chunk boundary ? no
+      unused_data, but the
+  - Added code: # next feed_data() call would fail on the spent
+      decompressor.
+  - Added code: # Only reset for gzip; deflate's feed_eof()
+      relies on eof=True to
+  - Added code: # confirm the stream is complete.
+  - Added code: if self._decompressor.eof and self._mode >
+      self._zlib_backend.MAX_WBITS:
+────────────────────────────────────────────────────────────────
+HISTORY (타임라인 상세)
+────────────────────────────────────────────────────────────────
+● 2026-05-31  ? FIRST OBSERVED (e8832ae)
+  Fix ZLibDecompressor dropping data past the first gzip membe
+  + # Handle concatenated gzip/deflate streams (multi-member).
+  + # After a member ends, unused_data holds the start of the 
+
+────────────────────────────────────────────────────────────────
+EVIDENCE EVALUATION (4차원 신뢰도 지표)
+────────────────────────────────────────────────────────────────
+[?] Commit message (유의미한 커밋 메시지)
+[?] Code diff (물리적 코드 변경 증명)
+[?] Linked PR (GitHub에서 확인된 PR)
+[?] PR Context (본문 상세 맥락)
+────────────────────────────────────────────────────────────────
+COVERAGE:    58% (MODERATE [7/12점])
+CONSISTENCY: △ MODERATE (부분 일치 또는 추가 검증 필요)
+AMBIGUITY:   LOW (단순 변경 이력)
+CONFIDENCE:  MODERATE
+────────────────────────────────────────────────────────────────
+LIMITATION
+────────────────────────────────────────────────────────────────
+본 분석은 Git History와 GitHub 공개 메타데이터를 근거로 복원되었습니다.
+기록되지 않은 개발자의 실제 의도는 자의적으로 단정하지 않습니다.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
