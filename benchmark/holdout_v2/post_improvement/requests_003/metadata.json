@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "case_id": "requests_003",
+  "evaluation_type": "post_improvement_rerun",
+  "baseline_preserved": true,
+  "why_blame_commit": "38316d107b848ea98713a486d2e0332540dfb140",
+  "repository": {
+    "url": "https://github.com/psf/requests.git",
+    "requested_commit": "6f205ff422bccd5e4c4fc0b64c5f3e7df5181db6",
+    "checked_out_commit": "6f205ff422bccd5e4c4fc0b64c5f3e7df5181db6"
+  },
+  "target": {
+    "file": "src/requests/models.py",
+    "start_line": 237,
+    "end_line": 246
+  },
+  "execution": {
+    "completed_at_utc": "2026-10-16T08:42:53.247663Z",
+    "exit_code": 0,
+    "runtime_confidence": "MODERATE",
+    "scoring_tier": "MEDIUM"
+  },
+  "artifacts": {
+    "stdout_file": "post_improvement/requests_003/stdout.txt",
+    "stderr_file": "post_improvement/requests_003/stderr.txt",
+    "annotation_file": "post_improvement/annotations/requests_003.json",
+    "stdout_sha256": "ade573975d993026746d74067aaf74056f2730fbc636ace0a7ad8d451fa15adf"
+  },
+  "comparison": {
+    "improved_claim": "claim_001",
+    "baseline_status": "WITHHELD",
+    "post_improvement_status": "PRESENTED"
+  }
+}

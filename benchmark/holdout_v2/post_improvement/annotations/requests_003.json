@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "case_id": "requests_003",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "confidence": {
+    "level": "MEDIUM",
+    "source": "Post-improvement rerun stdout reports runtime CONFIDENCE: MODERATE. This result was produced by why-blame commit 38316d107b848ea98713a486d2e0332540dfb140."
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The post-improvement output presents that fp.read() is used for RequestField data when fp satisfies _SupportsRead or exposes a read attribute."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The preserved first-run history presents commit 6f205ff as a bug fix titled Fix `_encode_files` detection for `__getattr__`-based file wrappers and links it to PR #7502."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that multipart encoding performance improvement was the primary reason for the change."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim complete multipart compatibility with every file-like proxy or wrapper implementation."
+    }
+  }
+}

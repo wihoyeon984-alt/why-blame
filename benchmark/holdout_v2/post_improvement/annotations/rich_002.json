@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "case_id": "rich_002",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "confidence": {
+    "level": "WEAK",
+    "source": "Post-improvement rerun stdout reports runtime CONFIDENCE: WEAK. This result was produced by why-blame commit 38316d107b848ea98713a486d2e0332540dfb140."
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The post-improvement output presents that cell_position is initialized to zero for each line when the line contains a tab."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The preserved first-run output links the implementation sequence to PR #3061, titled Extend tabs with styles, includes context that the previous tab expansion did not account for styles, and presents the later double-width test and optimization step."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that reducing Rich memory usage was the primary reason for the tab-expansion change."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that the change introduced a new Rich markup syntax for tab characters."
+    }
+  }
+}
