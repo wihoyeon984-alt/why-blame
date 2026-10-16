@@ -1,4 +1,7 @@
+import re
 import sys
+from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 
 from git_tracker import extract_git_history, get_repo_info, get_current_code_lines
 from github_client import fetch_ref_info, fetch_commit_prs
@@ -98,8 +101,33 @@ def parse_args(args):
     )
 
 
+def get_version():
+    pyproject_path = Path(__file__).with_name("pyproject.toml")
+
+    if pyproject_path.is_file():
+        pyproject_text = pyproject_path.read_text(
+            encoding="utf-8"
+        )
+        match = re.search(
+            r'(?m)^version\s*=\s*"([^"]+)"\s*$',
+            pyproject_text,
+        )
+
+        if match:
+            return match.group(1)
+
+    try:
+        return version("why-blame")
+    except PackageNotFoundError:
+        return "unknown"
+
+
 def main():
     args = sys.argv[1:]
+
+    if args in (["--version"], ["-V"]):
+        print(f"why-blame {get_version()}")
+        return
 
     try:
         parsed = parse_args(args)
