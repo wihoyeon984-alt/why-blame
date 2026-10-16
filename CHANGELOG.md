@@ -2,6 +2,18 @@
 
 All notable changes to Why-Blame are documented in this file.
 
+## [0.3.2] - 2026-10-16
+
+### Changed
+
+- Add verified release automation and include the changelog in source distributions
+
+### Validation
+
+- Full verification passes.
+- HTTP ResourceWarning count is zero.
+- Holdout v1 integrity verification passes.
+- Holdout v2 post-improvement scoring passes.
 ## [0.3.1] - 2026-10-16
 
 ### Fixed
