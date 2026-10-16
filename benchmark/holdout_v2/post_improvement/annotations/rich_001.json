@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "case_id": "rich_001",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "confidence": {
+    "level": "WEAK",
+    "source": "Post-improvement rerun stdout reports runtime CONFIDENCE: WEAK. This result was produced by why-blame commit 38316d107b848ea98713a486d2e0332540dfb140."
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The preserved first-run output shows the tuple branch beginning with _safe_isinstance(arg, tuple), key and child unpacking, and the history of the reverted tuple-positional handling change. It also identifies commit 4ae2be62 as a revert of the relevant implementation."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The post-improvement output presents that a non-tuple argument is passed directly to _traverse and the resulting child node is appended."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that pretty-print traversal performance improvement was the primary reason for the revert."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that the revert added a new Rich markup syntax for tuple values."
+    }
+  }
+}

@@ -1,0 +1,20 @@
+﻿{
+    "schema_version":  2,
+    "candidate_id":  "rich_002",
+    "first_run":  true,
+    "freeze_commit":  "4cf8249",
+    "repository":  {
+                       "url":  "https://github.com/Textualize/rich.git",
+                       "requested_commit":  "482dcee134c4de5c49db781f100e1e99ad84a3fd",
+                       "checked_out_commit":  "482dcee134c4de5c49db781f100e1e99ad84a3fd"
+                   },
+    "target":  {
+                   "file":  "rich/text.py",
+                   "start_line":  828,
+                   "end_line":  851
+               },
+    "artifacts":  {
+                      "stdout_file":  "results/rich_002/stdout.txt",
+                      "stderr_file":  "results/rich_002/stderr.txt"
+                  }
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "candidate_id": "aiohttp_001",
+  "repository": {
+    "url": "https://github.com/aio-libs/aiohttp.git",
+    "commit": "e8832aee7f694979292740b9b56a9c98fb0afc1a"
+  },
+  "target": {
+    "file": "aiohttp/compression_utils.py",
+    "start_line": 295,
+    "end_line": 315
+  },
+  "status": "ANNOTATED",
+  "selection": {
+    "rationale": "Adds a multi-member compression handling case from a project not yet represented in Holdout v2. The production diff directly introduces processing for unused data from subsequent gzip or deflate members, bounded-output preservation, and gzip decompressor reset at an exact member boundary.",
+    "proposed_at": "2026-10-16",
+    "proposed_by": "Wi Ho-yeon"
+  },
+  "exclusion": {
+    "code": "",
+    "reason": ""
+  },
+  "integrity": {
+    "overlaps_holdout_v1": false,
+    "overlap_details": "",
+    "ground_truth_frozen": true,
+    "system_executed": true,
+    "annotation_complete": true
+  },
+  "artifacts": {
+    "case_file": "cases/aiohttp_001.json",
+    "result_file": "results/aiohttp_001/stdout.txt",
+    "annotation_file": "annotations/aiohttp_001.json"
+  },
+  "notes": "Selected and inspected before any Holdout v2 system execution. The frozen target covers the multi-member loop and the gzip chunk-boundary decompressor reset."
+}

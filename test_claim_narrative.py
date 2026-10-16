@@ -1,6 +1,9 @@
 import unittest
 
-from narrative import append_supported_claims
+from narrative import (
+    append_supported_claims,
+    synthesize_narrative,
+)
 
 
 class TestClaimNarrative(unittest.TestCase):
@@ -119,6 +122,72 @@ class TestClaimNarrative(unittest.TestCase):
                 "\uad00\ucc30\ub418\ub294 \ucf54\ub4dc \ub3d9\uc791:\n"
                 "- o is encoded as UTF-8."
             ),
+        )
+
+    def test_blocked_low_appends_safe_direct_behavior(self):
+        timeline = [
+            {
+                "hash": "old1234",
+                "type": "FIRST OBSERVED",
+                "diff_lines": [],
+                "ref_items": [],
+            },
+            {
+                "hash": "blocked004",
+                "type": "BUG FIX",
+                "diff_lines": [
+                    '+ o = o.encode("utf-8")',
+                ],
+                "ref_items": [
+                    {
+                        "status": "SUCCESS",
+                        "type": "PR",
+                        "number": 900,
+                        "title": "Unrelated image rendering",
+                    }
+                ],
+            },
+        ]
+
+        stats = {
+            "confidence": "LOW",
+            "consistency": "INCONSISTENT",
+            "is_blocked": True,
+            "inconsistent_pairs": [
+                "encoding change versus image rendering"
+            ],
+        }
+
+        headline, body = synthesize_narrative(
+            timeline,
+            stats,
+        )
+
+        self.assertIn(
+            "\uc99d\uac70 \ubd88\uc77c\uce58",
+            headline,
+        )
+        self.assertIn(
+            "\uad6c\uccb4\uc801\uc778 "
+            "\ubcc0\uacbd \uc0ac\uc720\ub97c "
+            "\uc81c\uc2dc\ud558\uc9c0 "
+            "\uc54a\uc2b5\ub2c8\ub2e4",
+            body,
+        )
+        self.assertIn(
+            "\ud655\uc778\ub41c \uc774\ub825 "
+            "\ubc94\uc704\uc5d0\uc11c "
+            "\uad00\ucc30\ub418\ub294 "
+            "\ucf54\ub4dc \ub3d9\uc791:",
+            body,
+        )
+        self.assertIn(
+            "o is encoded as UTF-8.",
+            body,
+        )
+        self.assertNotIn(
+            "Unrelated image rendering",
+            body,
         )
 
     def test_medium_confidence_uses_conservative_label(self):

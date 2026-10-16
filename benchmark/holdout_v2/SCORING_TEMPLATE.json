@@ -1,0 +1,19 @@
+{
+  "schema_version": 2,
+  "case_id": "example_001",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "confidence": {
+    "level": "VERY_HIGH",
+    "source": "final_output"
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "Exact supporting output"
+    }
+  }
+}

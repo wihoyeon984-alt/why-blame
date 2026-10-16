@@ -1,0 +1,20 @@
+﻿{
+    "schema_version":  2,
+    "candidate_id":  "black_002",
+    "first_run":  true,
+    "freeze_commit":  "ab27ed5",
+    "repository":  {
+                       "url":  "https://github.com/psf/black.git",
+                       "requested_commit":  "8ec61a7fb6f1961377afd28bbe71f8a2095916ac",
+                       "checked_out_commit":  "8ec61a7fb6f1961377afd28bbe71f8a2095916ac"
+                   },
+    "target":  {
+                   "file":  "src/black/files.py",
+                   "start_line":  261,
+                   "end_line":  264
+               },
+    "artifacts":  {
+                      "stdout_file":  "results/black_002/stdout.txt",
+                      "stderr_file":  "results/black_002/stderr.txt"
+                  }
+}

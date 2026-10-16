@@ -642,6 +642,7 @@ def compute_metrics(
     observable_supported = 0
     not_reached = 0
     unsafe_presented = 0
+    total_presentations = 0
     false_why = 0
     system_abstentions = 0
     withheld = 0
@@ -677,6 +678,12 @@ def compute_metrics(
             annotated_claims += 1
 
             status = claim_annotation.status
+
+            if status in {
+                "PRESENTED",
+                "UNSAFE_PRESENTED",
+            }:
+                total_presentations += 1
 
             if status == "NOT_REACHED":
                 not_reached += 1
@@ -741,6 +748,15 @@ def compute_metrics(
             supported_presented,
             total_claims,
         ),
+        "claim_precision": safe_divide(
+            supported_presented,
+            total_presentations,
+        ),
+        "unsafe_presentation_rate": safe_divide(
+            unsafe_presented,
+            total_presentations,
+        ),
+        "total_presentations": total_presentations,
         "abstention_precision": safe_divide(
             correct_abstentions,
             system_abstentions,
@@ -937,6 +953,26 @@ def print_report(
                 "safe_claim_coverage"
             ]
         )
+    )
+    print(
+        "Claim precision:         "
+        + format_rate(
+            metrics[
+                "claim_precision"
+            ]
+        )
+    )
+    print(
+        "Unsafe presentation rate: "
+        + format_rate(
+            metrics[
+                "unsafe_presentation_rate"
+            ]
+        )
+    )
+    print(
+        f"Total presentations:     "
+        f"{metrics['total_presentations']}"
     )
     print(
         "Abstention precision:    "

@@ -1,0 +1,20 @@
+{
+  "schema_version": 2,
+  "candidate_id": "requests_001",
+  "first_run": true,
+  "freeze_commit": "ad72e4c",
+  "repository": {
+    "url": "https://github.com/psf/requests.git",
+    "requested_commit": "6f66281a1d6326b1b9c4ac09ca30de0fc4e6ef43",
+    "checked_out_commit": "6f66281a1d6326b1b9c4ac09ca30de0fc4e6ef43"
+  },
+  "target": {
+    "file": "src/requests/_types.py",
+    "start_line": 32,
+    "end_line": 34
+  },
+  "artifacts": {
+    "stdout_file": "results/requests_001/stdout.txt",
+    "stderr_file": "results/requests_001/stderr.txt"
+  }
+}

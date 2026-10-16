@@ -302,6 +302,561 @@ def find_direct_local_helpers(source, target_statement):
             local_helpers.append(node.name)
     return sorted(local_helpers)
 
+def extract_conditional_assignment_flows(
+    source,
+    source_event,
+):
+    """
+    Extract directly observable conditional data flows.
+
+    Recognized structure:
+
+        if condition:
+            temporary = producer_call()
+
+        consumer(..., field=temporary, ...)
+
+    Safety rules:
+    - The producer must be a direct call assigned to one name.
+    - The producer condition must be explicit in the AST.
+    - The consumer must directly use the temporary as an argument.
+    - Exactly one matching consumer use must exist.
+    - Every rendered semantic field receives DIRECT DIFF evidence.
+    - No causal or intentional meaning is inferred.
+    """
+    if not isinstance(source, str):
+        return []
+
+    if not source.strip():
+        return []
+
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return []
+
+    result = []
+
+    def direct_call_from_statement(statement):
+        if (
+            isinstance(statement, ast.Assign)
+            and isinstance(statement.value, ast.Call)
+        ):
+            return statement.value
+
+        if (
+            isinstance(statement, ast.AnnAssign)
+            and isinstance(statement.value, ast.Call)
+        ):
+            return statement.value
+
+        if (
+            isinstance(statement, ast.Expr)
+            and isinstance(statement.value, ast.Call)
+        ):
+            return statement.value
+
+        return None
+
+    def assignment_target_name(statement):
+        if isinstance(statement, ast.Assign):
+            if len(statement.targets) != 1:
+                return None
+
+            target = statement.targets[0]
+
+            if isinstance(target, ast.Name):
+                return target.id
+
+            return None
+
+        if (
+            isinstance(statement, ast.AnnAssign)
+            and isinstance(statement.target, ast.Name)
+        ):
+            return statement.target.id
+
+        return None
+
+    def iter_if_branches(node):
+        current = node
+
+        while isinstance(current, ast.If):
+            yield current.test, current.body
+
+            if (
+                len(current.orelse) == 1
+                and isinstance(current.orelse[0], ast.If)
+            ):
+                current = current.orelse[0]
+                continue
+
+            if current.orelse:
+                yield None, current.orelse
+
+            break
+
+    def consumer_uses(call, variable):
+        uses = []
+
+        for index, argument in enumerate(call.args):
+            if (
+                isinstance(argument, ast.Name)
+                and argument.id == variable
+            ):
+                uses.append(
+                    (
+                        f"argument {index + 1}",
+                        argument,
+                    )
+                )
+
+        for keyword in call.keywords:
+            if keyword.arg is None:
+                continue
+
+            if (
+                isinstance(keyword.value, ast.Name)
+                and keyword.value.id == variable
+            ):
+                uses.append(
+                    (
+                        keyword.arg,
+                        keyword.value,
+                    )
+                )
+
+        return uses
+
+    def consumer_target(call, use_name):
+        function_name = ast.unparse(call.func).strip()
+
+        if not function_name:
+            return None
+
+        return f"{function_name} {use_name}"
+
+    def inspect_block(statements):
+        for index, statement in enumerate(statements):
+            if isinstance(statement, ast.If):
+                following = statements[index + 1:]
+
+                for condition_node, branch in iter_if_branches(statement):
+                    if condition_node is None:
+                        continue
+
+                    condition = ast.unparse(
+                        condition_node
+                    ).strip()
+
+                    if not condition:
+                        continue
+
+                    for branch_statement in branch:
+                        variable = assignment_target_name(
+                            branch_statement
+                        )
+                        producer_call = direct_call_from_statement(
+                            branch_statement
+                        )
+
+                        if not variable or producer_call is None:
+                            continue
+
+                        producer = ast.unparse(
+                            producer_call
+                        ).strip()
+
+                        if not producer:
+                            continue
+
+                        matches = []
+
+                        for later_statement in following:
+                            consumer_call = direct_call_from_statement(
+                                later_statement
+                            )
+
+                            if consumer_call is None:
+                                continue
+
+                            for use_name, _ in consumer_uses(
+                                consumer_call,
+                                variable,
+                            ):
+                                target = consumer_target(
+                                    consumer_call,
+                                    use_name,
+                                )
+
+                                if target:
+                                    matches.append(target)
+
+                        if len(matches) != 1:
+                            continue
+
+                        semantics = make_behavior_semantics(
+                            action="USE",
+                            subject=producer,
+                            condition=condition,
+                            target=matches[0],
+                            source_event=source_event,
+                        )
+
+                        for field in (
+                            "action",
+                            "subject",
+                            "condition",
+                            "target",
+                        ):
+                            semantics = attach_field_evidence(
+                                semantics,
+                                field,
+                                source="DIFF",
+                                ref=source_event,
+                                level=DIRECT,
+                            )
+
+                        result.append(semantics)
+
+            nested_blocks = []
+
+            if isinstance(
+                statement,
+                (
+                    ast.FunctionDef,
+                    ast.AsyncFunctionDef,
+                    ast.ClassDef,
+                    ast.For,
+                    ast.AsyncFor,
+                    ast.While,
+                    ast.With,
+                    ast.AsyncWith,
+                    ast.Try,
+                ),
+            ):
+                nested_blocks.append(statement.body)
+
+            if isinstance(statement, ast.Try):
+                nested_blocks.extend(
+                    handler.body
+                    for handler in statement.handlers
+                )
+                nested_blocks.append(statement.orelse)
+                nested_blocks.append(statement.finalbody)
+
+            for nested in nested_blocks:
+                if nested:
+                    inspect_block(nested)
+
+    inspect_block(tree.body)
+    return result
+
+
+def extract_else_branch_assignment_flows(
+    source,
+    source_event,
+):
+    """
+    Extract a direct producer-to-consumer flow from an
+    explicit else branch.
+    """
+    if not isinstance(source, str) or not source.strip():
+        return []
+
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return []
+
+    result = []
+
+    def assignment_name(statement):
+        if isinstance(statement, ast.Assign):
+            if len(statement.targets) != 1:
+                return None
+
+            target = statement.targets[0]
+
+            if isinstance(target, ast.Name):
+                return target.id
+
+        if (
+            isinstance(statement, ast.AnnAssign)
+            and isinstance(statement.target, ast.Name)
+        ):
+            return statement.target.id
+
+        return None
+
+    def assigned_call(statement):
+        if (
+            isinstance(statement, ast.Assign)
+            and isinstance(statement.value, ast.Call)
+        ):
+            return statement.value
+
+        if (
+            isinstance(statement, ast.AnnAssign)
+            and isinstance(statement.value, ast.Call)
+        ):
+            return statement.value
+
+        return None
+
+    def expression_call(statement):
+        if (
+            isinstance(statement, ast.Expr)
+            and isinstance(statement.value, ast.Call)
+        ):
+            return statement.value
+
+        return None
+
+    def call_uses_name(call, name):
+        uses = 0
+
+        for argument in call.args:
+            if (
+                isinstance(argument, ast.Name)
+                and argument.id == name
+            ):
+                uses += 1
+
+        for keyword in call.keywords:
+            if (
+                keyword.arg is not None
+                and isinstance(keyword.value, ast.Name)
+                and keyword.value.id == name
+            ):
+                uses += 1
+
+        return uses
+
+    def inspect_if(node):
+        if not node.orelse:
+            return
+
+        # A single nested If is an elif, not an explicit else.
+        if (
+            len(node.orelse) == 1
+            and isinstance(node.orelse[0], ast.If)
+        ):
+            inspect_if(node.orelse[0])
+            return
+
+        condition = ast.unparse(node.test).strip()
+
+        if not condition:
+            return
+
+        for producer_index, statement in enumerate(
+            node.orelse
+        ):
+            temporary = assignment_name(statement)
+            producer_call = assigned_call(statement)
+
+            if not temporary or producer_call is None:
+                continue
+
+            producer = ast.unparse(producer_call).strip()
+
+            consumers = []
+            reassigned = False
+
+            for later_statement in node.orelse[
+                producer_index + 1:
+            ]:
+                if (
+                    assignment_name(later_statement)
+                    == temporary
+                ):
+                    reassigned = True
+                    break
+
+                consumer_call = expression_call(
+                    later_statement
+                )
+
+                if consumer_call is None:
+                    continue
+
+                use_count = call_uses_name(
+                    consumer_call,
+                    temporary,
+                )
+
+                if use_count == 1:
+                    consumers.append(
+                        ast.unparse(
+                            consumer_call
+                        ).strip()
+                    )
+                elif use_count > 1:
+                    consumers.extend(
+                        [None] * use_count
+                    )
+
+            if (
+                reassigned
+                or len(consumers) != 1
+                or not consumers[0]
+            ):
+                continue
+
+            semantics = make_behavior_semantics(
+                action="USE",
+                subject=producer,
+                condition=f"not {condition}",
+                target=consumers[0],
+                source_event=source_event,
+            )
+
+            for field in (
+                "action",
+                "subject",
+                "condition",
+                "target",
+            ):
+                semantics = attach_field_evidence(
+                    semantics,
+                    field,
+                    source="DIFF",
+                    ref=source_event,
+                    level=DIRECT,
+                )
+
+            result.append(semantics)
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.If):
+            inspect_if(node)
+
+    return result
+
+
+def extract_loop_else_initializations(source, source_event):
+    """Extract literal initialization from an explicit loop else branch."""
+    if not isinstance(source, str) or not source.strip():
+        return []
+
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return []
+
+    result = []
+
+    def invert_condition(node):
+        inverse = {
+            ast.NotIn: ast.In,
+            ast.In: ast.NotIn,
+            ast.IsNot: ast.Is,
+            ast.Is: ast.IsNot,
+            ast.NotEq: ast.Eq,
+            ast.Eq: ast.NotEq,
+        }
+
+        if (
+            isinstance(node, ast.Compare)
+            and len(node.ops) == 1
+            and len(node.comparators) == 1
+            and type(node.ops[0]) in inverse
+        ):
+            inverted = ast.Compare(
+                left=node.left,
+                ops=[inverse[type(node.ops[0])]()],
+                comparators=node.comparators,
+            )
+        else:
+            inverted = ast.UnaryOp(
+                op=ast.Not(),
+                operand=node,
+            )
+
+        return ast.unparse(
+            ast.fix_missing_locations(inverted)
+        ).strip()
+
+    for loop in ast.walk(tree):
+        if not isinstance(loop, (ast.For, ast.AsyncFor)):
+            continue
+
+        if not isinstance(loop.target, ast.Name):
+            continue
+
+        loop_name = loop.target.id
+
+        for branch in loop.body:
+            if not isinstance(branch, ast.If):
+                continue
+
+            if not branch.orelse:
+                continue
+
+            if (
+                len(branch.orelse) == 1
+                and isinstance(branch.orelse[0], ast.If)
+            ):
+                continue
+
+            referenced = {
+                node.id
+                for node in ast.walk(branch.test)
+                if isinstance(node, ast.Name)
+            }
+
+            if loop_name not in referenced:
+                continue
+
+            condition = invert_condition(branch.test)
+
+            for statement in branch.orelse:
+                if not isinstance(statement, ast.Assign):
+                    continue
+
+                if len(statement.targets) != 1:
+                    continue
+
+                target = statement.targets[0]
+
+                if not isinstance(target, ast.Name):
+                    continue
+
+                if not isinstance(statement.value, ast.Constant):
+                    continue
+
+                value = ast.unparse(statement.value).strip()
+
+                semantics = make_behavior_semantics(
+                    action="INITIALIZE",
+                    subject=target.id,
+                    target=value,
+                    condition=condition,
+                    scope=f"each {loop_name}",
+                    source_event=source_event,
+                )
+
+                for field in (
+                    "action",
+                    "subject",
+                    "target",
+                    "condition",
+                    "scope",
+                ):
+                    semantics = attach_field_evidence(
+                        semantics,
+                        field,
+                        source="DIFF",
+                        ref=source_event,
+                        level=DIRECT,
+                    )
+
+                result.append(semantics)
+
+    return result
+
+
 def extract_statement_semantics(
     code,
     source_event,

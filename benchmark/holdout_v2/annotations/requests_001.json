@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "case_id": "requests_001",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "confidence": {
+    "level": "VERY_HIGH",
+    "source": "Preserved first-run stdout reports CONFIDENCE: VERY HIGH."
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The preserved first-run output presents the has_read helper and shows that readable objects are detected through isinstance(obj, SupportsRead) or hasattr(obj, 'read')."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The preserved first-run output links the change to PR #7505 and includes context stating that the change is a successor to #7502 and addresses proxied-read behavior."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that request throughput improvement was the primary motivation."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that asynchronous file upload support was added."
+    }
+  }
+}

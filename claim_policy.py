@@ -79,19 +79,31 @@ def get_claim_visibility(claim, stats):
     if claim.get("status") != SUPPORTED:
         return HIDDEN
 
-    if stats.get("is_blocked") is True:
-        return HIDDEN
-
     consistency = (
         stats.get("consistency") or ""
     ).upper()
 
-    if consistency == "INCONSISTENT":
-        return HIDDEN
-
     confidence = (
         stats.get("confidence") or ""
     ).upper()
+
+    blocked_or_inconsistent = (
+        stats.get("is_blocked") is True
+        or consistency == "INCONSISTENT"
+    )
+
+    if (
+        blocked_or_inconsistent
+        and confidence in {"WEAK", "LOW"}
+        and _is_safe_direct_behavior(claim)
+    ):
+        return CONSERVATIVE
+
+    if stats.get("is_blocked") is True:
+        return HIDDEN
+
+    if consistency == "INCONSISTENT":
+        return HIDDEN
 
     if claim.get("type") == REVERT_CAUSE:
         if confidence in HIGH_CONFIDENCE:

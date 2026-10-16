@@ -1,0 +1,63 @@
+﻿{
+    "schema_version":  2,
+    "case_id":  "rich_001",
+    "repository":  {
+                       "url":  "https://github.com/Textualize/rich.git",
+                       "commit":  "4ae2be62f62863034cbaa11dfc1b397499c971d8"
+                   },
+    "frozen":  true,
+    "claims":  {
+                   "claim_001":  {
+                                     "type":  "BEHAVIOR",
+                                     "label":  "SUPPORTED",
+                                     "text":  "Rich handles tuple arguments from __rich_repr__ in a dedicated branch by unpacking the key and child, recursively traversing the child, and assigning the key representation and equals separator to the resulting node.",
+                                     "evidence":  [
+                                                      {
+                                                          "channel":  "DIFF",
+                                                          "ref":  "4ae2be62f62863034cbaa11dfc1b397499c971d8",
+                                                          "relation":  "SUPPORTS",
+                                                          "note":  "The frozen source restores a dedicated tuple branch that unpacks key and child, traverses the child, sets key_repr and key_separator, and appends the child node."
+                                                      }
+                                                  ],
+                                     "rationale":  "The behavior is directly visible in the frozen source at rich/pretty.py lines 681 through 687."
+                                 },
+                   "claim_002":  {
+                                     "type":  "BEHAVIOR",
+                                     "label":  "SUPPORTED",
+                                     "text":  "Rich handles non-tuple arguments from __rich_repr__ as positional values by recursively traversing the argument itself and appending the resulting child node without assigning a key representation.",
+                                     "evidence":  [
+                                                      {
+                                                          "channel":  "DIFF",
+                                                          "ref":  "4ae2be62f62863034cbaa11dfc1b397499c971d8",
+                                                          "relation":  "SUPPORTS",
+                                                          "note":  "The frozen source restores a separate else branch that traverses arg directly and appends the resulting node without setting key_repr."
+                                                      },
+                                                      {
+                                                          "channel":  "TEST",
+                                                          "ref":  "4ae2be62f62863034cbaa11dfc1b397499c971d8",
+                                                          "relation":  "SUPPORTS",
+                                                          "note":  "The retained tests document positional rich-repr values and confirm that a tuple value associated with a None key is rendered without a displayed key."
+                                                      }
+                                                  ],
+                                     "rationale":  "The frozen implementation directly separates non-tuple positional values from keyed tuple arguments, while the retained tests document the expected positional rendering behavior."
+                                 },
+                   "claim_003":  {
+                                     "type":  "CAUSE",
+                                     "label":  "UNSUPPORTED",
+                                     "text":  "The revert was primarily introduced to improve the performance of Rich pretty-print traversal.",
+                                     "evidence":  [
+
+                                                  ],
+                                     "rationale":  "The frozen diff and commit history describe reverting None-related pretty handling and do not identify performance as the objective."
+                                 },
+                   "claim_004":  {
+                                     "type":  "BEHAVIOR",
+                                     "label":  "UNSUPPORTED",
+                                     "text":  "The revert adds a new Rich markup syntax for formatting tuple values.",
+                                     "evidence":  [
+
+                                                  ],
+                                     "rationale":  "The change only restores internal traversal branching in rich/pretty.py and does not alter or add Rich markup syntax."
+                                 }
+               }
+}

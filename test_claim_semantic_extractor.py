@@ -19,6 +19,9 @@ from claim_semantic_extractor import (
     extract_statement_ordering,
     extract_target_ordering,
     derive_transitive_ordering,
+    extract_conditional_assignment_flows,
+    extract_else_branch_assignment_flows,
+    extract_loop_else_initializations,
 )
 from claim_semantics import (
     DIRECT,
@@ -462,6 +465,282 @@ class TestClaimSemanticExtractor(
             [],
         )
 
+
+    def test_conditional_assignment_flow_extracts_direct_use_semantics(self):
+        source = (
+            "if isinstance(fp, (str, bytes, bytearray)):\n"
+            "    fdata = fp\n"
+            "elif isinstance(fp, _SupportsRead) or hasattr(fp, "
+            "\"read\"):\n"
+            "    fdata = fp.read()\n"
+            "elif fp is None:\n"
+            "    continue\n"
+            "else:\n"
+            "    fdata = fp\n"
+            "\n"
+            "rf = RequestField(\n"
+            "    name=k,\n"
+            "    data=fdata,\n"
+            "    filename=fn,\n"
+            "    headers=fh,\n"
+            ")\n"
+        )
+
+        result = extract_conditional_assignment_flows(
+            source,
+            "flow001",
+        )
+
+        self.assertEqual(
+            len(result),
+            1,
+        )
+
+        semantics = result[0]
+
+        self.assertEqual(
+            semantics["action"],
+            "USE",
+        )
+        self.assertEqual(
+            semantics["subject"],
+            "fp.read()",
+        )
+        self.assertEqual(
+            semantics["condition"],
+            (
+                "isinstance(fp, _SupportsRead) "
+                "or hasattr(fp, 'read')"
+            ),
+        )
+        self.assertEqual(
+            semantics["target"],
+            "RequestField data",
+        )
+        self.assertEqual(
+            semantics["source_event"],
+            "flow001",
+        )
+
+        for field in (
+            "action",
+            "subject",
+            "condition",
+            "target",
+        ):
+            self.assertEqual(
+                semantics["field_evidence"][field],
+                [
+                    {
+                        "source": "DIFF",
+                        "ref": "flow001",
+                        "level": DIRECT,
+                    }
+                ],
+            )
+
+    def test_else_branch_flow_extracts_direct_use_semantics(self):
+        source = (
+            "if _safe_isinstance(arg, tuple):\n"
+            "    key, child = arg\n"
+            "    child_node = _traverse(child, depth=depth + 1)\n"
+            "    child_node.key_repr = key\n"
+            "    append(child_node)\n"
+            "else:\n"
+            "    child_node = _traverse(arg, depth=depth + 1)\n"
+            "    child_node.last = last\n"
+            "    append(child_node)\n"
+        )
+
+        result = extract_else_branch_assignment_flows(
+            source,
+            "else001",
+        )
+
+        self.assertEqual(
+            len(result),
+            1,
+        )
+
+        semantics = result[0]
+
+        self.assertEqual(
+            semantics["action"],
+            "USE",
+        )
+        self.assertEqual(
+            semantics["subject"],
+            "_traverse(arg, depth=depth + 1)",
+        )
+        self.assertEqual(
+            semantics["condition"],
+            "not _safe_isinstance(arg, tuple)",
+        )
+        self.assertEqual(
+            semantics["target"],
+            "append(child_node)",
+        )
+        self.assertEqual(
+            semantics["source_event"],
+            "else001",
+        )
+
+        for field in (
+            "action",
+            "subject",
+            "condition",
+            "target",
+        ):
+            self.assertEqual(
+                semantics["field_evidence"][field],
+                [
+                    {
+                        "source": "DIFF",
+                        "ref": "else001",
+                        "level": DIRECT,
+                    }
+                ],
+            )
+
+    def test_else_branch_flow_rejects_unrelated_consumer(self):
+        source = (
+            "if is_keyed(arg):\n"
+            "    consume_keyed(arg)\n"
+            "else:\n"
+            "    child_node = traverse(arg)\n"
+            "    append(other_node)\n"
+        )
+
+        result = extract_else_branch_assignment_flows(
+            source,
+            "else002",
+        )
+
+        self.assertEqual(
+            result,
+            [],
+        )
+
+    def test_loop_else_literal_initialization_extracts_semantics(self):
+        source = (
+            'for line in self.split("\\n", include_separator=True):\n'
+            '    if "\\t" not in line.plain:\n'
+            '        append(line)\n'
+            '    else:\n'
+            '        cell_position = 0\n'
+            '        parts = line.split("\\t", include_separator=True)\n'
+        )
+
+        result = extract_loop_else_initializations(
+            source,
+            "init001",
+        )
+
+        self.assertEqual(
+            len(result),
+            1,
+        )
+
+        semantics = result[0]
+
+        self.assertEqual(
+            semantics["action"],
+            "INITIALIZE",
+        )
+        self.assertEqual(
+            semantics["subject"],
+            "cell_position",
+        )
+        self.assertEqual(
+            semantics["target"],
+            "0",
+        )
+        self.assertEqual(
+            semantics["condition"],
+            "'\\t' in line.plain",
+        )
+        self.assertEqual(
+            semantics["scope"],
+            "each line",
+        )
+        self.assertEqual(
+            semantics["source_event"],
+            "init001",
+        )
+
+        for field in (
+            "action",
+            "subject",
+            "target",
+            "condition",
+            "scope",
+        ):
+            self.assertEqual(
+                semantics["field_evidence"][field],
+                [
+                    {
+                        "source": "DIFF",
+                        "ref": "init001",
+                        "level": DIRECT,
+                    }
+                ],
+            )
+
+    def test_loop_else_initialization_rejects_call_value(self):
+        source = (
+            "for item in items:\n"
+            "    if should_skip(item):\n"
+            "        continue\n"
+            "    else:\n"
+            "        state = compute_state()\n"
+        )
+
+        result = extract_loop_else_initializations(
+            source,
+            "init002",
+        )
+
+        self.assertEqual(
+            result,
+            [],
+        )
+
+    def test_loop_else_initialization_rejects_attribute_target(self):
+        source = (
+            "for item in items:\n"
+            "    if should_skip(item):\n"
+            "        continue\n"
+            "    else:\n"
+            "        item.state = 0\n"
+        )
+
+        result = extract_loop_else_initializations(
+            source,
+            "init003",
+        )
+
+        self.assertEqual(
+            result,
+            [],
+        )
+
+    def test_initialization_outside_loop_is_not_extracted(self):
+        source = (
+            "if should_skip(item):\n"
+            "    consume(item)\n"
+            "else:\n"
+            "    state = 0\n"
+        )
+
+        result = extract_loop_else_initializations(
+            source,
+            "init004",
+        )
+
+        self.assertEqual(
+            result,
+            [],
+        )
 
     def test_statement_ordering_preserves_direct_call_sequence(self):
         code = (

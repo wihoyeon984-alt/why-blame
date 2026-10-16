@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "case_id": "requests_003",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "confidence": {
+    "level": "LOW",
+    "source": "Preserved first-run stdout reports CONFIDENCE: LOW due to evidence inconsistency."
+  },
+  "claims": {
+    "claim_001": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output shows related historical code fragments, but the final low-confidence narrative does not present the complete current behavior that objects satisfying _SupportsRead or exposing read are read and their returned data is used as multipart field data."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The preserved first-run history presents commit 6f205ff as a bug fix titled Fix `_encode_files` detection for `__getattr__`-based file wrappers and links it to PR #7502."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that multipart encoding performance improvement was the primary reason for the change."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim complete multipart compatibility with every file-like proxy or wrapper implementation."
+    }
+  }
+}

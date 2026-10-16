@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "evaluation_type": "post_improvement_comparison",
+  "why_blame_commit": "38316d107b848ea98713a486d2e0332540dfb140",
+  "baseline": {
+    "case_count": 10,
+    "supported_total": 20,
+    "supported_presented": 17,
+    "total_presentations": 17,
+    "unsafe_presented": 0,
+    "claim_precision": 1.0,
+    "supported_recall": 0.85,
+    "unsafe_presentation_rate": 0.0
+  },
+  "post_improvement": {
+    "case_count": 10,
+    "supported_total": 20,
+    "supported_presented": 20,
+    "total_presentations": 20,
+    "unsafe_presented": 0,
+    "claim_precision": 1.0,
+    "supported_recall": 1.0,
+    "unsafe_presentation_rate": 0.0
+  },
+  "delta": {
+    "supported_presented": 3,
+    "total_presentations": 3,
+    "unsafe_presented": 0,
+    "claim_precision": 0.0,
+    "supported_recall": 0.15000000000000002,
+    "unsafe_presentation_rate": 0.0
+  },
+  "improvements": [
+    {
+      "case_id": "requests_003",
+      "claim_id": "claim_001",
+      "label": "SUPPORTED",
+      "baseline_status": "WITHHELD",
+      "post_improvement_status": "PRESENTED"
+    },
+    {
+      "case_id": "rich_001",
+      "claim_id": "claim_002",
+      "label": "SUPPORTED",
+      "baseline_status": "WITHHELD",
+      "post_improvement_status": "PRESENTED"
+    },
+    {
+      "case_id": "rich_002",
+      "claim_id": "claim_001",
+      "label": "SUPPORTED",
+      "baseline_status": "WITHHELD",
+      "post_improvement_status": "PRESENTED"
+    }
+  ],
+  "baseline_cases": [
+    {
+      "case_id": "aiohttp_001",
+      "annotation_file": "benchmark/holdout_v2/annotations/aiohttp_001.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "black_001",
+      "annotation_file": "benchmark/holdout_v2/annotations/black_001.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "black_002",
+      "annotation_file": "benchmark/holdout_v2/annotations/black_002.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "httpx_001",
+      "annotation_file": "benchmark/holdout_v2/annotations/httpx_001.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "requests_001",
+      "annotation_file": "benchmark/holdout_v2/annotations/requests_001.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "requests_002",
+      "annotation_file": "benchmark/holdout_v2/annotations/requests_002.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "requests_003",
+      "annotation_file": "benchmark/holdout_v2/annotations/requests_003.json",
+      "supported_total": 2,
+      "supported_presented": 1,
+      "total_presentations": 1,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "rich_001",
+      "annotation_file": "benchmark/holdout_v2/annotations/rich_001.json",
+      "supported_total": 2,
+      "supported_presented": 1,
+      "total_presentations": 1,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "rich_002",
+      "annotation_file": "benchmark/holdout_v2/annotations/rich_002.json",
+      "supported_total": 2,
+      "supported_presented": 1,
+      "total_presentations": 1,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "urllib3_001",
+      "annotation_file": "benchmark/holdout_v2/annotations/urllib3_001.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    }
+  ],
+  "post_improvement_cases": [
+    {
+      "case_id": "aiohttp_001",
+      "annotation_file": "benchmark/holdout_v2/annotations/aiohttp_001.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "black_001",
+      "annotation_file": "benchmark/holdout_v2/annotations/black_001.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "black_002",
+      "annotation_file": "benchmark/holdout_v2/annotations/black_002.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "httpx_001",
+      "annotation_file": "benchmark/holdout_v2/annotations/httpx_001.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "requests_001",
+      "annotation_file": "benchmark/holdout_v2/annotations/requests_001.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "requests_002",
+      "annotation_file": "benchmark/holdout_v2/annotations/requests_002.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "requests_003",
+      "annotation_file": "benchmark/holdout_v2/post_improvement/annotations/requests_003.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "rich_001",
+      "annotation_file": "benchmark/holdout_v2/post_improvement/annotations/rich_001.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "rich_002",
+      "annotation_file": "benchmark/holdout_v2/post_improvement/annotations/rich_002.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    },
+    {
+      "case_id": "urllib3_001",
+      "annotation_file": "benchmark/holdout_v2/annotations/urllib3_001.json",
+      "supported_total": 2,
+      "supported_presented": 2,
+      "total_presentations": 2,
+      "unsafe_presented": 0
+    }
+  ]
+}

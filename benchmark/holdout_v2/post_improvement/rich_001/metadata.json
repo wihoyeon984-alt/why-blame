@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "case_id": "rich_001",
+  "evaluation_type": "post_improvement_rerun",
+  "baseline_preserved": true,
+  "why_blame_commit": "38316d107b848ea98713a486d2e0332540dfb140",
+  "repository": {
+    "url": "https://github.com/Textualize/rich.git",
+    "requested_commit": "4ae2be62f62863034cbaa11dfc1b397499c971d8",
+    "checked_out_commit": "4ae2be62f62863034cbaa11dfc1b397499c971d8"
+  },
+  "target": {
+    "file": "rich/pretty.py",
+    "start_line": 681,
+    "end_line": 691
+  },
+  "execution": {
+    "completed_at_utc": "2026-10-16T08:43:21.811522Z",
+    "exit_code": 0,
+    "runtime_confidence": "WEAK",
+    "scoring_tier": "WEAK"
+  },
+  "artifacts": {
+    "stdout_file": "post_improvement/rich_001/stdout.txt",
+    "stderr_file": "post_improvement/rich_001/stderr.txt",
+    "annotation_file": "post_improvement/annotations/rich_001.json",
+    "stdout_sha256": "0dc8e3832061baf84b541cc178b800a7aa8e7f864e66cd32b050b462ff4ab004"
+  },
+  "comparison": {
+    "improved_claim": "claim_002",
+    "baseline_status": "WITHHELD",
+    "post_improvement_status": "PRESENTED"
+  }
+}

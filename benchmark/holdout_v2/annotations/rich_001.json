@@ -1,0 +1,31 @@
+﻿{
+    "schema_version":  2,
+    "case_id":  "rich_001",
+    "execution":  {
+                      "completed":  true,
+                      "failure_stage":  "",
+                      "failure_type":  ""
+                  },
+    "confidence":  {
+                       "level":  "LOW",
+                       "source":  "Preserved first-run stdout reports CONFIDENCE: LOW because the evidence is inconsistent and the history includes a revert."
+                   },
+    "claims":  {
+                   "claim_001":  {
+                                     "status":  "PRESENTED",
+                                     "raw_evidence":  "The preserved first-run output shows the tuple branch beginning with _safe_isinstance(arg, tuple), key and child unpacking, and the history of the reverted tuple-positional handling change. It also identifies commit 4ae2be62 as a revert of the relevant implementation."
+                                 },
+                   "claim_002":  {
+                                     "status":  "WITHHELD",
+                                     "raw_evidence":  "The preserved first-run output blocks its WHY explanation because of inconsistent evidence and does not explicitly present the complete current non-tuple branch behavior of recursively traversing arg and appending the resulting node."
+                                 },
+                   "claim_003":  {
+                                     "status":  "WITHHELD",
+                                     "raw_evidence":  "The preserved first-run output does not claim that pretty-print traversal performance improvement was the primary reason for the revert."
+                                 },
+                   "claim_004":  {
+                                     "status":  "WITHHELD",
+                                     "raw_evidence":  "The preserved first-run output does not claim that the revert added a new Rich markup syntax for tuple values."
+                                 }
+               }
+}

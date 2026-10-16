@@ -1,0 +1,35 @@
+{
+  "schema_version": 2,
+  "candidate_id": "aiohttp_001",
+  "first_run": true,
+  "freeze_commit": "4f5f322428f6c10fbf9ee61eebf676a4525bd400",
+  "repository": {
+    "url": "https://github.com/aio-libs/aiohttp.git",
+    "requested_commit": "e8832aee7f694979292740b9b56a9c98fb0afc1a",
+    "checked_out_commit": "e8832aee7f694979292740b9b56a9c98fb0afc1a"
+  },
+  "target": {
+    "file": "aiohttp/compression_utils.py",
+    "start_line": 295,
+    "end_line": 315
+  },
+  "command": {
+    "executable": "C:\\Users\\wihoy\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+    "arguments": [
+      "C:\\Users\\wihoy\\source\\repos\\why-blame\\main.py",
+      "aiohttp/compression_utils.py",
+      "295",
+      "315"
+    ],
+    "working_directory": "C:\\Users\\wihoy\\AppData\\Local\\Temp\\why-blame-holdout-v2-aiohttp-001"
+  },
+  "execution": {
+    "started_at_utc": "2026-10-16T06:00:12.8777333Z",
+    "finished_at_utc": "2026-10-16T06:00:13.3009462Z",
+    "exit_code": 0
+  },
+  "artifacts": {
+    "stdout_file": "results/aiohttp_001/stdout.txt",
+    "stderr_file": "results/aiohttp_001/stderr.txt"
+  }
+}

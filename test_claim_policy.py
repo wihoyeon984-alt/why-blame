@@ -224,6 +224,84 @@ class TestClaimPolicy(unittest.TestCase):
             result,
             CONSERVATIVE,
         )
+    def make_safe_direct_behavior(self):
+        claim = self.make_supported_behavior()
+        claim["target_relevant"] = True
+        claim["evidence"] = [
+            {
+                "source": "DIFF",
+                "ref": "blocked001",
+                "supports": True,
+            }
+        ]
+
+        semantics = make_behavior_semantics(
+            action="PRECEDE",
+            subject="sockets.append(sock)",
+            target="sock.bind((host, port))",
+            source_event="blocked001",
+        )
+
+        for field in (
+            "action",
+            "subject",
+            "target",
+        ):
+            semantics = attach_field_evidence(
+                semantics,
+                field,
+                source="DIFF",
+                ref="blocked001",
+                level=DIRECT_EVIDENCE,
+            )
+
+        claim["structured_semantics"] = [semantics]
+        return claim
+
+    def test_blocked_low_preserves_safe_direct_behavior(self):
+        claim = self.make_safe_direct_behavior()
+
+        stats = {
+            "confidence": "LOW",
+            "consistency": "INCONSISTENT",
+            "is_blocked": True,
+        }
+
+        self.assertEqual(
+            get_claim_visibility(claim, stats),
+            CONSERVATIVE,
+        )
+
+    def test_blocked_low_hides_unverified_behavior(self):
+        claim = self.make_safe_direct_behavior()
+        claim["status"] = UNVERIFIED
+
+        stats = {
+            "confidence": "LOW",
+            "consistency": "INCONSISTENT",
+            "is_blocked": True,
+        }
+
+        self.assertEqual(
+            get_claim_visibility(claim, stats),
+            HIDDEN,
+        )
+
+    def test_blocked_low_hides_behavior_without_safe_semantics(self):
+        claim = self.make_safe_direct_behavior()
+        claim["structured_semantics"] = []
+
+        stats = {
+            "confidence": "LOW",
+            "consistency": "INCONSISTENT",
+            "is_blocked": True,
+        }
+
+        self.assertEqual(
+            get_claim_visibility(claim, stats),
+            HIDDEN,
+        )
+
     def test_revert_cause_is_not_direct_even_with_high_confidence(self):
         claim = make_claim(
             "The change was reverted because it introduced a bug.",

@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "case_id": "urllib3_001",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "confidence": {
+    "level": "VERY_HIGH",
+    "source": "Preserved first-run stdout reports CONFIDENCE: VERY HIGH."
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The preserved first-run output presents the added behavior `if value is not None: key_lock.release()` as current code behavior."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The preserved first-run output links the change to commit a164d79c and PR #5254 titled `Fix HTTP/2 probe cache lock leak`, with PR context describing release of the probe lock for waiting threads."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that improving HTTP request throughput was the primary motivation."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that HTTP/3 support was added."
+    }
+  }
+}

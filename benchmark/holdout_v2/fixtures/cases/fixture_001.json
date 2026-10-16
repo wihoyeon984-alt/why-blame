@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "case_id": "fixture_001",
+  "repository": {
+    "url": "https://github.com/example/project.git",
+    "commit": "abc123def456"
+  },
+  "frozen": true,
+  "claims": {
+    "claim_001": {
+      "type": "BEHAVIOR",
+      "label": "SUPPORTED",
+      "text": "The fixture directly establishes the first behavior.",
+      "evidence": [
+        {
+          "channel": "DIFF",
+          "ref": "abc123def456",
+          "relation": "SUPPORTS",
+          "note": "The pinned fixture diff directly shows the behavior."
+        }
+      ],
+      "rationale": "The behavior is directly observable in the frozen fixture evidence."
+    },
+    "claim_002": {
+      "type": "BEHAVIOR",
+      "label": "SUPPORTED",
+      "text": "The fixture directly establishes the second behavior.",
+      "evidence": [
+        {
+          "channel": "DIFF",
+          "ref": "abc123def456",
+          "relation": "SUPPORTS",
+          "note": "The pinned fixture diff directly shows the second behavior."
+        }
+      ],
+      "rationale": "The second behavior is directly observable in the frozen evidence."
+    },
+    "claim_003": {
+      "type": "CAUSE",
+      "label": "UNSUPPORTED",
+      "text": "The fixture change was primarily introduced for performance.",
+      "evidence": [],
+      "rationale": "The frozen fixture evidence does not establish this motivation."
+    }
+  }
+}

@@ -1,0 +1,36 @@
+﻿{
+    "schema_version":  2,
+    "candidate_id":  "rich_002",
+    "repository":  {
+                       "url":  "https://github.com/Textualize/rich.git",
+                       "commit":  "482dcee134c4de5c49db781f100e1e99ad84a3fd"
+                   },
+    "target":  {
+                   "file":  "rich/text.py",
+                   "start_line":  828,
+                   "end_line":  851
+               },
+    "status":  "ANNOTATED",
+    "selection":  {
+                      "rationale":  "This public Rich change completes a coherent Text.expand_tabs implementation sequence with direct code, regression-test, double-width, multiline, style-span, and changelog evidence. The final commit was selected before running Why-Blame.",
+                      "proposed_at":  "2026-10-16",
+                      "proposed_by":  "Wi Ho-yeon"
+                  },
+    "exclusion":  {
+                      "code":  "",
+                      "reason":  ""
+                  },
+    "integrity":  {
+                      "overlaps_holdout_v1":  false,
+                      "overlap_details":  "Rich does not appear in Holdout v1, and this Text.expand_tabs behavior does not overlap with the existing Rich pretty-printer revert case.",
+                      "ground_truth_frozen":  true,
+                      "system_executed":  true,
+                      "annotation_complete":  true
+                  },
+    "artifacts":  {
+                      "case_file":  "cases/rich_002.json",
+                      "result_file":  "results/rich_002/stdout.txt",
+                      "annotation_file":  "annotations/rich_002.json"
+                  },
+    "notes":  "Candidate selected from the completed Rich tab-expansion sequence ending at commit 482dcee1. Ground Truth was defined from the frozen implementation, tests, changelog, and preceding commits before Why-Blame execution."
+}

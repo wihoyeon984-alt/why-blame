@@ -1,0 +1,71 @@
+{
+  "schema_version": 2,
+  "case_id": "black_002",
+  "repository": {
+    "url": "https://github.com/psf/black.git",
+    "commit": "8ec61a7fb6f1961377afd28bbe71f8a2095916ac"
+  },
+  "frozen": true,
+  "claims": {
+    "claim_001": {
+      "type": "BEHAVIOR",
+      "label": "SUPPORTED",
+      "text": "Black reads .gitignore files using the utf-8-sig encoding so that a UTF-8 byte order mark at the start of the file is skipped before the ignore patterns are parsed.",
+      "evidence": [
+        {
+          "channel": "DIFF",
+          "ref": "8ec61a7fb6f1961377afd28bbe71f8a2095916ac",
+          "relation": "SUPPORTS",
+          "note": "The frozen diff changes the encoding used by get_gitignore from utf-8 to utf-8-sig and adds a comment explaining that the UTF-8 byte order mark is skipped."
+        },
+        {
+          "channel": "TEST",
+          "ref": "8ec61a7fb6f1961377afd28bbe71f8a2095916ac",
+          "relation": "SUPPORTS",
+          "note": "The added regression test writes root and nested .gitignore files with utf-8-sig and verifies that only the non-ignored Python files are collected."
+        }
+      ],
+      "rationale": "The source change directly selects an encoding that consumes the UTF-8 byte order mark, and the regression test verifies the resulting source-collection behavior for both root and nested .gitignore files."
+    },
+    "claim_002": {
+      "type": "CAUSE",
+      "label": "SUPPORTED",
+      "text": "The encoding change was made because an unskipped UTF-8 byte order mark became part of the first .gitignore pattern, causing that pattern not to match.",
+      "evidence": [
+        {
+          "channel": "DIFF",
+          "ref": "8ec61a7fb6f1961377afd28bbe71f8a2095916ac",
+          "relation": "SUPPORTS",
+          "note": "The added source comment states that without skipping the byte order mark it becomes part of the first pattern, which then never matches."
+        },
+        {
+          "channel": "COMMIT",
+          "ref": "8ec61a7fb6f1961377afd28bbe71f8a2095916ac",
+          "relation": "SUPPORTS",
+          "note": "The commit title states: Skip UTF-8 BOM when reading .gitignore."
+        },
+        {
+          "channel": "CHANGELOG",
+          "ref": "8ec61a7fb6f1961377afd28bbe71f8a2095916ac",
+          "relation": "SUPPORTS",
+          "note": "The changelog explains that the mark became part of the first pattern, so that pattern never matched and Black formatted files ignored by Git."
+        }
+      ],
+      "rationale": "The frozen source comment, commit title, and changelog explicitly identify the unskipped byte order mark and the resulting failure of the first ignore pattern as the reason for the change."
+    },
+    "claim_003": {
+      "type": "CAUSE",
+      "label": "UNSUPPORTED",
+      "text": "The change was primarily introduced to improve the performance of Black's .gitignore processing.",
+      "evidence": [],
+      "rationale": "The frozen evidence describes correctness for UTF-8 byte order marks and does not identify performance as an objective."
+    },
+    "claim_004": {
+      "type": "BEHAVIOR",
+      "label": "UNSUPPORTED",
+      "text": "The change adds support for a new .gitignore pattern syntax that was previously rejected by Black.",
+      "evidence": [],
+      "rationale": "The pattern parser and supported pattern syntax are unchanged. The frozen change only alters how the .gitignore file is decoded before its existing patterns are parsed."
+    }
+  }
+}

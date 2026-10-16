@@ -1,0 +1,53 @@
+{
+  "schema_version": 2,
+  "case_id": "requests_001",
+  "repository": {
+    "url": "https://github.com/psf/requests.git",
+    "commit": "6f66281a1d6326b1b9c4ac09ca30de0fc4e6ef43"
+  },
+  "frozen": true,
+  "claims": {
+    "claim_001": {
+      "type": "BEHAVIOR",
+      "label": "SUPPORTED",
+      "text": "The has_read helper treats objects with a read attribute as readable even when protocol isinstance checks alone would not recognize them.",
+      "evidence": [
+        {
+          "channel": "DIFF",
+          "ref": "6f66281a1d6326b1b9c4ac09ca30de0fc4e6ef43",
+          "relation": "SUPPORTS",
+          "note": "The helper returns true when hasattr(obj, \"read\") succeeds."
+        }
+      ],
+      "rationale": "The newly added helper explicitly extends readable-object detection."
+    },
+    "claim_002": {
+      "type": "CAUSE",
+      "label": "SUPPORTED",
+      "text": "The change was introduced to support __getattr__-based proxy objects that expose read-capable file interfaces.",
+      "evidence": [
+        {
+          "channel": "COMMIT",
+          "ref": "6f66281a1d6326b1b9c4ac09ca30de0fc4e6ef43",
+          "relation": "SUPPORTS",
+          "note": "The commit title and helper comment reference protocol checks and __getattr__-based proxies."
+        }
+      ],
+      "rationale": "The commit explicitly generalizes support for proxy objects exposing read()."
+    },
+    "claim_003": {
+      "type": "CAUSE",
+      "label": "UNSUPPORTED",
+      "text": "The change was primarily introduced to improve HTTP request throughput.",
+      "evidence": [],
+      "rationale": "No throughput-related goal appears in the commit or diff."
+    },
+    "claim_004": {
+      "type": "BEHAVIOR",
+      "label": "UNSUPPORTED",
+      "text": "The change adds asynchronous file upload support.",
+      "evidence": [],
+      "rationale": "The diff only modifies readable-object detection logic."
+    }
+  }
+}

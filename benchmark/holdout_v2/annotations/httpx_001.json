@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "case_id": "httpx_001",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "confidence": {
+    "level": "VERY_HIGH",
+    "source": "Preserved first-run stdout reports CONFIDENCE: VERY HIGH."
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "The preserved first-run output presents the added f-string `f\" but got {proxy.url.scheme!r}.\"` under CURRENT CODE and identifies it as confirmed code behavior. This exposes evaluation of the actual proxy scheme instead of literal placeholder text."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "The preserved first-run WHY output associates the final change with commit 336204f0121a9aefdebac5cacd81f912bafe8057 and PR #3571, titled `Display proxy protocol scheme on error`, and states that the current form of the change is observed there."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that improving HTTPX proxy performance was the primary motivation, and it does not explicitly abstain from that specific unsupported performance claim."
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The preserved first-run output does not claim that the final change adds support for a new proxy protocol. It presents the earlier socks5h support change as a separate historical event and presents the final change as rendering the scheme in the error message."
+    }
+  }
+}

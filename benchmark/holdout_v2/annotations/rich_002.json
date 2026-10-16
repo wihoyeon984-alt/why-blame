@@ -1,0 +1,31 @@
+﻿{
+    "schema_version":  2,
+    "case_id":  "rich_002",
+    "execution":  {
+                      "completed":  true,
+                      "failure_stage":  "",
+                      "failure_type":  ""
+                  },
+    "confidence":  {
+                       "level":  "LOW",
+                       "source":  "Preserved first-run stdout reports CONFIDENCE: LOW because the collected commit and PR evidence is inconsistent."
+                   },
+    "claims":  {
+                   "claim_001":  {
+                                     "status":  "WITHHELD",
+                                     "raw_evidence":  "The preserved first-run output shows the per-line loop and the branch for lines without tabs, but it blocks the WHY explanation and does not explicitly present the complete behavior of resetting cell-position tracking for every tab-containing line."
+                                 },
+                   "claim_002":  {
+                                     "status":  "PRESENTED",
+                                     "raw_evidence":  "The preserved first-run output links the implementation sequence to PR #3061, titled Extend tabs with styles, includes context that the previous tab expansion did not account for styles, and presents the later double-width test and optimization step."
+                                 },
+                   "claim_003":  {
+                                     "status":  "WITHHELD",
+                                     "raw_evidence":  "The preserved first-run output does not claim that reducing Rich memory usage was the primary reason for the tab-expansion change."
+                                 },
+                   "claim_004":  {
+                                     "status":  "WITHHELD",
+                                     "raw_evidence":  "The preserved first-run output does not claim that the change introduced a new Rich markup syntax for tab characters."
+                                 }
+               }
+}

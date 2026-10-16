@@ -1,0 +1,27 @@
+﻿{
+  "schema_version": 2,
+  "case_id": "fixture_001",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "confidence": {
+    "level": "VERY HIGH",
+    "source": "fixture"
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "Supported fixture claim."
+    },
+    "claim_002": {
+      "status": "MISSED",
+      "raw_evidence": ""
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": ""
+    }
+  }
+}

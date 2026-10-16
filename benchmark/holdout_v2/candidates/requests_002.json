@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "candidate_id": "requests_002",
+  "repository": {
+    "url": "https://github.com/psf/requests.git",
+    "commit": "ef439eb779c1eba7cbdeeeb302b11e1e061b4b7d"
+  },
+  "target": {
+    "file": "src/requests/sessions.py",
+    "start_line": 181,
+    "end_line": 183
+  },
+  "status": "ANNOTATED",
+  "selection": {
+    "rationale": "Redirect history behavior change with explicit test coverage and clear causal rationale.",
+    "proposed_at": "2026-10-15",
+    "proposed_by": "Wi Ho-yeon"
+  },
+  "exclusion": {
+    "code": "",
+    "reason": ""
+  },
+  "integrity": {
+    "overlaps_holdout_v1": false,
+    "overlap_details": "No overlap identified with frozen Holdout v1 cases.",
+    "ground_truth_frozen": true,
+    "system_executed": true,
+    "annotation_complete": true
+  },
+  "artifacts": {
+    "case_file": "cases/requests_002.json",
+    "result_file": "results/requests_002/stdout.txt",
+    "annotation_file": "annotations/requests_002.json"
+  },
+  "notes": "Selected from Requests commit ef439eb7 Prevent Response self-reference in redirect history (#7328)."
+}
