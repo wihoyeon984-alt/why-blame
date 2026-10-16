@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "candidate_id": "requests_003",
+  "repository": {
+    "url": "https://github.com/psf/requests.git",
+    "commit": "6f205ff422bccd5e4c4fc0b64c5f3e7df5181db6"
+  },
+  "target": {
+    "file": "src/requests/models.py",
+    "start_line": 237,
+    "end_line": 246
+  },
+  "status": "PROPOSED",
+  "selection": {
+    "rationale": "Evaluates whether the system distinguishes directly observable file-like object detection and read behavior from broader claims about intent, compatibility, or complete proxy support.",
+    "proposed_at": "2026-10-16",
+    "proposed_by": "Wi Ho-yeon"
+  },
+  "exclusion": {
+    "code": "",
+    "reason": ""
+  },
+  "integrity": {
+    "overlaps_holdout_v1": false,
+    "overlap_details": "",
+    "ground_truth_frozen": false,
+    "system_executed": false,
+    "annotation_complete": false
+  },
+  "artifacts": {
+    "case_file": "",
+    "result_file": "",
+    "annotation_file": ""
+  },
+  "notes": "Selected before system execution. The target includes the input-type branches surrounding the expanded read detection."
+}
