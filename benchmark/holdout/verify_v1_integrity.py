@@ -4,9 +4,9 @@ import sys
 
 
 def main():
-    manifest = Path(
-        "benchmark/holdout/HOLDOUT_V1_SHA256.txt"
-    )
+    holdout_dir = Path(__file__).resolve().parent
+    repository_root = holdout_dir.parent.parent
+    manifest = holdout_dir / "HOLDOUT_V1_SHA256.txt"
 
     if not manifest.exists():
         print(
@@ -28,7 +28,7 @@ def main():
             1,
         )
 
-        path = Path(relative)
+        path = repository_root / relative
 
         if not path.exists():
             failures.append(
