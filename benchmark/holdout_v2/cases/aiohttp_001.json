@@ -1,0 +1,57 @@
+﻿{
+    "schema_version":  2,
+    "case_id":  "aiohttp_001",
+    "repository":  {
+                       "url":  "https://github.com/aio-libs/aiohttp.git",
+                       "commit":  "e8832aee7f694979292740b9b56a9c98fb0afc1a"
+                   },
+    "frozen":  true,
+    "claims":  {
+                   "claim_001":  {
+                                     "type":  "BEHAVIOR",
+                                     "label":  "SUPPORTED",
+                                     "text":  "When the current decompressor reaches EOF with unused data, the implementation creates a fresh decompressor and processes the unused data as a subsequent compressed member.",
+                                     "evidence":  [
+                                                      {
+                                                          "channel":  "DIFF",
+                                                          "ref":  "e8832aee7f694979292740b9b56a9c98fb0afc1a",
+                                                          "relation":  "SUPPORTS",
+                                                          "note":  "The frozen production diff adds a loop guarded by decompressor EOF and unused_data, saves the unused bytes, creates a new decompressor, and decompresses those bytes."
+                                                      }
+                                                  ],
+                                     "rationale":  "The selected production lines directly implement processing of concatenated compressed members, so this behavior does not depend on system interpretation or external causal context."
+                                 },
+                   "claim_002":  {
+                                     "type":  "BEHAVIOR",
+                                     "label":  "SUPPORTED",
+                                     "text":  "When the configured output limit is exhausted before the next compressed member is processed, the implementation stores the remaining unused data in _pending_unused_data for later processing.",
+                                     "evidence":  [
+                                                      {
+                                                          "channel":  "DIFF",
+                                                          "ref":  "e8832aee7f694979292740b9b56a9c98fb0afc1a",
+                                                          "relation":  "SUPPORTS",
+                                                          "note":  "The frozen production diff subtracts the current result length from max_length and assigns unused data to _pending_unused_data before breaking when the remaining limit is not positive."
+                                                      }
+                                                  ],
+                                     "rationale":  "The assignment and its max_length condition are directly observable in the frozen diff."
+                                 },
+                   "claim_003":  {
+                                     "type":  "BEHAVIOR",
+                                     "label":  "UNSUPPORTED",
+                                     "text":  "The change makes ZLibDecompressor recover successfully from every form of malformed or corrupted gzip input.",
+                                     "evidence":  [
+
+                                                  ],
+                                     "rationale":  "The frozen evidence handles concatenated members and boundary state, but it does not establish recovery from every kind of malformed or corrupted gzip input."
+                                 },
+                   "claim_004":  {
+                                     "type":  "CAUSE",
+                                     "label":  "UNSUPPORTED",
+                                     "text":  "The change was primarily introduced to reduce decompression memory usage and improve performance.",
+                                     "evidence":  [
+
+                                                  ],
+                                     "rationale":  "The frozen production diff and commit title concern data being dropped after the first gzip member; they do not establish memory reduction or performance improvement as the primary motivation."
+                                 }
+               }
+}
