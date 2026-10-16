@@ -145,6 +145,24 @@ try {
         Write-Success "Working tree cleanliness check was skipped."
     }
     else {
+        Write-Step "Checking branch commits"
+
+        $commitCountText = git rev-list `
+            --count `
+            "$Base..$branch"
+
+        Assert-LastExitCode `
+            "Unable to compare the branch with its base."
+
+        $commitCount = [int]$commitCountText.Trim()
+
+        if ($commitCount -eq 0) {
+            throw "No commits exist between '$Base' and '$branch'."
+        }
+
+        Write-Success `
+            "$commitCount branch commits are ready."
+
         Assert-CleanWorkingTree
     }
 
