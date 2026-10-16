@@ -141,6 +141,29 @@ class TestClaimSafeRenderer(unittest.TestCase):
             ),
         )
 
+    def test_initialize_per_item_with_condition_template(self):
+        semantics = make_behavior_semantics(
+            action="INITIALIZE",
+            subject="cell_position",
+            target="0",
+            condition="'\\t' in line.plain",
+            scope="each line",
+            source_event="init001",
+        )
+        semantics["semantic_safety"] = SAFE_TO_RENDER
+
+        result = render_safe_semantics(
+            semantics
+        )
+
+        self.assertEqual(
+            result,
+            (
+                "cell_position is initialized to 0 "
+                "for each line when '\\t' in line.plain."
+            ),
+        )
+
     def test_unknown_action_is_not_rendered(self):
         semantics = self.make_safe(
             action="OPTIMIZE",

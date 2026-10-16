@@ -735,6 +735,128 @@ def extract_else_branch_assignment_flows(
     return result
 
 
+def extract_loop_else_initializations(source, source_event):
+    """Extract literal initialization from an explicit loop else branch."""
+    if not isinstance(source, str) or not source.strip():
+        return []
+
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return []
+
+    result = []
+
+    def invert_condition(node):
+        inverse = {
+            ast.NotIn: ast.In,
+            ast.In: ast.NotIn,
+            ast.IsNot: ast.Is,
+            ast.Is: ast.IsNot,
+            ast.NotEq: ast.Eq,
+            ast.Eq: ast.NotEq,
+        }
+
+        if (
+            isinstance(node, ast.Compare)
+            and len(node.ops) == 1
+            and len(node.comparators) == 1
+            and type(node.ops[0]) in inverse
+        ):
+            inverted = ast.Compare(
+                left=node.left,
+                ops=[inverse[type(node.ops[0])]()],
+                comparators=node.comparators,
+            )
+        else:
+            inverted = ast.UnaryOp(
+                op=ast.Not(),
+                operand=node,
+            )
+
+        return ast.unparse(
+            ast.fix_missing_locations(inverted)
+        ).strip()
+
+    for loop in ast.walk(tree):
+        if not isinstance(loop, (ast.For, ast.AsyncFor)):
+            continue
+
+        if not isinstance(loop.target, ast.Name):
+            continue
+
+        loop_name = loop.target.id
+
+        for branch in loop.body:
+            if not isinstance(branch, ast.If):
+                continue
+
+            if not branch.orelse:
+                continue
+
+            if (
+                len(branch.orelse) == 1
+                and isinstance(branch.orelse[0], ast.If)
+            ):
+                continue
+
+            referenced = {
+                node.id
+                for node in ast.walk(branch.test)
+                if isinstance(node, ast.Name)
+            }
+
+            if loop_name not in referenced:
+                continue
+
+            condition = invert_condition(branch.test)
+
+            for statement in branch.orelse:
+                if not isinstance(statement, ast.Assign):
+                    continue
+
+                if len(statement.targets) != 1:
+                    continue
+
+                target = statement.targets[0]
+
+                if not isinstance(target, ast.Name):
+                    continue
+
+                if not isinstance(statement.value, ast.Constant):
+                    continue
+
+                value = ast.unparse(statement.value).strip()
+
+                semantics = make_behavior_semantics(
+                    action="INITIALIZE",
+                    subject=target.id,
+                    target=value,
+                    condition=condition,
+                    scope=f"each {loop_name}",
+                    source_event=source_event,
+                )
+
+                for field in (
+                    "action",
+                    "subject",
+                    "target",
+                    "condition",
+                    "scope",
+                ):
+                    semantics = attach_field_evidence(
+                        semantics,
+                        field,
+                        source="DIFF",
+                        ref=source_event,
+                        level=DIRECT,
+                    )
+
+                result.append(semantics)
+
+    return result
+
+
 def extract_statement_semantics(
     code,
     source_event,

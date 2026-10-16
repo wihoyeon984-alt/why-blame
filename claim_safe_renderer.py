@@ -143,6 +143,30 @@ def render_safe_semantics(semantics):
             f"{target}."
         )
 
+    if action == "INITIALIZE":
+        if not subject or not target:
+            return None
+
+        sentence = (
+            f"{subject} is initialized to {target}"
+        )
+
+        scope = _clean_value(
+            semantics.get("scope")
+        )
+
+        if scope:
+            sentence += (
+                f" for {scope}"
+            )
+
+        if condition:
+            sentence += (
+                f" when {condition}"
+            )
+
+        return sentence + "."
+
     if action == "RETURN":
         if not target:
             return None

@@ -425,6 +425,87 @@ class TestClaimAdapter(unittest.TestCase):
         )
 
 
+    def test_loop_initialization_is_attached_to_behavior_claim(self):
+        timeline = [
+            {
+                "hash": "init001",
+                "diff_lines": [
+                    (
+                        '+         for line in self.split('
+                        '"\\n", include_separator=True):'
+                    ),
+                    '+             else:',
+                    '+                 cell_position = 0',
+                ],
+                "source": (
+                    'for line in self.split("\\n", '
+                    'include_separator=True):\n'
+                    '    if "\\t" not in line.plain:\n'
+                    '        append(line)\n'
+                    '    else:\n'
+                    '        cell_position = 0\n'
+                    '        parts = line.split(\n'
+                    '            "\\t",\n'
+                    '            include_separator=True,\n'
+                    '        )\n'
+                ),
+                "ref_items": [],
+                "type": "UPDATE",
+            }
+        ]
+
+        claims = build_behavior_claims(timeline)
+
+        initialization_claims = [
+            claim
+            for claim in claims
+            if any(
+                semantics.get("action")
+                == "INITIALIZE"
+                and semantics.get("subject")
+                == "cell_position"
+                and semantics.get("target") == "0"
+                and semantics.get("scope")
+                == "each line"
+                for semantics in claim.get(
+                    "structured_semantics",
+                    [],
+                )
+            )
+        ]
+
+        self.assertEqual(
+            len(initialization_claims),
+            1,
+        )
+
+        claim = initialization_claims[0]
+
+        self.assertTrue(
+            claim["target_relevant"],
+        )
+        self.assertEqual(
+            claim["source_event"],
+            "init001",
+        )
+        self.assertEqual(
+            claim["evidence"],
+            [
+                {
+                    "source": "DIFF",
+                    "ref": "init001",
+                    "supports": True,
+                }
+            ],
+        )
+
+        semantics = claim["structured_semantics"][0]
+
+        self.assertEqual(
+            semantics["condition"],
+            "'\\t' in line.plain",
+        )
+
     def test_else_branch_flow_is_attached_to_behavior_claim(self):
         timeline = [
             {

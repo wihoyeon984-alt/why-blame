@@ -21,6 +21,7 @@ from claim_semantic_extractor import (
     derive_transitive_ordering,
     extract_conditional_assignment_flows,
     extract_else_branch_assignment_flows,
+    extract_loop_else_initializations,
 )
 from claim_semantics import (
     DIRECT,
@@ -613,6 +614,127 @@ class TestClaimSemanticExtractor(
         result = extract_else_branch_assignment_flows(
             source,
             "else002",
+        )
+
+        self.assertEqual(
+            result,
+            [],
+        )
+
+    def test_loop_else_literal_initialization_extracts_semantics(self):
+        source = (
+            'for line in self.split("\\n", include_separator=True):\n'
+            '    if "\\t" not in line.plain:\n'
+            '        append(line)\n'
+            '    else:\n'
+            '        cell_position = 0\n'
+            '        parts = line.split("\\t", include_separator=True)\n'
+        )
+
+        result = extract_loop_else_initializations(
+            source,
+            "init001",
+        )
+
+        self.assertEqual(
+            len(result),
+            1,
+        )
+
+        semantics = result[0]
+
+        self.assertEqual(
+            semantics["action"],
+            "INITIALIZE",
+        )
+        self.assertEqual(
+            semantics["subject"],
+            "cell_position",
+        )
+        self.assertEqual(
+            semantics["target"],
+            "0",
+        )
+        self.assertEqual(
+            semantics["condition"],
+            "'\\t' in line.plain",
+        )
+        self.assertEqual(
+            semantics["scope"],
+            "each line",
+        )
+        self.assertEqual(
+            semantics["source_event"],
+            "init001",
+        )
+
+        for field in (
+            "action",
+            "subject",
+            "target",
+            "condition",
+            "scope",
+        ):
+            self.assertEqual(
+                semantics["field_evidence"][field],
+                [
+                    {
+                        "source": "DIFF",
+                        "ref": "init001",
+                        "level": DIRECT,
+                    }
+                ],
+            )
+
+    def test_loop_else_initialization_rejects_call_value(self):
+        source = (
+            "for item in items:\n"
+            "    if should_skip(item):\n"
+            "        continue\n"
+            "    else:\n"
+            "        state = compute_state()\n"
+        )
+
+        result = extract_loop_else_initializations(
+            source,
+            "init002",
+        )
+
+        self.assertEqual(
+            result,
+            [],
+        )
+
+    def test_loop_else_initialization_rejects_attribute_target(self):
+        source = (
+            "for item in items:\n"
+            "    if should_skip(item):\n"
+            "        continue\n"
+            "    else:\n"
+            "        item.state = 0\n"
+        )
+
+        result = extract_loop_else_initializations(
+            source,
+            "init003",
+        )
+
+        self.assertEqual(
+            result,
+            [],
+        )
+
+    def test_initialization_outside_loop_is_not_extracted(self):
+        source = (
+            "if should_skip(item):\n"
+            "    consume(item)\n"
+            "else:\n"
+            "    state = 0\n"
+        )
+
+        result = extract_loop_else_initializations(
+            source,
+            "init004",
         )
 
         self.assertEqual(

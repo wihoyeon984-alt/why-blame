@@ -7,6 +7,7 @@ from claim_semantic_extractor import (
     extract_target_ordering,
     extract_conditional_assignment_flows,
     extract_else_branch_assignment_flows,
+    extract_loop_else_initializations,
 )
 
 from claim_semantics import (
@@ -151,6 +152,13 @@ def build_behavior_claims(timeline):
 
             flow_semantics.extend(
                 extract_else_branch_assignment_flows(
+                    source,
+                    source_event,
+                )
+            )
+
+            flow_semantics.extend(
+                extract_loop_else_initializations(
                     source,
                     source_event,
                 )
