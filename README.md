@@ -283,9 +283,28 @@ Automation should branch on `error.code`, not on localized message text.
 The `message` field is diagnostic and may include relevant file or Git
 details. The public error schema remains identified by `schema_version`.
 
+### Web dashboard
+
+Why-Blame includes a local Streamlit dashboard that reuses the existing
+JSON analysis engine.
+
+Install and run the dashboard with:
+
+    python -m venv .venv-web
+    .\.venv-web\Scripts\python.exe -m pip install -r .\requirements-web.txt
+    .\.venv-web\Scripts\python.exe -m streamlit run .\webapp\app.py
+
+Open http://localhost:8501 if the browser does not open automatically.
+
+Enter a local Git repository, a repository-relative file path, and an
+inclusive line range. The dashboard displays current code, evidence summary,
+limitations, change history, raw JSON, and a JSON download button.
+
+The initial dashboard is intended for local use.
+
 ## Testing
 
-The project currently passes `427 / 427` tests.
+The project currently passes `450 / 450` tests.
 
 The Holdout scorer-specific suite passes `18 / 18` tests.
 
