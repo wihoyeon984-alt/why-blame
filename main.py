@@ -3,7 +3,7 @@ import sys
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
-from git_tracker import extract_git_history, get_repo_info, get_current_code_lines
+from git_tracker import extract_git_history, get_repo_info, get_current_code_lines, is_git_repository
 from github_client import fetch_ref_info, fetch_commit_prs
 from timeline import build_timeline
 from viewer import render_card
@@ -189,6 +189,38 @@ def main():
         return
 
     file_name, start_line, end_line = parsed
+
+    if not Path(file_name).is_file():
+        message = (
+            "The requested file does not exist: "
+            + file_name
+        )
+
+        if json_output:
+            render_json_error(
+                "FILE_NOT_FOUND",
+                message,
+            )
+        else:
+            print(f"\uc624\ub958: {message}")
+
+        sys.exit(1)
+
+    if not is_git_repository():
+        message = (
+            "The current directory is not "
+            "a Git repository."
+        )
+
+        if json_output:
+            render_json_error(
+                "NOT_A_GIT_REPOSITORY",
+                message,
+            )
+        else:
+            print(f"\uc624\ub958: {message}")
+
+        sys.exit(1)
 
     line_range_str = (
         f"{start_line}"

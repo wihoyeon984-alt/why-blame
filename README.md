@@ -244,7 +244,7 @@ It cannot be combined with help or version options.
 
 ## Testing
 
-The project currently passes `403 / 403` tests.
+The project currently passes `410 / 410` tests.
 
 The Holdout scorer-specific suite passes `18 / 18` tests.
 

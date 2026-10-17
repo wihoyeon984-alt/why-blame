@@ -439,5 +439,125 @@ class MainCliTests(unittest.TestCase):
         mocked_json_error.assert_not_called()
 
 
+    def test_json_file_not_found_error(self):
+        with patch.object(
+            main.Path,
+            "is_file",
+            return_value=False,
+        ):
+            with patch.object(
+                main,
+                "is_git_repository",
+            ) as mocked_git_check:
+                output = self.run_main_expecting_exit(
+                    [
+                        "missing.py:1",
+                        "--json",
+                    ],
+                    1,
+                )
+
+        document = json.loads(output)
+
+        self.assertEqual(
+            document["schema_version"],
+            "1",
+        )
+        self.assertEqual(
+            document["error"]["code"],
+            "FILE_NOT_FOUND",
+        )
+        self.assertIn(
+            "missing.py",
+            document["error"]["message"],
+        )
+        mocked_git_check.assert_not_called()
+
+    def test_json_not_a_git_repository_error(self):
+        with patch.object(
+            main.Path,
+            "is_file",
+            return_value=True,
+        ):
+            with patch.object(
+                main,
+                "is_git_repository",
+                return_value=False,
+            ):
+                output = self.run_main_expecting_exit(
+                    [
+                        "service.py:2",
+                        "--json",
+                    ],
+                    1,
+                )
+
+        document = json.loads(output)
+
+        self.assertEqual(
+            document["schema_version"],
+            "1",
+        )
+        self.assertEqual(
+            document["error"]["code"],
+            "NOT_A_GIT_REPOSITORY",
+        )
+
+    def test_human_file_not_found_keeps_text_output(self):
+        with patch.object(
+            main.Path,
+            "is_file",
+            return_value=False,
+        ):
+            with patch.object(
+                main,
+                "render_json_error",
+            ) as mocked_json_error:
+                output = self.run_main_expecting_exit(
+                    ["missing.py:1"],
+                    1,
+                )
+
+        self.assertIn(
+            "The requested file does not exist",
+            output,
+        )
+        self.assertIn(
+            "missing.py",
+            output,
+        )
+        self.assertNotIn(
+            '"schema_version"',
+            output,
+        )
+        mocked_json_error.assert_not_called()
+
+    def test_file_check_precedes_repository_check(self):
+        with patch.object(
+            main.Path,
+            "is_file",
+            return_value=False,
+        ):
+            with patch.object(
+                main,
+                "is_git_repository",
+            ) as mocked_git_check:
+                output = self.run_main_expecting_exit(
+                    [
+                        "missing.py:1",
+                        "--json",
+                    ],
+                    1,
+                )
+
+        document = json.loads(output)
+
+        self.assertEqual(
+            document["error"]["code"],
+            "FILE_NOT_FOUND",
+        )
+        mocked_git_check.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()

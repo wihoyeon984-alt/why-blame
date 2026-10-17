@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from git_tracker import extract_git_history, get_source_at_commit
+from git_tracker import extract_git_history, get_source_at_commit, is_git_repository
 
 
 class TestGitTracker(unittest.TestCase):
@@ -397,6 +397,52 @@ diff --git a/service.py b/service.py
             result[0]["source"],
             source_result.stdout,
         )
+
+
+    @patch("git_tracker.subprocess.run")
+    def test_is_git_repository_returns_true(self, mock_run):
+        result = MagicMock()
+        result.returncode = 0
+        result.stdout = "true\n"
+        mock_run.return_value = result
+
+        self.assertTrue(is_git_repository())
+
+        mock_run.assert_called_once_with(
+            [
+                "git",
+                "rev-parse",
+                "--is-inside-work-tree",
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+
+    @patch("git_tracker.subprocess.run")
+    def test_is_git_repository_returns_false_on_failure(
+        self,
+        mock_run,
+    ):
+        result = MagicMock()
+        result.returncode = 128
+        result.stdout = ""
+        mock_run.return_value = result
+
+        self.assertFalse(is_git_repository())
+
+    @patch(
+        "git_tracker.subprocess.run",
+        side_effect=FileNotFoundError,
+    )
+    def test_is_git_repository_handles_missing_git(
+        self,
+        mock_run,
+    ):
+        self.assertFalse(is_git_repository())
+        mock_run.assert_called_once()
 
 if __name__ == "__main__":
     unittest.main()
