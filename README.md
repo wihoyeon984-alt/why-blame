@@ -1,5 +1,7 @@
 # why-blame
 
+[한국어 안내](README.ko.md)
+
 > **Git blame tells you WHO. Why-blame shows the evidence behind WHY.**
 
 `why-blame` is a CLI tool for reconstructing how code reached its current form
