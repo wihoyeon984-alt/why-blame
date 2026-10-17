@@ -134,6 +134,73 @@ def validate_json_output(
     return document
 
 
+
+def validate_json_error_output(
+    stdout_bytes,
+    stderr_bytes,
+    return_code,
+    expected_exit_code,
+    expected_error_code,
+):
+    if return_code != expected_exit_code:
+        raise ValueError(
+            f"Unexpected JSON error exit code: {return_code}"
+        )
+
+    if stderr_bytes:
+        raise ValueError(
+            "Expected empty stderr from JSON error mode, got: "
+            + repr(stderr_bytes)
+        )
+
+    if not stdout_bytes:
+        raise ValueError(
+            "JSON error mode produced empty stdout."
+        )
+
+    try:
+        stdout_text = stdout_bytes.decode("ascii")
+    except UnicodeDecodeError as exc:
+        raise ValueError(
+            "JSON error output is not ASCII-safe."
+        ) from exc
+
+    try:
+        document = json.loads(stdout_text)
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            "JSON error mode did not produce one valid document."
+        ) from exc
+
+    if document.get("schema_version") != "1":
+        raise ValueError(
+            "Unexpected JSON error schema version."
+        )
+
+    error = document.get("error")
+
+    if not isinstance(error, dict):
+        raise ValueError(
+            "JSON error document must contain an error object."
+        )
+
+    if error.get("code") != expected_error_code:
+        raise ValueError(
+            f"Unexpected JSON error code: {error.get('code')!r}"
+        )
+
+    if not isinstance(error.get("message"), str):
+        raise ValueError(
+            "JSON error message must be a string."
+        )
+
+    if not error["message"]:
+        raise ValueError(
+            "JSON error message must not be empty."
+        )
+
+    return document
+
 def initialize_sample_repository(sample_repo):
     sample_repo.mkdir(
         parents=True,
@@ -320,6 +387,32 @@ def main():
             ),
         )
         print("RELEASE_JSON_CHECK_OK")
+
+        json_error_result = subprocess.run(
+            [str(cli_exe), "--json"],
+            cwd=sample_repo,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+
+        error_document = validate_json_error_output(
+            json_error_result.stdout,
+            json_error_result.stderr,
+            json_error_result.returncode,
+            expected_exit_code=2,
+            expected_error_code="INVALID_ARGUMENTS",
+        )
+
+        print(
+            "JSON_ERROR_EXIT_CODE:",
+            json_error_result.returncode,
+        )
+        print(
+            "JSON_ERROR_CODE:",
+            error_document["error"]["code"],
+        )
+        print("RELEASE_JSON_ERROR_CHECK_OK")
         print("RELEASE_INSTALL_CHECK_OK")
     finally:
         shutil.rmtree(

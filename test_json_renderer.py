@@ -6,7 +6,9 @@ from contextlib import redirect_stdout
 from json_renderer import (
     SCHEMA_VERSION,
     build_json_document,
+    build_json_error_document,
     render_json,
+    render_json_error,
 )
 from timeline import ConfidenceReport
 
@@ -178,6 +180,51 @@ class JsonRendererTests(unittest.TestCase):
         self.assertIn(
             "\\ud55c\\uae00",
             raw_output,
+        )
+
+
+    def test_build_json_error_document(self):
+        document = build_json_error_document(
+            "INVALID_ARGUMENTS",
+            "Missing target",
+        )
+
+        self.assertEqual(
+            document,
+            {
+                "schema_version": "1",
+                "error": {
+                    "code": "INVALID_ARGUMENTS",
+                    "message": "Missing target",
+                },
+            },
+        )
+
+    def test_render_json_error_is_ascii_safe(self):
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            render_json_error(
+                "INVALID_ARGUMENTS",
+                "\ud55c\uae00 \uc624\ub958",
+            )
+
+        raw_output = output.getvalue()
+        raw_output.encode("ascii")
+
+        document = json.loads(raw_output)
+
+        self.assertEqual(
+            document["schema_version"],
+            "1",
+        )
+        self.assertEqual(
+            document["error"]["code"],
+            "INVALID_ARGUMENTS",
+        )
+        self.assertEqual(
+            document["error"]["message"],
+            "\ud55c\uae00 \uc624\ub958",
         )
 
 

@@ -7,7 +7,7 @@ from git_tracker import extract_git_history, get_repo_info, get_current_code_lin
 from github_client import fetch_ref_info, fetch_commit_prs
 from timeline import build_timeline
 from viewer import render_card
-from json_renderer import render_json
+from json_renderer import render_json, render_json_error
 
 
 USAGE = """사용법:
@@ -157,6 +157,7 @@ def get_version():
 
 def main():
     args = sys.argv[1:]
+    json_requested = "--json" in args
 
     try:
         args, json_output = parse_output_mode(
@@ -170,9 +171,16 @@ def main():
         parsed = parse_args(args)
 
     except ValueError as exc:
-        print(f"오류: {exc}")
-        print()
-        print_usage()
+        if json_requested:
+            render_json_error(
+                "INVALID_ARGUMENTS",
+                exc,
+            )
+        else:
+            print(f"??: {exc}")
+            print()
+            print_usage()
+
         sys.exit(2)
 
     # --help / -h
@@ -203,6 +211,15 @@ def main():
     )
 
     if not commits:
+        if json_output:
+            render_json_error(
+                "NO_HISTORY",
+                (
+                    "No Git history was found for "
+                    "the requested target."
+                ),
+            )
+
         sys.exit(1)
 
     timeline, stats = build_timeline(
