@@ -10,8 +10,13 @@ req = urllib.request.Request(url, headers=headers)
 
 try:
     print(f"[*] GitHub API에 연결 요청 중... ({url})")
-    response = urllib.request.urlopen(req, timeout=5)
-    data = json.loads(response.read().decode("utf-8"))
+    with urllib.request.urlopen(
+        req,
+        timeout=5,
+    ) as response:
+        data = json.loads(
+            response.read().decode("utf-8")
+        )
     
     print("\n=== GitHub API 응답 성공! ===")
     print("번호:", data.get("number"))
@@ -21,6 +26,7 @@ try:
     print("생성일:", data.get("created_at")[:10])
 
 except urllib.error.HTTPError as e:
+    e.close()
     print(f"\n[HTTP 오류 {e.code}] 해당 번호의 PR/이슈를 찾을 수 없거나 권한이 없습니다.")
 except Exception as e:
     print(f"\n[네트워크 오류] 연결 실패: {e}")

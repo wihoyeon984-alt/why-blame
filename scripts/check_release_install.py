@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -39,6 +40,152 @@ def run(command, cwd=None):
             f"{result.returncode}: {command}"
         )
 
+
+
+def run_capture(command, cwd=None):
+    print("RUN:", " ".join(str(part) for part in command))
+
+    result = subprocess.run(
+        command,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    if result.returncode != 0:
+        raise ValueError(
+            f"Command failed with exit code {result.returncode}: "
+            f"{command!r}; stderr={result.stderr!r}"
+        )
+
+    return result
+
+
+def validate_json_output(
+    stdout_bytes,
+    stderr_bytes,
+    expected_file,
+    expected_line,
+):
+    if stderr_bytes:
+        raise ValueError(
+            f"Expected empty stderr, got: {stderr_bytes!r}"
+        )
+
+    if not stdout_bytes:
+        raise ValueError("JSON stdout is empty.")
+
+    try:
+        stdout_text = stdout_bytes.decode("ascii")
+    except UnicodeDecodeError as exc:
+        raise ValueError(
+            "JSON stdout is not ASCII-safe."
+        ) from exc
+
+    try:
+        document = json.loads(stdout_text)
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            "CLI did not produce one valid JSON document."
+        ) from exc
+
+    if document.get("schema_version") != "1":
+        raise ValueError("Unexpected JSON schema version.")
+
+    expected_target = {
+        "file": expected_file,
+        "start_line": expected_line,
+        "end_line": expected_line,
+    }
+
+    if document.get("target") != expected_target:
+        raise ValueError(
+            f"Unexpected JSON target: {document.get('target')!r}"
+        )
+
+    repository = document.get("repository")
+
+    if repository is not None and not isinstance(
+        repository,
+        dict,
+    ):
+        raise ValueError(
+            "JSON repository must be an object or null."
+        )
+
+    if not isinstance(document.get("current_lines"), list):
+        raise ValueError(
+            "JSON current_lines must be an array."
+        )
+
+    timeline = document.get("timeline")
+
+    if not isinstance(timeline, list) or not timeline:
+        raise ValueError(
+            "JSON timeline must be a non-empty array."
+        )
+
+    if not isinstance(document.get("stats"), dict):
+        raise ValueError(
+            "JSON stats must be an object."
+        )
+
+    return document
+
+
+def initialize_sample_repository(sample_repo):
+    sample_repo.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    service_path = sample_repo / "service.py"
+    service_path.write_text(
+        "def pay(user):\n"
+        "    return user.is_active\n",
+        encoding="utf-8",
+    )
+
+    run(
+        ["git", "init"],
+        cwd=sample_repo,
+    )
+    run(
+        [
+            "git",
+            "config",
+            "user.email",
+            "release-check@example.invalid",
+        ],
+        cwd=sample_repo,
+    )
+    run(
+        [
+            "git",
+            "config",
+            "user.name",
+            "Why-Blame Release Check",
+        ],
+        cwd=sample_repo,
+    )
+    run(
+        [
+            "git",
+            "add",
+            "service.py",
+        ],
+        cwd=sample_repo,
+    )
+    run(
+        [
+            "git",
+            "commit",
+            "-m",
+            "Add sample service",
+        ],
+        cwd=sample_repo,
+    )
 
 def main():
     args = parse_args()
@@ -135,6 +282,44 @@ def main():
             cwd=temp_root,
         )
 
+        sample_repo = temp_root / "sample-repository"
+
+        initialize_sample_repository(
+            sample_repo
+        )
+
+        json_result = run_capture(
+            [
+                str(cli_exe),
+                "service.py:2",
+                "--json",
+            ],
+            cwd=sample_repo,
+        )
+
+        document = validate_json_output(
+            json_result.stdout,
+            json_result.stderr,
+            expected_file="service.py",
+            expected_line=2,
+        )
+
+        print(
+            "JSON_SCHEMA_VERSION:",
+            document["schema_version"],
+        )
+        print(
+            "JSON_TIMELINE_EVENTS:",
+            len(document["timeline"]),
+        )
+        print(
+            "JSON_CONFIDENCE:",
+            document["stats"].get(
+                "confidence",
+                "UNKNOWN",
+            ),
+        )
+        print("RELEASE_JSON_CHECK_OK")
         print("RELEASE_INSTALL_CHECK_OK")
     finally:
         shutil.rmtree(
