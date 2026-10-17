@@ -793,5 +793,159 @@ class MainCliTests(unittest.TestCase):
         mocked_card.assert_not_called()
 
 
+    def test_json_permission_error_returns_file_read_error(self):
+        with patch.object(
+            main.Path,
+            "is_file",
+            return_value=True,
+        ), patch.object(
+            main,
+            "get_file_line_count",
+            side_effect=PermissionError("Access denied"),
+        ), patch.object(
+            main,
+            "is_git_repository",
+        ) as mocked_git_check:
+            output = self.run_main_expecting_exit(
+                ["service.py:1", "--json"],
+                1,
+            )
+
+        document = json.loads(output)
+
+        self.assertEqual(
+            document["error"]["code"],
+            "FILE_READ_ERROR",
+        )
+        self.assertIn(
+            "PermissionError",
+            document["error"]["message"],
+        )
+        mocked_git_check.assert_not_called()
+
+    def test_json_decode_error_returns_file_read_error(self):
+        decode_error = UnicodeDecodeError(
+            "utf-8",
+            b"\xff",
+            0,
+            1,
+            "invalid start byte",
+        )
+
+        with patch.object(
+            main.Path,
+            "is_file",
+            return_value=True,
+        ), patch.object(
+            main,
+            "get_file_line_count",
+            side_effect=decode_error,
+        ):
+            output = self.run_main_expecting_exit(
+                ["service.py:1", "--json"],
+                1,
+            )
+
+        document = json.loads(output)
+
+        self.assertEqual(
+            document["schema_version"],
+            "1",
+        )
+        self.assertEqual(
+            document["error"]["code"],
+            "FILE_READ_ERROR",
+        )
+        self.assertIn(
+            "UnicodeDecodeError",
+            document["error"]["message"],
+        )
+
+
+    def test_json_os_error_returns_file_read_error(self):
+        with patch.object(
+            main.Path,
+            "is_file",
+            return_value=True,
+        ), patch.object(
+            main,
+            "get_file_line_count",
+            side_effect=OSError("File system error"),
+        ):
+            output = self.run_main_expecting_exit(
+                ["service.py:1", "--json"],
+                1,
+            )
+
+        document = json.loads(output)
+
+        self.assertEqual(
+            document["error"]["code"],
+            "FILE_READ_ERROR",
+        )
+        self.assertIn(
+            "OSError",
+            document["error"]["message"],
+        )
+
+    def test_file_removed_after_precheck_returns_file_not_found(self):
+        with patch.object(
+            main.Path,
+            "is_file",
+            return_value=True,
+        ), patch.object(
+            main,
+            "get_file_line_count",
+            side_effect=FileNotFoundError,
+        ), patch.object(
+            main,
+            "is_git_repository",
+        ) as mocked_git_check:
+            output = self.run_main_expecting_exit(
+                ["service.py:1", "--json"],
+                1,
+            )
+
+        document = json.loads(output)
+
+        self.assertEqual(
+            document["error"]["code"],
+            "FILE_NOT_FOUND",
+        )
+        mocked_git_check.assert_not_called()
+
+    def test_human_file_read_error_keeps_text_output(self):
+        with patch.object(
+            main.Path,
+            "is_file",
+            return_value=True,
+        ), patch.object(
+            main,
+            "get_file_line_count",
+            side_effect=PermissionError("Access denied"),
+        ), patch.object(
+            main,
+            "render_json_error",
+        ) as mocked_json_error:
+            output = self.run_main_expecting_exit(
+                ["service.py:1"],
+                1,
+            )
+
+        self.assertIn(
+            "The requested file could not be read",
+            output,
+        )
+        self.assertIn(
+            "PermissionError",
+            output,
+        )
+        self.assertNotIn(
+            '"schema_version"',
+            output,
+        )
+        mocked_json_error.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()

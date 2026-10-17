@@ -206,9 +206,43 @@ def main():
 
         sys.exit(1)
 
-    file_line_count = get_file_line_count(
-        file_name
-    )
+    try:
+        file_line_count = get_file_line_count(
+            file_name
+        )
+    except FileNotFoundError:
+        message = (
+            "The requested file does not exist: "
+            + file_name
+        )
+
+        if json_output:
+            render_json_error(
+                "FILE_NOT_FOUND",
+                message,
+            )
+        else:
+            print(f"??: {message}")
+
+        sys.exit(1)
+    except (UnicodeDecodeError, OSError) as exc:
+        message = (
+            "The requested file could not be read: "
+            + file_name
+            + " ("
+            + type(exc).__name__
+            + ")"
+        )
+
+        if json_output:
+            render_json_error(
+                "FILE_READ_ERROR",
+                message,
+            )
+        else:
+            print(f"??: {message}")
+
+        sys.exit(1)
 
     if end_line > file_line_count:
         requested_range = (

@@ -480,6 +480,41 @@ def main():
         )
 
         print("LINE_RANGE_OUT_OF_BOUNDS_CHECK_OK")
+
+        invalid_file = sample_repo / "invalid.py"
+        invalid_file.write_bytes(
+            b"\xff\xfe\xfa"
+        )
+
+        read_error_result = subprocess.run(
+            [
+                str(cli_exe),
+                "invalid.py:1",
+                "--json",
+            ],
+            cwd=sample_repo,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+
+        read_error_document = validate_json_error_output(
+            read_error_result.stdout,
+            read_error_result.stderr,
+            read_error_result.returncode,
+            1,
+            "FILE_READ_ERROR",
+        )
+
+        if "UnicodeDecodeError" not in (
+            read_error_document["error"]["message"]
+        ):
+            raise ValueError(
+                "FILE_READ_ERROR does not identify "
+                "the Unicode decoding failure."
+            )
+
+        print("FILE_READ_ERROR_CHECK_OK")
         print("RELEASE_INSTALL_CHECK_OK")
     finally:
         shutil.rmtree(
