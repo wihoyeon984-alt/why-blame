@@ -166,7 +166,7 @@ Clone and install the current development branch:
 ```powershell
 git clone https://github.com/wihoyeon984-alt/why-blame.git
 cd why-blame
-git switch claim-recovery-v1
+git switch main
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e .
@@ -203,9 +203,48 @@ why-blame service.py 1 3
 
 The target file should belong to a Git repository with relevant history.
 
+### JSON output
+
+Use `--json` when another program consumes the analysis result.
+
+```powershell
+why-blame service.py:10 --json
+why-blame --json service.py:10
+```
+
+Without `--json`, Why-Blame keeps the human-readable card output.
+JSON mode writes one JSON document to standard output.
+
+```json
+{
+  "schema_version": "1",
+  "target": {
+    "file": "service.py",
+    "start_line": 10,
+    "end_line": 10
+  },
+  "repository": null,
+  "current_lines": [],
+  "timeline": [],
+  "stats": {}
+}
+```
+
+- `schema_version` identifies the public JSON schema.
+- `target` contains the requested file and inclusive line range.
+- `repository` contains repository metadata, or `null`.
+- `current_lines` contains the current source lines.
+- `timeline` contains the oldest-to-newest evidence history.
+- `stats` contains confidence, coverage, and limitations.
+
+The raw output is ASCII-safe. A JSON parser restores escaped Unicode.
+
+`--json` may appear before or after the target, but only once.
+It cannot be combined with help or version options.
+
 ## Testing
 
-The project currently passes `278 / 278` tests.
+The project currently passes `393 / 393` tests.
 
 The Holdout scorer-specific suite passes `18 / 18` tests.
 
