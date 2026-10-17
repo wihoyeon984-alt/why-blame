@@ -947,5 +947,135 @@ class MainCliTests(unittest.TestCase):
         mocked_json_error.assert_not_called()
 
 
+    def test_json_git_command_failure(self):
+        patches = [
+            patch.object(
+                main.Path,
+                "is_file",
+                return_value=True,
+            ),
+            patch.object(
+                main,
+                "get_file_line_count",
+                return_value=3,
+            ),
+            patch.object(
+                main,
+                "is_git_repository",
+                return_value=True,
+            ),
+            patch.object(
+                main,
+                "get_current_code_lines",
+                return_value=["example"],
+            ),
+            patch.object(
+                main,
+                "get_repo_info",
+                return_value=None,
+            ),
+            patch.object(
+                main,
+                "extract_git_history",
+                side_effect=main.GitHistoryError(
+                    "Git history analysis failed.",
+                    stderr="fatal: untracked file",
+                ),
+            ),
+        ]
+
+        with ExitStack() as stack:
+            for patcher in patches:
+                stack.enter_context(patcher)
+
+            output = self.run_main_expecting_exit(
+                ["service.py:1", "--json"],
+                1,
+            )
+
+        document = json.loads(output)
+
+        self.assertEqual(
+            document["schema_version"],
+            "1",
+        )
+        self.assertEqual(
+            document["error"]["code"],
+            "GIT_COMMAND_FAILED",
+        )
+        self.assertIn(
+            "fatal: untracked file",
+            document["error"]["message"],
+        )
+
+    def test_human_git_command_failure_keeps_text_output(self):
+        patches = [
+            patch.object(
+                main.Path,
+                "is_file",
+                return_value=True,
+            ),
+            patch.object(
+                main,
+                "get_file_line_count",
+                return_value=3,
+            ),
+            patch.object(
+                main,
+                "is_git_repository",
+                return_value=True,
+            ),
+            patch.object(
+                main,
+                "get_current_code_lines",
+                return_value=["example"],
+            ),
+            patch.object(
+                main,
+                "get_repo_info",
+                return_value=None,
+            ),
+            patch.object(
+                main,
+                "extract_git_history",
+                side_effect=main.GitHistoryError(
+                    "Git history analysis failed.",
+                    stderr="fatal: untracked file",
+                ),
+            ),
+            patch.object(
+                main,
+                "render_json_error",
+            ),
+        ]
+
+        with ExitStack() as stack:
+            for patcher in patches[:6]:
+                stack.enter_context(patcher)
+
+            mocked_json = stack.enter_context(
+                patches[6]
+            )
+
+            output = self.run_main_expecting_exit(
+                ["service.py:1"],
+                1,
+            )
+
+        self.assertIn(
+            "Git history analysis failed",
+            output,
+        )
+        self.assertIn(
+            "fatal: untracked file",
+            output,
+        )
+        self.assertNotIn(
+            '"schema_version"',
+            output,
+        )
+        mocked_json.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()

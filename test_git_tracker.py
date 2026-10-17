@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from git_tracker import extract_git_history, get_source_at_commit, get_file_line_count, is_git_repository
+from git_tracker import GitHistoryError, extract_git_history, get_source_at_commit, get_file_line_count, is_git_repository
 
 
 class TestGitTracker(unittest.TestCase):
@@ -505,6 +505,55 @@ diff --git a/service.py b/service.py
             )
 
         self.assertEqual(result, 2)
+
+
+    @patch("git_tracker.subprocess.run")
+    def test_extract_git_history_raises_on_git_failure(
+        self,
+        mock_run,
+    ):
+        result = MagicMock()
+        result.returncode = 128
+        result.stdout = ""
+        result.stderr = "fatal: untracked file"
+        mock_run.return_value = result
+
+        with self.assertRaises(
+            GitHistoryError
+        ) as raised:
+            extract_git_history(
+                "service.py",
+                1,
+                1,
+            )
+
+        self.assertEqual(
+            raised.exception.stderr,
+            "fatal: untracked file",
+        )
+        self.assertIn(
+            "Git history analysis failed",
+            str(raised.exception),
+        )
+
+    @patch("git_tracker.subprocess.run")
+    def test_extract_git_history_returns_empty_on_no_log(
+        self,
+        mock_run,
+    ):
+        result = MagicMock()
+        result.returncode = 0
+        result.stdout = ""
+        result.stderr = ""
+        mock_run.return_value = result
+
+        history = extract_git_history(
+            "service.py",
+            1,
+            1,
+        )
+
+        self.assertEqual(history, [])
 
 if __name__ == "__main__":
     unittest.main()

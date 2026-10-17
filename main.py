@@ -3,7 +3,7 @@ import sys
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
-from git_tracker import extract_git_history, get_repo_info, get_current_code_lines, get_file_line_count, is_git_repository
+from git_tracker import GitHistoryError, extract_git_history, get_repo_info, get_current_code_lines, get_file_line_count, is_git_repository
 from github_client import fetch_ref_info, fetch_commit_prs
 from timeline import build_timeline
 from viewer import render_card
@@ -299,11 +299,27 @@ def main():
 
     repo_info = get_repo_info()
 
-    commits = extract_git_history(
-        file_name,
-        start_line,
-        end_line,
-    )
+    try:
+        commits = extract_git_history(
+            file_name,
+            start_line,
+            end_line,
+        )
+    except GitHistoryError as exc:
+        message = str(exc)
+
+        if exc.stderr:
+            message += " " + exc.stderr
+
+        if json_output:
+            render_json_error(
+                "GIT_COMMAND_FAILED",
+                message,
+            )
+        else:
+            print(f"??: {message}")
+
+        sys.exit(1)
 
     if not commits:
         if json_output:
