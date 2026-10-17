@@ -183,6 +183,11 @@ class MainCliTests(unittest.TestCase):
         patches = [
             patch.object(
                 main,
+                "get_file_line_count",
+                return_value=100,
+            ),
+            patch.object(
+                main,
                 "get_current_code_lines",
                 return_value=current_lines,
             ),
@@ -212,14 +217,14 @@ class MainCliTests(unittest.TestCase):
         ]
 
         with ExitStack() as stack:
-            for patcher in patches[:4]:
+            for patcher in patches[:5]:
                 stack.enter_context(patcher)
 
             mocked_json = stack.enter_context(
-                patches[4]
+                patches[5]
             )
             mocked_card = stack.enter_context(
-                patches[5]
+                patches[6]
             )
 
             self.run_main(
@@ -256,6 +261,11 @@ class MainCliTests(unittest.TestCase):
         patches = [
             patch.object(
                 main,
+                "get_file_line_count",
+                return_value=100,
+            ),
+            patch.object(
+                main,
                 "get_current_code_lines",
                 return_value=current_lines,
             ),
@@ -285,14 +295,14 @@ class MainCliTests(unittest.TestCase):
         ]
 
         with ExitStack() as stack:
-            for patcher in patches[:4]:
+            for patcher in patches[:5]:
                 stack.enter_context(patcher)
 
             mocked_json = stack.enter_context(
-                patches[4]
+                patches[5]
             )
             mocked_card = stack.enter_context(
-                patches[5]
+                patches[6]
             )
 
             self.run_main(
@@ -382,6 +392,11 @@ class MainCliTests(unittest.TestCase):
 
     def test_json_no_history_returns_structured_error(self):
         patches = [
+            patch.object(
+                main,
+                "get_file_line_count",
+                return_value=100,
+            ),
             patch.object(
                 main,
                 "get_current_code_lines",
@@ -557,6 +572,225 @@ class MainCliTests(unittest.TestCase):
             "FILE_NOT_FOUND",
         )
         mocked_git_check.assert_not_called()
+
+
+    def test_json_single_line_out_of_bounds(self):
+        with patch.object(
+            main.Path,
+            "is_file",
+            return_value=True,
+        ), patch.object(
+            main,
+            "get_file_line_count",
+            return_value=3,
+        ), patch.object(
+            main,
+            "is_git_repository",
+        ) as mocked_git_check:
+            output = self.run_main_expecting_exit(
+                ["service.py:4", "--json"],
+                1,
+            )
+
+        document = json.loads(output)
+
+        self.assertEqual(
+            document["error"]["code"],
+            "LINE_RANGE_OUT_OF_BOUNDS",
+        )
+        self.assertIn(
+            "4",
+            document["error"]["message"],
+        )
+        self.assertIn(
+            "3",
+            document["error"]["message"],
+        )
+        mocked_git_check.assert_not_called()
+
+    def test_json_range_end_out_of_bounds(self):
+        with patch.object(
+            main.Path,
+            "is_file",
+            return_value=True,
+        ), patch.object(
+            main,
+            "get_file_line_count",
+            return_value=3,
+        ), patch.object(
+            main,
+            "is_git_repository",
+        ) as mocked_git_check:
+            output = self.run_main_expecting_exit(
+                ["service.py:2-4", "--json"],
+                1,
+            )
+
+        document = json.loads(output)
+
+        self.assertEqual(
+            document["schema_version"],
+            "1",
+        )
+        self.assertEqual(
+            document["error"]["code"],
+            "LINE_RANGE_OUT_OF_BOUNDS",
+        )
+        self.assertIn(
+            "2-4",
+            document["error"]["message"],
+        )
+        mocked_git_check.assert_not_called()
+
+    def test_json_empty_file_rejects_first_line(self):
+        with patch.object(
+            main.Path,
+            "is_file",
+            return_value=True,
+        ), patch.object(
+            main,
+            "get_file_line_count",
+            return_value=0,
+        ), patch.object(
+            main,
+            "is_git_repository",
+        ) as mocked_git_check:
+            output = self.run_main_expecting_exit(
+                ["empty.py:1", "--json"],
+                1,
+            )
+
+        document = json.loads(output)
+
+        self.assertEqual(
+            document["error"]["code"],
+            "LINE_RANGE_OUT_OF_BOUNDS",
+        )
+        self.assertIn(
+            "file length of 0",
+            document["error"]["message"],
+        )
+        mocked_git_check.assert_not_called()
+
+
+    def test_human_line_range_out_of_bounds(self):
+        with patch.object(
+            main.Path,
+            "is_file",
+            return_value=True,
+        ), patch.object(
+            main,
+            "get_file_line_count",
+            return_value=3,
+        ), patch.object(
+            main,
+            "render_json_error",
+        ) as mocked_json_error:
+            output = self.run_main_expecting_exit(
+                ["service.py:4"],
+                1,
+            )
+
+        self.assertIn(
+            "The requested line range 4",
+            output,
+        )
+        self.assertIn(
+            "file length of 3",
+            output,
+        )
+        self.assertNotIn(
+            '"schema_version"',
+            output,
+        )
+        mocked_json_error.assert_not_called()
+
+    def test_last_valid_line_is_allowed(self):
+        current_lines = ["last line"]
+        timeline = [
+            {
+                "hash": "abcdef123456",
+                "message": "Add last line",
+            }
+        ]
+        stats = {
+            "score": 3,
+            "confidence": "HIGH",
+        }
+
+        patches = [
+            patch.object(
+                main.Path,
+                "is_file",
+                return_value=True,
+            ),
+            patch.object(
+                main,
+                "get_file_line_count",
+                return_value=3,
+            ),
+            patch.object(
+                main,
+                "is_git_repository",
+                return_value=True,
+            ),
+            patch.object(
+                main,
+                "get_current_code_lines",
+                return_value=current_lines,
+            ),
+            patch.object(
+                main,
+                "get_repo_info",
+                return_value=("owner", "repo"),
+            ),
+            patch.object(
+                main,
+                "extract_git_history",
+                return_value=[
+                    {"hash": "abcdef123456"}
+                ],
+            ),
+            patch.object(
+                main,
+                "build_timeline",
+                return_value=(timeline, stats),
+            ),
+            patch.object(
+                main,
+                "render_json",
+            ),
+            patch.object(
+                main,
+                "render_card",
+            ),
+        ]
+
+        with ExitStack() as stack:
+            for patcher in patches[:7]:
+                stack.enter_context(patcher)
+
+            mocked_json = stack.enter_context(
+                patches[7]
+            )
+            mocked_card = stack.enter_context(
+                patches[8]
+            )
+
+            self.run_main(
+                ["service.py:3", "--json"]
+            )
+
+        mocked_json.assert_called_once_with(
+            "service.py",
+            3,
+            3,
+            ("owner", "repo"),
+            current_lines,
+            timeline,
+            stats,
+        )
+        mocked_card.assert_not_called()
 
 
 if __name__ == "__main__":
