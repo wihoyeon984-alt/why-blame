@@ -242,6 +242,47 @@ The raw output is ASCII-safe. A JSON parser restores escaped Unicode.
 `--json` may appear before or after the target, but only once.
 It cannot be combined with help or version options.
 
+#### JSON error responses
+
+When JSON mode fails, standard output contains one JSON document:
+
+```json
+{
+  "schema_version": "1",
+  "error": {
+    "code": "FILE_NOT_FOUND",
+    "message": "The requested file does not exist: missing.py"
+  }
+}
+```
+
+JSON errors use exit code `1` for analysis or runtime failures and exit
+code `2` for invalid command-line arguments. Standard error remains empty.
+
+#### JSON error codes
+
+- `INVALID_ARGUMENTS` uses exit code `2`. The command-line arguments are
+  missing, duplicated, incompatible, or invalid. Correct the command and
+  run it again. Retrying the same command without changes will not help.
+- `NO_HISTORY` uses exit code `1`. Git completed successfully, but no
+  relevant history was found. Check the target range or repository history.
+- `FILE_NOT_FOUND` uses exit code `1`. The requested path is not an existing
+  file. Correct the path before retrying.
+- `NOT_A_GIT_REPOSITORY` uses exit code `1`. The current directory is not
+  inside a Git work tree. Run Why-Blame from the target repository.
+- `LINE_RANGE_OUT_OF_BOUNDS` uses exit code `1`. The requested line or range
+  exceeds the current file length. Choose a valid inclusive line range.
+- `FILE_READ_ERROR` uses exit code `1`. The file exists but cannot be read,
+  for example because of permissions, an operating-system error, or invalid
+  UTF-8. Fix file access or encoding before retrying.
+- `GIT_COMMAND_FAILED` uses exit code `1`. Git history analysis failed, such
+  as for an untracked file or an invalid Git state. Review the error message,
+  commit or track the file when appropriate, and then retry.
+
+Automation should branch on `error.code`, not on localized message text.
+The `message` field is diagnostic and may include relevant file or Git
+details. The public error schema remains identified by `schema_version`.
+
 ## Testing
 
 The project currently passes `427 / 427` tests.
