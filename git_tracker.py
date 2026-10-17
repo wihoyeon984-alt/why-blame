@@ -85,6 +85,19 @@ def get_source_at_commit(commit_hash, file_name):
 
     return result.stdout
 
+
+def get_file_line_count(file_name):
+    """Return the number of lines in a UTF-8 source file."""
+    with open(
+        file_name,
+        "r",
+        encoding="utf-8",
+    ) as source_file:
+        return sum(
+            1
+            for _ in source_file
+        )
+
 def get_current_code_lines(file_name, start_line, end_line):
     """지정된 범위의 현재 코드 줄을 리스트로 읽어옵니다."""
     try:

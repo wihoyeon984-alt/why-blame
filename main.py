@@ -3,7 +3,7 @@ import sys
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
-from git_tracker import extract_git_history, get_repo_info, get_current_code_lines, is_git_repository
+from git_tracker import extract_git_history, get_repo_info, get_current_code_lines, get_file_line_count, is_git_repository
 from github_client import fetch_ref_info, fetch_commit_prs
 from timeline import build_timeline
 from viewer import render_card
@@ -203,6 +203,35 @@ def main():
             )
         else:
             print(f"\uc624\ub958: {message}")
+
+        sys.exit(1)
+
+    file_line_count = get_file_line_count(
+        file_name
+    )
+
+    if end_line > file_line_count:
+        requested_range = (
+            str(start_line)
+            if start_line == end_line
+            else f"{start_line}-{end_line}"
+        )
+
+        message = (
+            "The requested line range "
+            + requested_range
+            + " exceeds the file length of "
+            + str(file_line_count)
+            + "."
+        )
+
+        if json_output:
+            render_json_error(
+                "LINE_RANGE_OUT_OF_BOUNDS",
+                message,
+            )
+        else:
+            print(f"??: {message}")
 
         sys.exit(1)
 

@@ -1,7 +1,8 @@
 import unittest
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from git_tracker import extract_git_history, get_source_at_commit, is_git_repository
+from git_tracker import extract_git_history, get_source_at_commit, get_file_line_count, is_git_repository
 
 
 class TestGitTracker(unittest.TestCase):
@@ -443,6 +444,67 @@ diff --git a/service.py b/service.py
     ):
         self.assertFalse(is_git_repository())
         mock_run.assert_called_once()
+
+
+    def test_get_file_line_count_counts_lines(self):
+        from tempfile import TemporaryDirectory
+
+        with TemporaryDirectory() as directory:
+            file_path = (
+                Path(directory)
+                / "example.py"
+            )
+            file_path.write_text(
+                "line one\n"
+                "line two\n"
+                "line three\n",
+                encoding="utf-8",
+            )
+
+            result = get_file_line_count(
+                file_path
+            )
+
+        self.assertEqual(result, 3)
+
+    def test_get_file_line_count_handles_empty_file(self):
+        from tempfile import TemporaryDirectory
+
+        with TemporaryDirectory() as directory:
+            file_path = (
+                Path(directory)
+                / "empty.py"
+            )
+            file_path.write_text(
+                "",
+                encoding="utf-8",
+            )
+
+            result = get_file_line_count(
+                file_path
+            )
+
+        self.assertEqual(result, 0)
+
+    def test_get_file_line_count_counts_final_unterminated_line(self):
+        from tempfile import TemporaryDirectory
+
+        with TemporaryDirectory() as directory:
+            file_path = (
+                Path(directory)
+                / "example.py"
+            )
+            file_path.write_text(
+                "line one\n"
+                "line two",
+                encoding="utf-8",
+            )
+
+            result = get_file_line_count(
+                file_path
+            )
+
+        self.assertEqual(result, 2)
 
 if __name__ == "__main__":
     unittest.main()

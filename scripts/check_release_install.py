@@ -458,6 +458,28 @@ def main():
 
         print("NOT_A_GIT_REPOSITORY_CHECK_OK")
         print("RELEASE_RUNTIME_ERROR_CHECK_OK")
+
+        line_range_result = subprocess.run(
+            [
+                str(cli_exe),
+                "service.py:9999",
+                "--json",
+            ],
+            cwd=sample_repo,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+
+        validate_json_error_output(
+            line_range_result.stdout,
+            line_range_result.stderr,
+            line_range_result.returncode,
+            1,
+            "LINE_RANGE_OUT_OF_BOUNDS",
+        )
+
+        print("LINE_RANGE_OUT_OF_BOUNDS_CHECK_OK")
         print("RELEASE_INSTALL_CHECK_OK")
     finally:
         shutil.rmtree(
