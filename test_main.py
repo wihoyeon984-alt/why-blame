@@ -1,5 +1,6 @@
 import io
 import unittest
+from contextlib import ExitStack
 from unittest.mock import patch
 
 import main
@@ -125,6 +126,187 @@ class MainCliTests(unittest.TestCase):
                 result = main.get_version()
 
         self.assertEqual(result, "unknown")
+
+
+    def test_parse_output_mode_accepts_json_after_target(self):
+        arguments, json_output = main.parse_output_mode(
+            ["service.py:10", "--json"]
+        )
+
+        self.assertEqual(
+            arguments,
+            ["service.py:10"],
+        )
+        self.assertTrue(json_output)
+
+    def test_parse_output_mode_accepts_json_before_target(self):
+        arguments, json_output = main.parse_output_mode(
+            ["--json", "service.py:10"]
+        )
+
+        self.assertEqual(
+            arguments,
+            ["service.py:10"],
+        )
+        self.assertTrue(json_output)
+
+    def test_parse_output_mode_rejects_duplicate_json(self):
+        with self.assertRaises(ValueError):
+            main.parse_output_mode(
+                [
+                    "--json",
+                    "service.py:10",
+                    "--json",
+                ]
+            )
+
+    def test_parse_output_mode_rejects_version_combination(self):
+        with self.assertRaises(ValueError):
+            main.parse_output_mode(
+                ["--version", "--json"]
+            )
+
+    def test_json_mode_uses_json_renderer_only(self):
+        current_lines = ["example"]
+        timeline = [
+            {
+                "hash": "abcdef123456",
+                "message": "Add example",
+            }
+        ]
+        stats = {
+            "score": 3,
+            "confidence": "HIGH",
+        }
+
+        patches = [
+            patch.object(
+                main,
+                "get_current_code_lines",
+                return_value=current_lines,
+            ),
+            patch.object(
+                main,
+                "get_repo_info",
+                return_value=("owner", "repo"),
+            ),
+            patch.object(
+                main,
+                "extract_git_history",
+                return_value=[{"hash": "abcdef123456"}],
+            ),
+            patch.object(
+                main,
+                "build_timeline",
+                return_value=(timeline, stats),
+            ),
+            patch.object(
+                main,
+                "render_json",
+            ),
+            patch.object(
+                main,
+                "render_card",
+            ),
+        ]
+
+        with ExitStack() as stack:
+            for patcher in patches[:4]:
+                stack.enter_context(patcher)
+
+            mocked_json = stack.enter_context(
+                patches[4]
+            )
+            mocked_card = stack.enter_context(
+                patches[5]
+            )
+
+            self.run_main(
+                [
+                    "service.py:10",
+                    "--json",
+                ]
+            )
+
+        mocked_json.assert_called_once_with(
+            "service.py",
+            10,
+            10,
+            ("owner", "repo"),
+            current_lines,
+            timeline,
+            stats,
+        )
+        mocked_card.assert_not_called()
+
+    def test_default_mode_keeps_card_renderer(self):
+        current_lines = ["example"]
+        timeline = [
+            {
+                "hash": "abcdef123456",
+                "message": "Add example",
+            }
+        ]
+        stats = {
+            "score": 3,
+            "confidence": "HIGH",
+        }
+
+        patches = [
+            patch.object(
+                main,
+                "get_current_code_lines",
+                return_value=current_lines,
+            ),
+            patch.object(
+                main,
+                "get_repo_info",
+                return_value=("owner", "repo"),
+            ),
+            patch.object(
+                main,
+                "extract_git_history",
+                return_value=[{"hash": "abcdef123456"}],
+            ),
+            patch.object(
+                main,
+                "build_timeline",
+                return_value=(timeline, stats),
+            ),
+            patch.object(
+                main,
+                "render_json",
+            ),
+            patch.object(
+                main,
+                "render_card",
+            ),
+        ]
+
+        with ExitStack() as stack:
+            for patcher in patches[:4]:
+                stack.enter_context(patcher)
+
+            mocked_json = stack.enter_context(
+                patches[4]
+            )
+            mocked_card = stack.enter_context(
+                patches[5]
+            )
+
+            self.run_main(
+                ["service.py:10"]
+            )
+
+        mocked_card.assert_called_once_with(
+            "service.py",
+            "10",
+            ("owner", "repo"),
+            current_lines,
+            timeline,
+            stats,
+        )
+        mocked_json.assert_not_called()
 
 
 if __name__ == "__main__":
