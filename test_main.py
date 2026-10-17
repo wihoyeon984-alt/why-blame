@@ -1,4 +1,5 @@
 import io
+import json
 import unittest
 from contextlib import ExitStack
 from unittest.mock import patch
@@ -307,6 +308,135 @@ class MainCliTests(unittest.TestCase):
             stats,
         )
         mocked_json.assert_not_called()
+
+
+    def run_main_expecting_exit(
+        self,
+        arguments,
+        expected_exit_code,
+    ):
+        output = io.StringIO()
+
+        with patch.object(
+            main.sys,
+            "argv",
+            ["why-blame"] + arguments,
+        ):
+            with patch(
+                "sys.stdout",
+                output,
+            ):
+                with self.assertRaises(
+                    SystemExit
+                ) as raised:
+                    main.main()
+
+        self.assertEqual(
+            raised.exception.code,
+            expected_exit_code,
+        )
+
+        return output.getvalue()
+
+    def test_json_missing_target_returns_structured_error(self):
+        output = self.run_main_expecting_exit(
+            ["--json"],
+            2,
+        )
+
+        document = json.loads(output)
+
+        self.assertEqual(
+            document["schema_version"],
+            "1",
+        )
+        self.assertEqual(
+            document["error"]["code"],
+            "INVALID_ARGUMENTS",
+        )
+        self.assertNotIn(
+            main.USAGE,
+            output,
+        )
+
+    def test_duplicate_json_returns_structured_error(self):
+        output = self.run_main_expecting_exit(
+            [
+                "--json",
+                "service.py:10",
+                "--json",
+            ],
+            2,
+        )
+
+        document = json.loads(output)
+
+        self.assertEqual(
+            document["error"]["code"],
+            "INVALID_ARGUMENTS",
+        )
+        self.assertNotIn(
+            main.USAGE,
+            output,
+        )
+
+    def test_json_no_history_returns_structured_error(self):
+        patches = [
+            patch.object(
+                main,
+                "get_current_code_lines",
+                return_value=["example"],
+            ),
+            patch.object(
+                main,
+                "get_repo_info",
+                return_value=None,
+            ),
+            patch.object(
+                main,
+                "extract_git_history",
+                return_value=[],
+            ),
+        ]
+
+        with ExitStack() as stack:
+            for patcher in patches:
+                stack.enter_context(patcher)
+
+            output = self.run_main_expecting_exit(
+                [
+                    "service.py:10",
+                    "--json",
+                ],
+                1,
+            )
+
+        document = json.loads(output)
+
+        self.assertEqual(
+            document["schema_version"],
+            "1",
+        )
+        self.assertEqual(
+            document["error"]["code"],
+            "NO_HISTORY",
+        )
+
+    def test_human_error_keeps_usage_output(self):
+        with patch.object(
+            main,
+            "render_json_error",
+        ) as mocked_json_error:
+            output = self.run_main_expecting_exit(
+                [],
+                2,
+            )
+
+        self.assertIn(
+            main.USAGE,
+            output,
+        )
+        mocked_json_error.assert_not_called()
 
 
 if __name__ == "__main__":

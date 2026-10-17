@@ -78,5 +78,72 @@ class ReleaseInstallCheckerTests(unittest.TestCase):
             )
 
 
+    def make_error_output(self, code="INVALID_ARGUMENTS"):
+        document = {
+            "schema_version": "1",
+            "error": {
+                "code": code,
+                "message": "Missing target",
+            },
+        }
+
+        return json.dumps(
+            document,
+            ensure_ascii=True,
+        ).encode("ascii")
+
+    def test_accepts_json_error_output(self):
+        document = (
+            checker.validate_json_error_output(
+                self.make_error_output(),
+                b"",
+                2,
+                2,
+                "INVALID_ARGUMENTS",
+            )
+        )
+
+        self.assertEqual(
+            document["schema_version"],
+            "1",
+        )
+        self.assertEqual(
+            document["error"]["code"],
+            "INVALID_ARGUMENTS",
+        )
+
+    def test_rejects_json_error_wrong_exit_code(self):
+        with self.assertRaises(ValueError):
+            checker.validate_json_error_output(
+                self.make_error_output(),
+                b"",
+                1,
+                2,
+                "INVALID_ARGUMENTS",
+            )
+
+    def test_rejects_json_error_stderr(self):
+        with self.assertRaises(ValueError):
+            checker.validate_json_error_output(
+                self.make_error_output(),
+                b"warning",
+                2,
+                2,
+                "INVALID_ARGUMENTS",
+            )
+
+    def test_rejects_json_error_wrong_code(self):
+        with self.assertRaises(ValueError):
+            checker.validate_json_error_output(
+                self.make_error_output(
+                    "NO_HISTORY"
+                ),
+                b"",
+                2,
+                2,
+                "INVALID_ARGUMENTS",
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

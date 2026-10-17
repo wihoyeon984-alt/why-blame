@@ -103,3 +103,28 @@ def render_json(
             indent=2,
         )
     )
+
+
+def build_json_error_document(code, message):
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "error": {
+            "code": code,
+            "message": str(message),
+        },
+    }
+
+
+def render_json_error(code, message):
+    document = build_json_error_document(
+        code,
+        message,
+    )
+
+    print(
+        json.dumps(
+            document,
+            ensure_ascii=True,
+            indent=2,
+        )
+    )
