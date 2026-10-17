@@ -7,6 +7,7 @@ from git_tracker import extract_git_history, get_repo_info, get_current_code_lin
 from github_client import fetch_ref_info, fetch_commit_prs
 from timeline import build_timeline
 from viewer import render_card
+from json_renderer import render_json
 
 
 USAGE = """사용법:
@@ -101,6 +102,38 @@ def parse_args(args):
     )
 
 
+
+def parse_output_mode(args):
+    json_count = args.count("--json")
+
+    if json_count > 1:
+        raise ValueError(
+            "--json ??? ? ?? ??? ? ????."
+        )
+
+    json_output = json_count == 1
+
+    if not json_output:
+        return list(args), False
+
+    remaining_args = [
+        arg
+        for arg in args
+        if arg != "--json"
+    ]
+
+    if any(
+        arg in ("--version", "-V", "--help", "-h")
+        for arg in remaining_args
+    ):
+        raise ValueError(
+            "--json ??? ?? ?? ??? ??? "
+            "?? ??? ? ????."
+        )
+
+    return remaining_args, True
+
+
 def get_version():
     pyproject_path = Path(__file__).with_name("pyproject.toml")
 
@@ -125,11 +158,15 @@ def get_version():
 def main():
     args = sys.argv[1:]
 
-    if args in (["--version"], ["-V"]):
-        print(f"why-blame {get_version()}")
-        return
-
     try:
+        args, json_output = parse_output_mode(
+            args
+        )
+
+        if args in (["--version"], ["-V"]):
+            print(f"why-blame {get_version()}")
+            return
+
         parsed = parse_args(args)
 
     except ValueError as exc:
@@ -174,6 +211,18 @@ def main():
         fetch_ref_info,
         fetch_commit_prs,
     )
+
+    if json_output:
+        render_json(
+            file_name,
+            start_line,
+            end_line,
+            repo_info,
+            current_lines,
+            timeline,
+            stats,
+        )
+        return
 
     render_card(
         file_name,

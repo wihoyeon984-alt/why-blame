@@ -19,6 +19,7 @@ why-blame = "main:main"
 [tool.setuptools]
 py-modules = [
     "main",
+    "json_renderer",
     "git_tracker",
     "github_client",
     "timeline",
