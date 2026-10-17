@@ -2,6 +2,18 @@
 
 All notable changes to Why-Blame are documented in this file.
 
+## [0.3.5] - 2026-10-17
+
+### Changed
+
+- Add CLI JSON output and schema validation
+
+### Validation
+
+- Full verification passes.
+- HTTP ResourceWarning count is zero.
+- Holdout v1 integrity verification passes.
+- Holdout v2 post-improvement scoring passes.
 ## [0.3.4] - 2026-10-16
 
 ### Changed
