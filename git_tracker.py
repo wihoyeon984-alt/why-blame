@@ -3,6 +3,15 @@ import re
 
 
 
+
+class GitHistoryError(RuntimeError):
+    """Raised when Git history analysis cannot be executed."""
+
+    def __init__(self, message, stderr=""):
+        super().__init__(message)
+        self.stderr = stderr
+
+
 def is_git_repository():
     """Return whether the current directory is inside a Git work tree."""
     try:
@@ -147,9 +156,15 @@ def extract_git_history(file_name, start_line, end_line):
     )
 
     if result.returncode != 0:
-        print("Git history 추적 실패:")
-        print(result.stderr.strip())
-        return []
+        stderr = result.stderr.strip()
+
+        raise GitHistoryError(
+            (
+                "Git history analysis failed "
+                "for the requested target."
+            ),
+            stderr=stderr,
+        )
 
     raw_log = result.stdout
 

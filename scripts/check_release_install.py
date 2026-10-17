@@ -515,6 +515,47 @@ def main():
             )
 
         print("FILE_READ_ERROR_CHECK_OK")
+
+        empty_git_repo = temp_root / "empty-git-repository"
+        empty_git_repo.mkdir()
+
+        run(
+            ["git", "init"],
+            cwd=empty_git_repo,
+        )
+
+        (empty_git_repo / "service.py").write_text(
+            "def example():\n"
+            "    return True\n",
+            encoding="utf-8",
+        )
+
+        git_error_result = subprocess.run(
+            [
+                str(cli_exe),
+                "service.py:2",
+                "--json",
+            ],
+            cwd=empty_git_repo,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+
+        git_error_document = validate_json_error_output(
+            git_error_result.stdout,
+            git_error_result.stderr,
+            git_error_result.returncode,
+            1,
+            "GIT_COMMAND_FAILED",
+        )
+
+        if not git_error_document["error"]["message"]:
+            raise ValueError(
+                "GIT_COMMAND_FAILED message is empty."
+            )
+
+        print("GIT_COMMAND_FAILED_CHECK_OK")
         print("RELEASE_INSTALL_CHECK_OK")
     finally:
         shutil.rmtree(
