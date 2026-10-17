@@ -413,6 +413,51 @@ def main():
             error_document["error"]["code"],
         )
         print("RELEASE_JSON_ERROR_CHECK_OK")
+        missing_result = subprocess.run(
+            [str(cli_exe), "missing.py:1", "--json"],
+            cwd=sample_repo,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+
+        validate_json_error_output(
+            missing_result.stdout,
+            missing_result.stderr,
+            missing_result.returncode,
+            1,
+            "FILE_NOT_FOUND",
+        )
+
+        print("FILE_NOT_FOUND_CHECK_OK")
+
+        non_git_repo = temp_root / "non-git-repository"
+        non_git_repo.mkdir()
+
+        (non_git_repo / "service.py").write_text(
+            "def example():\n"
+            "    return True\n",
+            encoding="utf-8",
+        )
+
+        non_git_result = subprocess.run(
+            [str(cli_exe), "service.py:2", "--json"],
+            cwd=non_git_repo,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+
+        validate_json_error_output(
+            non_git_result.stdout,
+            non_git_result.stderr,
+            non_git_result.returncode,
+            1,
+            "NOT_A_GIT_REPOSITORY",
+        )
+
+        print("NOT_A_GIT_REPOSITORY_CHECK_OK")
+        print("RELEASE_RUNTIME_ERROR_CHECK_OK")
         print("RELEASE_INSTALL_CHECK_OK")
     finally:
         shutil.rmtree(

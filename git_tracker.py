@@ -2,6 +2,30 @@ import subprocess
 import re
 
 
+
+def is_git_repository():
+    """Return whether the current directory is inside a Git work tree."""
+    try:
+        result = subprocess.run(
+            [
+                "git",
+                "rev-parse",
+                "--is-inside-work-tree",
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+    except FileNotFoundError:
+        return False
+
+    return (
+        result.returncode == 0
+        and result.stdout.strip().lower() == "true"
+    )
+
 def get_repo_info():
     """원격 GitHub 저장소 URL에서 (소유자, 저장소명)을 추출합니다."""
     res = subprocess.run(
