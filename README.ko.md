@@ -21,9 +21,24 @@ Why-Blame은 Git 이력, diff, 커밋 메시지, PR 및 Issue를 바탕으로
 - 전체 테스트: `482 / 482`
 - CI: Windows와 Ubuntu, Python 3.9·3.11·3.14에서 `6 / 6`
 - Holdout v2 post-improvement:
+  - 평가 대상: 동결된 사례 `10개`
+  - Ground Truth claim: `40개`
+  - Supported Ground Truth claim: `20개`
+  - Supported claims presented: `20 / 20`
   - Claim precision: `1.000`
   - Supported recall: `1.000`
   - Unsafe presentation rate: `0.000`
+
+> 위 결과는 동결된 Holdout v2 사례 10개와 Ground Truth claim 40개를
+> 대상으로 한 내부 평가 결과입니다. Supported recall `1.000`은 이 평가
+> 집합의 Supported Ground Truth claim 20개 중 20개가 제시되었음을
+> 뜻합니다.
+>
+> Claim precision과 Unsafe presentation rate를 포함한 각 지표는 현재의
+> 평가 집합과 판정 기준 안에서 계산되었습니다. 이 결과는 평가에 포함되지
+> 않은 저장소, 프로그래밍 언어, 코드 구조 또는 변경 이력에서도 동일한
+> 성능이 보장된다는 뜻이 아니며, Why-Blame의 일반 정확도가 100%임을
+> 의미하지 않습니다.
 
 ## 5분 Quick Start
 
