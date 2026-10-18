@@ -47,6 +47,29 @@ def _behavior_limitation(language, code):
     return translate(language, key)
 
 
+
+def _localize_behavior_statement(language, statement):
+    if language != "ko":
+        return statement
+
+    replacements = [
+        (" is not used.", "? ???? ????."),
+        (" is used.", "? ?????."),
+        (" is returned.", "? ?????."),
+        (" is enabled.", "? ??????."),
+        (" is disabled.", "? ???????."),
+        (" is added.", "? ?????."),
+        (" is removed.", "? ?????."),
+    ]
+
+    result = statement
+
+    for old, new in replacements:
+        result = result.replace(old, new)
+
+    return result
+
+
 def _target_label(language, target):
     if not isinstance(target, dict):
         return translate(language, "easy_target_unavailable")
@@ -105,7 +128,10 @@ def _build_behavior_sections(beginner_behavior, language):
             )
             steps.append(
                 {
-                    "statement": str(step.get("statement", "")),
+                    "statement": _localize_behavior_statement(
+                        language,
+                        str(step.get("statement", "")),
+                    ),
                     "code_excerpt": str(
                         step.get("code_excerpt", "")
                     ),
