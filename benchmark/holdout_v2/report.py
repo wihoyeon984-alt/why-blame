@@ -90,3 +90,24 @@ def print_confidence_metrics(metrics):
                 ]
             )
         )
+
+def print_withheld_reason_summary(summary):
+    print("WITHHELD reason coverage")
+    print("------------------------")
+    print(
+        "Total WITHHELD:        "
+        f"{summary['total']}"
+    )
+    print(
+        "Reason specified:      "
+        f"{summary['specified']}"
+    )
+    print(
+        "Reason unspecified:    "
+        f"{summary['unspecified']}"
+    )
+    print()
+    print("By reason")
+
+    for reason, count in summary["by_reason"].items():
+        print(f"  {reason}: {count}")

@@ -175,6 +175,22 @@ class TestHoldoutV2Scorer(unittest.TestCase):
             "Supported recall:          1.000",
             result.stdout,
         )
+        self.assertIn(
+            "WITHHELD reason coverage",
+            result.stdout,
+        )
+        self.assertIn(
+            "Total WITHHELD:        1",
+            result.stdout,
+        )
+        self.assertIn(
+            "Reason specified:      0",
+            result.stdout,
+        )
+        self.assertIn(
+            "Reason unspecified:    1",
+            result.stdout,
+        )
 
     def test_rejects_missing_annotation(self):
         result = self.run_scorer(
