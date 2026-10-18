@@ -965,3 +965,139 @@ def remove_product_worktree(
         raise SnapshotError(
             "evaluated product worktree still exists"
         )
+
+def select_execution_spec(specs, case_id):
+    """Select exactly one frozen execution specification."""
+
+    matches = [
+        spec
+        for spec in specs
+        if spec.case_id == case_id
+    ]
+
+    if len(matches) != 1:
+        raise SnapshotError(
+            f"expected one execution spec for {case_id}, "
+            f"found {len(matches)}"
+        )
+
+    return matches[0]
+
+
+def run_single_case_snapshot(
+    runner_repository_root,
+    holdout_dir,
+    workspace_directory,
+    case_id,
+    evaluated_product_commit,
+    snapshot_runner_commit,
+    python_executable,
+    git_executable="git",
+):
+    """Run and preserve one frozen Holdout v2 case."""
+
+    runner_repository_root = Path(
+        runner_repository_root
+    ).resolve()
+
+    holdout_dir = Path(
+        holdout_dir
+    ).resolve()
+
+    workspace_directory = Path(
+        workspace_directory
+    ).resolve()
+
+    if not runner_repository_root.is_dir():
+        raise SnapshotError(
+            "runner repository does not exist: "
+            f"{runner_repository_root}"
+        )
+
+    if not holdout_dir.is_dir():
+        raise SnapshotError(
+            "holdout directory does not exist: "
+            f"{holdout_dir}"
+        )
+
+    ensure_new_output_directory(
+        workspace_directory
+    )
+
+    product_path = (
+        workspace_directory
+        / "product"
+    )
+
+    repository_path = (
+        workspace_directory
+        / "repository"
+    )
+
+    result_path = (
+        workspace_directory
+        / "result"
+        / case_id
+    )
+
+    specs = load_execution_specs(
+        holdout_dir
+    )
+
+    spec = select_execution_spec(
+        specs,
+        case_id,
+    )
+
+    product_checkout = None
+
+    try:
+        product_checkout = checkout_product_worktree(
+            runner_repository_root,
+            product_path,
+            evaluated_product_commit,
+            git_executable=git_executable,
+        )
+
+        repository_checkout = clone_frozen_repository(
+            spec,
+            repository_path,
+            git_executable=git_executable,
+        )
+
+        result = run_why_blame(
+            spec,
+            repository_checkout.repository_path,
+            python_executable,
+            Path(
+                product_checkout.repository_path
+            )
+            / "main.py",
+        )
+
+        metadata = write_case_artifacts(
+            result_path,
+            spec,
+            repository_checkout,
+            result,
+            evaluated_product_commit,
+            snapshot_runner_commit,
+        )
+
+        return {
+            "workspace_directory": str(
+                workspace_directory
+            ),
+            "result_directory": str(
+                result_path
+            ),
+            "metadata": metadata,
+        }
+
+    finally:
+        if product_checkout is not None:
+            remove_product_worktree(
+                runner_repository_root,
+                product_path,
+                git_executable=git_executable,
+            )

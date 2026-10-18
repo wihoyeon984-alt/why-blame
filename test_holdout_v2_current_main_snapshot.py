@@ -20,7 +20,9 @@ from benchmark.holdout_v2.run_current_main_snapshot import (
     remove_product_worktree,
     require_success,
     run_command,
+    run_single_case_snapshot,
     run_why_blame,
+    select_execution_spec,
     sha256_file,
     write_case_artifacts,
 )
@@ -666,6 +668,270 @@ class TestCurrentMainSnapshotRunner(unittest.TestCase):
                     destination,
                     commit,
                 )
+
+
+    def test_select_execution_spec_returns_requested_case(self):
+        specs = [
+            ExecutionSpec(
+                case_id="sample_001",
+                repository_url="repository-one",
+                repository_commit="a" * 40,
+                target_file="sample.py",
+                start_line=1,
+                end_line=1,
+            ),
+            ExecutionSpec(
+                case_id="sample_002",
+                repository_url="repository-two",
+                repository_commit="b" * 40,
+                target_file="other.py",
+                start_line=2,
+                end_line=3,
+            ),
+        ]
+
+        selected = select_execution_spec(
+            specs,
+            "sample_002",
+        )
+
+        self.assertEqual(
+            selected.case_id,
+            "sample_002",
+        )
+
+    def test_select_execution_spec_rejects_unknown_case(self):
+        with self.assertRaisesRegex(
+            SnapshotError,
+            "found 0",
+        ):
+            select_execution_spec(
+                [],
+                "missing_001",
+            )
+
+    def test_run_single_case_snapshot_preserves_artifacts(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+
+            product_root = root / "product-repository-root"
+            product_root.mkdir()
+
+            product_repository, unused_commit = (
+                self._create_local_git_repository(
+                    product_root
+                )
+            )
+
+            product_main = (
+                product_repository
+                / "main.py"
+            )
+
+            product_main.write_text(
+                (
+                    "import sys\n"
+                    "target = sys.argv[1]\n"
+                    "print('WHY-BLAME')\n"
+                    "print('TARGET: ' + target)\n"
+                    "print('?? ??')\n"
+                ),
+                encoding="utf-8",
+            )
+
+            require_success(
+                run_command(
+                    ["git", "add", "main.py"],
+                    product_repository,
+                ),
+                "stage product main",
+            )
+
+            require_success(
+                run_command(
+                    [
+                        "git",
+                        "commit",
+                        "-m",
+                        "add product main",
+                    ],
+                    product_repository,
+                ),
+                "commit product main",
+            )
+
+            evaluated_commit = read_git_head(
+                product_repository
+            )
+
+            external_root = root / "external-repository-root"
+            external_root.mkdir()
+
+            external_repository, external_commit = (
+                self._create_local_git_repository(
+                    external_root
+                )
+            )
+
+            sample_target = (
+                external_repository
+                / "sample.py"
+            )
+
+            sample_target.write_text(
+                "print('sample')\n",
+                encoding="utf-8",
+            )
+
+            require_success(
+                run_command(
+                    ["git", "add", "sample.py"],
+                    external_repository,
+                ),
+                "stage external target",
+            )
+
+            require_success(
+                run_command(
+                    [
+                        "git",
+                        "commit",
+                        "-m",
+                        "add external target",
+                    ],
+                    external_repository,
+                ),
+                "commit external target",
+            )
+
+            external_commit = read_git_head(
+                external_repository
+            )
+
+            holdout_dir = root / "holdout"
+            cases_dir = holdout_dir / "cases"
+            candidates_dir = holdout_dir / "candidates"
+
+            cases_dir.mkdir(parents=True)
+            candidates_dir.mkdir(parents=True)
+
+            case = {
+                "schema_version": 2,
+                "case_id": "sample_001",
+                "repository": {
+                    "url": str(external_repository),
+                    "commit": external_commit,
+                },
+                "frozen": True,
+                "claims": {},
+            }
+
+            candidate = {
+                "schema_version": 2,
+                "candidate_id": "sample_001",
+                "repository": {
+                    "url": str(external_repository),
+                    "commit": external_commit,
+                },
+                "target": {
+                    "file": "sample.py",
+                    "start_line": 1,
+                    "end_line": 1,
+                },
+            }
+
+            (cases_dir / "sample_001.json").write_text(
+                json.dumps(case),
+                encoding="utf-8",
+            )
+
+            (
+                candidates_dir
+                / "sample_001.json"
+            ).write_text(
+                json.dumps(candidate),
+                encoding="utf-8",
+            )
+
+            workspace = root / "workspace"
+            runner_commit = "c" * 40
+
+            captured = run_single_case_snapshot(
+                product_repository,
+                holdout_dir,
+                workspace,
+                "sample_001",
+                evaluated_commit,
+                runner_commit,
+                sys.executable,
+            )
+
+            result_directory = Path(
+                captured["result_directory"]
+            )
+
+            self.assertTrue(
+                (result_directory / "stdout.bin").is_file()
+            )
+            self.assertTrue(
+                (result_directory / "stderr.bin").is_file()
+            )
+            self.assertTrue(
+                (result_directory / "stdout.txt").is_file()
+            )
+            self.assertTrue(
+                (result_directory / "stderr.txt").is_file()
+            )
+            self.assertTrue(
+                (result_directory / "metadata.json").is_file()
+            )
+
+            stdout_text = (
+                result_directory
+                / "stdout.txt"
+            ).read_text(
+                encoding="utf-8"
+            )
+
+            self.assertIn(
+                "WHY-BLAME",
+                stdout_text,
+            )
+            self.assertIn(
+                "sample.py:1-1",
+                stdout_text,
+            )
+            self.assertIn(
+                "?? ??",
+                stdout_text,
+            )
+
+            metadata = captured["metadata"]
+
+            self.assertEqual(
+                metadata[
+                    "evaluated_product_commit"
+                ],
+                evaluated_commit,
+            )
+            self.assertEqual(
+                metadata[
+                    "snapshot_runner_commit"
+                ],
+                runner_commit,
+            )
+            self.assertEqual(
+                metadata["execution"]["exit_code"],
+                0,
+            )
+            self.assertEqual(
+                metadata["artifacts"]["stderr_bytes"],
+                0,
+            )
+
+            self.assertFalse(
+                (workspace / "product").exists()
+            )
 
 
 if __name__ == "__main__":
