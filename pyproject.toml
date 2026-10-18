@@ -17,6 +17,7 @@ dependencies = []
 why-blame = "main:main"
 
 [tool.setuptools]
+packages = ["webapp"]
 py-modules = [
     "main",
     "json_renderer",
