@@ -17,9 +17,11 @@ from benchmark.holdout_v2.case import (
 )
 from benchmark.holdout_v2.metrics import (
     compute_confidence_metrics,
+    summarize_withheld_reasons,
 )
 from benchmark.holdout_v2.report import (
     print_confidence_metrics,
+    print_withheld_reason_summary,
 )
 
 
@@ -155,6 +157,17 @@ def run(cases_dir, scoring_dir):
     )
 
     print_confidence_metrics(metrics)
+
+    withheld_summary = (
+        summarize_withheld_reasons(
+            annotations
+        )
+    )
+
+    print()
+    print_withheld_reason_summary(
+        withheld_summary
+    )
 
 
 def main():

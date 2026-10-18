@@ -1,3 +1,6 @@
+from .annotation import (
+    VALID_WITHHELD_REASONS,
+)
 from .validation import (
     validate_annotation_against_case,
 )
@@ -115,4 +118,44 @@ def compute_confidence_metrics(
         for level, group in sorted(
             groups.items()
         )
+    }
+
+def summarize_withheld_reasons(annotations):
+    by_reason = {
+        reason: 0
+        for reason in sorted(
+            VALID_WITHHELD_REASONS
+        )
+    }
+
+    total = 0
+    specified = 0
+
+    for annotation in annotations.values():
+        for claim in annotation.claims.values():
+            if claim.status != "WITHHELD":
+                continue
+
+            total += 1
+            reason = claim.withheld_reason
+
+            if not reason:
+                continue
+
+            if reason not in by_reason:
+                raise ValueError(
+                    "invalid withheld reason in annotation: "
+                    f"{reason}"
+                )
+
+            specified += 1
+            by_reason[reason] += 1
+
+    unspecified = total - specified
+
+    return {
+        "total": total,
+        "specified": specified,
+        "unspecified": unspecified,
+        "by_reason": by_reason,
     }
