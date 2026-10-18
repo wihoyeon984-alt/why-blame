@@ -72,6 +72,7 @@ def _empty_ref_result(
         "type": "UNKNOWN",
         "title": "",
         "body_summary": "",
+        "body_summary_truncated": False,
         "labels": [],
         "state": None,
         "url": None,
@@ -211,8 +212,19 @@ def _summarize_body(body, max_length=180):
     Markdown heading은 문서 구조이므로 제거하고,
     실제 본문 내용만 보존한다.
     """
+    summary, _ = _summarize_body_with_metadata(
+        body,
+        max_length=max_length,
+    )
+    return summary
+
+
+def _summarize_body_with_metadata(body, max_length=180):
+    """
+    본문 요약과 절단 여부를 함께 반환한다.
+    """
     if not body:
-        return ""
+        return "", False
 
     cleaned_lines = []
 
@@ -231,9 +243,12 @@ def _summarize_body(body, max_length=180):
     summary = " ".join(cleaned_lines)
 
     if len(summary) > max_length:
-        summary = summary[:max_length - 3] + "..."
+        return (
+            summary[:max_length - 3] + "...",
+            True,
+        )
 
-    return summary
+    return summary, False
 
 
 def _build_ref_result(data, number):
@@ -244,7 +259,9 @@ def _build_ref_result(data, number):
     ref_type = "PR" if is_pr else "ISSUE"
 
     body = data.get("body") or ""
-    body_summary = _summarize_body(body)
+    body_summary, body_summary_truncated = (
+        _summarize_body_with_metadata(body)
+    )
 
     labels = []
 
@@ -261,6 +278,7 @@ def _build_ref_result(data, number):
         "type": ref_type,
         "title": data.get("title", ""),
         "body_summary": body_summary,
+        "body_summary_truncated": body_summary_truncated,
         "labels": labels,
         "state": data.get("state"),
         "url": data.get("html_url", ""),
@@ -364,7 +382,9 @@ def _build_pr_result(pr):
     Timeline Evidence 구조로 변환한다.
     """
     body = pr.get("body") or ""
-    body_summary = _summarize_body(body)
+    body_summary, body_summary_truncated = (
+        _summarize_body_with_metadata(body)
+    )
 
     labels = []
 
@@ -381,6 +401,7 @@ def _build_pr_result(pr):
         "type": "PR",
         "title": pr.get("title", ""),
         "body_summary": body_summary,
+        "body_summary_truncated": body_summary_truncated,
         "labels": labels,
         "state": pr.get("state"),
         "url": pr.get("html_url", ""),

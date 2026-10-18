@@ -12,6 +12,56 @@ class TestGitHubClient(unittest.TestCase):
     def setUp(self):
         github_client._cache.clear()
 
+    def test_short_body_is_not_truncated(self):
+        summary, is_truncated = (
+            github_client._summarize_body_with_metadata("short body")
+        )
+
+        self.assertEqual(summary, "short body")
+        self.assertFalse(is_truncated)
+
+    def test_long_body_keeps_existing_summary_rule(self):
+        body = "x" * 181
+        summary, is_truncated = (
+            github_client._summarize_body_with_metadata(body)
+        )
+
+        self.assertEqual(summary, "x" * 177 + "...")
+        self.assertTrue(is_truncated)
+        self.assertEqual(summary, github_client._summarize_body(body))
+
+    def test_empty_body_is_not_truncated(self):
+        self.assertEqual(
+            github_client._summarize_body_with_metadata(""),
+            ("", False),
+        )
+
+    def test_ref_result_contains_body_truncation_metadata(self):
+        result = github_client._build_ref_result(
+            {
+                "title": "Issue",
+                "body": "body",
+                "labels": [],
+            },
+            10,
+        )
+
+        self.assertIn("body_summary_truncated", result)
+        self.assertFalse(result["body_summary_truncated"])
+
+    def test_pr_result_contains_body_truncation_metadata(self):
+        result = github_client._build_pr_result(
+            {
+                "number": 11,
+                "title": "PR",
+                "body": "body",
+                "labels": [],
+            }
+        )
+
+        self.assertIn("body_summary_truncated", result)
+        self.assertFalse(result["body_summary_truncated"])
+
     @patch("urllib.request.urlopen")
     def test_fetch_pr_with_body_and_labels(self, mock_urlopen):
         mock_resp = MagicMock()

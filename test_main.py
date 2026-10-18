@@ -2,7 +2,7 @@ import io
 import json
 import unittest
 from contextlib import ExitStack
-from unittest.mock import patch
+from unittest.mock import patch, sentinel
 
 import main
 
@@ -226,6 +226,20 @@ class MainCliTests(unittest.TestCase):
             mocked_card = stack.enter_context(
                 patches[6]
             )
+            beginner_evidence_patch = stack.enter_context(
+                patch.object(
+                    main,
+                    "build_beginner_evidence_contract",
+                    return_value=sentinel.json_mode_beginner_evidence,
+                )
+            )
+            beginner_behavior_patch = stack.enter_context(
+                patch.object(
+                    main,
+                    "build_beginner_behavior_from_analysis",
+                    return_value=sentinel.json_mode_beginner_behavior,
+                )
+            )
 
             self.run_main(
                 [
@@ -241,6 +255,17 @@ class MainCliTests(unittest.TestCase):
             ("owner", "repo"),
             current_lines,
             timeline,
+            stats,
+            beginner_evidence=sentinel.json_mode_beginner_evidence,
+            beginner_behavior=sentinel.json_mode_beginner_behavior,
+        )
+        beginner_evidence_patch.assert_called_once_with(
+            timeline,
+            stats,
+        )
+        beginner_behavior_patch.assert_called_once_with(
+            timeline,
+            current_lines,
             stats,
         )
         mocked_card.assert_not_called()
@@ -778,6 +803,20 @@ class MainCliTests(unittest.TestCase):
             mocked_card = stack.enter_context(
                 patches[8]
             )
+            beginner_evidence_patch = stack.enter_context(
+                patch.object(
+                    main,
+                    "build_beginner_evidence_contract",
+                    return_value=sentinel.last_line_beginner_evidence,
+                )
+            )
+            beginner_behavior_patch = stack.enter_context(
+                patch.object(
+                    main,
+                    "build_beginner_behavior_from_analysis",
+                    return_value=sentinel.last_line_beginner_behavior,
+                )
+            )
 
             self.run_main(
                 ["service.py:3", "--json"]
@@ -790,6 +829,17 @@ class MainCliTests(unittest.TestCase):
             ("owner", "repo"),
             current_lines,
             timeline,
+            stats,
+            beginner_evidence=sentinel.last_line_beginner_evidence,
+            beginner_behavior=sentinel.last_line_beginner_behavior,
+        )
+        beginner_evidence_patch.assert_called_once_with(
+            timeline,
+            stats,
+        )
+        beginner_behavior_patch.assert_called_once_with(
+            timeline,
+            current_lines,
             stats,
         )
         mocked_card.assert_not_called()

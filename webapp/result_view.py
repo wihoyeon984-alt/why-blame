@@ -1,4 +1,6 @@
-﻿from dataclasses import dataclass
+from __future__ import annotations
+
+from dataclasses import dataclass
 
 
 class ResultViewError(ValueError):
@@ -18,6 +20,8 @@ class SuccessView:
     current_lines: list
     timeline: list
     stats: dict
+    beginner_evidence: dict | None = None
+    beginner_behavior: dict | None = None
 
 
 def build_error_view(document):
@@ -52,6 +56,8 @@ def build_success_view(document):
     current_lines = document.get("current_lines")
     timeline = document.get("timeline")
     stats = document.get("stats")
+    beginner_evidence = document.get("beginner_evidence")
+    beginner_behavior = document.get("beginner_behavior")
 
     if not isinstance(target, dict):
         raise ResultViewError(
@@ -73,12 +79,30 @@ def build_success_view(document):
             "The stats object is invalid."
         )
 
+    if (
+        beginner_evidence is not None
+        and not isinstance(beginner_evidence, dict)
+    ):
+        raise ResultViewError(
+            "The beginner evidence object is invalid."
+        )
+
+    if (
+        beginner_behavior is not None
+        and not isinstance(beginner_behavior, dict)
+    ):
+        raise ResultViewError(
+            "The beginner behavior object is invalid."
+        )
+
     return SuccessView(
         target=target,
         repository=document.get("repository"),
         current_lines=current_lines,
         timeline=timeline,
         stats=stats,
+        beginner_evidence=beginner_evidence,
+        beginner_behavior=beginner_behavior,
     )
 
 

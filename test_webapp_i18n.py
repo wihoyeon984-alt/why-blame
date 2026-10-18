@@ -59,6 +59,23 @@ class WebappI18nTests(unittest.TestCase):
         with self.assertRaises(KeyError):
             translate("en", "missing-key")
 
+    def test_behavior_translation_keys_are_available_in_both_languages(self):
+        behavior_keys = {
+            key
+            for key in TEXT["en"]
+            if key.startswith("easy_behavior_")
+        }
+
+        self.assertTrue(behavior_keys)
+        self.assertEqual(
+            behavior_keys,
+            {
+                key
+                for key in TEXT["ko"]
+                if key.startswith("easy_behavior_")
+            },
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
