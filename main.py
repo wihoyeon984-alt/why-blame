@@ -202,7 +202,10 @@ def main():
                 message,
             )
         else:
-            print(f"\uc624\ub958: {message}")
+            print(
+                f"\uc624\ub958: \uc694\uccad\ud55c \ud30c\uc77c\uc774 "
+                f"\uc874\uc7ac\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4: {file_name}"
+            )
 
         sys.exit(1)
 
@@ -222,7 +225,10 @@ def main():
                 message,
             )
         else:
-            print(f"오류: {message}")
+            print(
+                f"\uc624\ub958: \uc694\uccad\ud55c \ud30c\uc77c\uc774 "
+                f"\uc874\uc7ac\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4: {file_name}"
+            )
 
         sys.exit(1)
     except (UnicodeDecodeError, OSError) as exc:
@@ -240,7 +246,11 @@ def main():
                 message,
             )
         else:
-            print(f"오류: {message}")
+            print(
+                f"\uc624\ub958: \uc694\uccad\ud55c \ud30c\uc77c\uc744 "
+                f"\uc77d\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4: {file_name} "
+                f"({type(exc).__name__})"
+            )
 
         sys.exit(1)
 
@@ -265,7 +275,11 @@ def main():
                 message,
             )
         else:
-            print(f"오류: {message}")
+            print(
+                f"\uc624\ub958: \uc694\uccad\ud55c \uc904 \ubc94\uc704 "
+                f"{requested_range}\uac00 \ud30c\uc77c \uae38\uc774 "
+                f"{file_line_count}\uc744 \ucd08\uacfc\ud569\ub2c8\ub2e4."
+            )
 
         sys.exit(1)
 
@@ -281,7 +295,10 @@ def main():
                 message,
             )
         else:
-            print(f"\uc624\ub958: {message}")
+            print(
+                "\uc624\ub958: \ud604\uc7ac \ub514\ub809\ud130\ub9ac\ub294 "
+                "Git \uc800\uc7a5\uc18c\uac00 \uc544\ub2d9\ub2c8\ub2e4."
+            )
 
         sys.exit(1)
 
@@ -317,7 +334,11 @@ def main():
                 message,
             )
         else:
-            print(f"오류: {message}")
+            print(
+                "\uc624\ub958: Git \uc774\ub825 \ubd84\uc11d \uba85\ub839\uc774 "
+                "\uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4: "
+                + message
+            )
 
         sys.exit(1)
 
@@ -329,6 +350,12 @@ def main():
                     "No Git history was found for "
                     "the requested target."
                 ),
+            )
+        else:
+            print(
+                "\uc624\ub958: \uc694\uccad\ud55c \ubd84\uc11d \ub300\uc0c1\uc758 "
+                "Git \uc774\ub825\uc744 "
+                "\ucc3e\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4."
             )
 
         sys.exit(1)

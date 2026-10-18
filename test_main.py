@@ -534,7 +534,8 @@ class MainCliTests(unittest.TestCase):
                 )
 
         self.assertIn(
-            "The requested file does not exist",
+            "\uc694\uccad\ud55c \ud30c\uc77c\uc774 "
+            "\uc874\uc7ac\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4",
             output,
         )
         self.assertIn(
@@ -692,11 +693,12 @@ class MainCliTests(unittest.TestCase):
             )
 
         self.assertIn(
-            "The requested line range 4",
+            "\uc694\uccad\ud55c \uc904 \ubc94\uc704 4",
             output,
         )
         self.assertIn(
-            "file length of 3",
+            "\ud30c\uc77c \uae38\uc774 3\uc744 "
+            "\ucd08\uacfc\ud569\ub2c8\ub2e4",
             output,
         )
         self.assertNotIn(
@@ -933,7 +935,8 @@ class MainCliTests(unittest.TestCase):
             )
 
         self.assertIn(
-            "The requested file could not be read",
+            "\uc694\uccad\ud55c \ud30c\uc77c\uc744 "
+            "\uc77d\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4",
             output,
         )
         self.assertIn(

@@ -18,7 +18,7 @@ Why-Blame은 Git 이력, diff, 커밋 메시지, PR 및 Issue를 바탕으로
 
 - 최신 안정 릴리스: `v0.3.6`
 - 최신 웹 대시보드: `main` 브랜치
-- 전체 테스트: `474 / 474`
+- 전체 테스트: `482 / 482`
 - CI: Windows와 Ubuntu, Python 3.9·3.11·3.14에서 `6 / 6`
 - Holdout v2 post-improvement:
   - Claim precision: `1.000`
