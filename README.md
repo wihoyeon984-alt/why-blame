@@ -307,9 +307,24 @@ The initial dashboard is intended for local use.
 
 ## Testing
 
-The project currently passes `456 / 456` tests.
+The project currently passes `488 / 488` tests.
+
 
 The Holdout scorer-specific suite passes `18 / 18` tests.
+
+### Holdout v2 evaluation snapshot
+
+The recorded Holdout v2 post-improvement metrics cover 10 frozen cases,
+40 Ground Truth claims, and 20 Supported Ground Truth claims. The recorded
+result presented `20 / 20` Supported claims, with claim precision `1.000`,
+supported recall `1.000`, and unsafe presentation rate `0.000`.
+
+> These metrics were produced by Why-Blame commit
+> `38316d107b848ea98713a486d2e0332540dfb140`. They are preserved as a
+> reproducible evaluation snapshot and should not be interpreted as a fresh
+> measurement of the current `main` branch or as guaranteed performance on
+> repositories, languages, code structures, or histories outside the frozen
+> evaluation set.
 
 ## Development Policy
 

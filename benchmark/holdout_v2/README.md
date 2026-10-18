@@ -84,3 +84,24 @@ Real annotations must use evidence from their own preserved execution output.
 
 Holdout v1 remains frozen. Holdout v2 cases, results, and annotations must be
 stored only under `benchmark/holdout_v2`.
+
+## Recorded post-improvement snapshot
+
+The preserved post-improvement comparison uses:
+
+- Why-Blame code commit:
+  `38316d107b848ea98713a486d2e0332540dfb140`
+- Frozen cases: `10`
+- Ground Truth claims: `40`
+- Supported Ground Truth claims: `20`
+- Supported claims presented: `20 / 20`
+- Claim precision: `1.000`
+- Supported recall: `1.000`
+- Unsafe presentation rate: `0.000`
+
+The source of record is
+`benchmark/holdout_v2/post_improvement/summary.json`. Existing result,
+metadata, and annotation artifacts are preserved as a reproducible historical
+snapshot. These metrics are not a fresh evaluation of the current `main`
+branch. A current-main rerun must be stored separately and must not overwrite
+the frozen snapshot.
