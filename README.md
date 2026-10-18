@@ -53,7 +53,7 @@ Safety Gate
         |
         v
 Safe Rendering
-
+```
 
 ## Empirical Validation
 
@@ -69,26 +69,29 @@ AMBIGUOUS:     4
 CONFLICTING:   0
 
 Required abstentions: 23
+```
 
 Both evaluations have complete annotations:
 
 ```text
 First-run: 55 / 55 claims
 Current:   55 / 55 claims
+```
+
 ### Holdout v1 Results
 
 | Metric | First-run | Current |
 |---|---:|---:|
 | E2E completion | 0.000 | **1.000** |
-| Strict supported recall | 0.688 | **0.875** |
-| Observed supported recall | 0.688 | **0.875** |
+| Strict supported recall | 0.688 | **0.781** |
+| Observed supported recall | 0.688 | **0.781** |
 | Unobservable claim rate | 0.000 | 0.000 |
-| Safe claim coverage | 0.400 | **0.509** |
+| Safe claim coverage | 0.400 | **0.455** |
 | Abstention precision | 0.778 | **1.000** |
 | Abstention recall | **0.304** | 0.130 |
 | Unsafe presented | **0** | **0** |
 
-Supported-claim recovery improved from `22 / 32` to `28 / 32`.
+Supported-claim recovery improved from `22 / 32` to `25 / 32`.
 
 E2E completion improved from `0 / 10` to `10 / 10`, while `unsafe_presented`
 remained zero.
@@ -107,6 +110,7 @@ Explicit abstentions:  3
 Correct abstentions:   3
 WITHHELD:              20
 Safe suppressions:     23
+```
 
 ## Reproducing the Benchmark
 
@@ -128,17 +132,9 @@ For detailed methodology, annotations, trade-offs, and failure analysis, see `be
 
 ## Current Known Failure Classes
 
-Four SUPPORTED claims remain unrecovered in Holdout v1.
-
-### Bounded semantic scope expansion
-
-- `aiohttp_003 / claim_002`
-- `django_001 / claim_003`
-
-### Semantic-detail recovery
-
-- `sqlalchemy_001 / claim_002`
-- `sqlalchemy_001 / claim_003`
+Seven SUPPORTED claims remain unrecovered in the current Holdout v1
+evaluation. See `benchmark/holdout/REPORT.md` and the frozen annotations for
+case-level results and evaluation methodology.
 
 
 ## Latest release
@@ -146,7 +142,7 @@ Four SUPPORTED claims remain unrecovered in Holdout v1.
 The latest stable release is
 [why-blame v0.3.6](https://github.com/wihoyeon984-alt/why-blame/releases/tag/v0.3.6).
 
-Release highlights:
+Release-time validation snapshot for v0.3.6:
 
 - 278 unit tests passed
 - 10/10 holdout cases completed
