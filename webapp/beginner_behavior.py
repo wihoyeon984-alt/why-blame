@@ -92,24 +92,23 @@ def _all_fields_direct(semantic, current_text):
         for key in ("code_excerpt", "source_text")
     )
     return bool(fields) and all(
-        _DIRECT in levels.get(field, set())
+        (
+            levels.get(field, set()) == {_DIRECT}
+        )
         and _CONFLICTING not in levels.get(field, set())
-        and (
-            semantic_excerpt
-            or any(
-                evidence.get("level") == _DIRECT
-                and any(
-                    isinstance(evidence.get(key), str)
-                    and evidence.get(key)
-                    and evidence.get(key) in current_text
-                    for key in ("code_excerpt", "source_text")
-                )
-                for evidence in semantic.get(
-                    "field_evidence",
-                    {},
-                ).get(field, ())
-                if isinstance(evidence, dict)
+        and any(
+            evidence.get("level") == _DIRECT
+            and any(
+                isinstance(evidence.get(key), str)
+                and evidence.get(key)
+                and evidence.get(key) in current_text
+                for key in ("code_excerpt", "source_text")
             )
+            for evidence in semantic.get(
+                "field_evidence",
+                {},
+            ).get(field, ())
+            if isinstance(evidence, dict)
         )
         for field in fields
     )

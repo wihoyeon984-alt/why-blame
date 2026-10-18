@@ -157,6 +157,51 @@ class BeginnerBehaviorTests(unittest.TestCase):
         self.assertIs(result.status, BehaviorStatus.PARTIALLY_OBSERVED)
         self.assertFalse(result.steps[0].is_directly_observed)
 
+    def test_direct_and_partial_same_field_is_not_directly_observed(self):
+        value = semantic()
+
+        value["field_evidence"]["action"].append(
+            {
+                "source": "DIFF",
+                "level": "PARTIAL",
+                "code_excerpt": value["code_excerpt"],
+            }
+        )
+
+        result = build_beginner_behavior_contract(
+            ["value = normalize(value)"],
+            [claim(value)],
+            {},
+        )
+
+        self.assertIs(
+            result.status,
+            BehaviorStatus.PARTIALLY_OBSERVED,
+        )
+        self.assertFalse(
+            result.steps[0].is_directly_observed
+        )
+
+
+    def test_semantic_excerpt_does_not_bypass_field_evidence(self):
+        value = semantic()
+
+        value["field_evidence"]["action"][0]["code_excerpt"] = "other_action"
+        value["field_evidence"]["subject"][0]["code_excerpt"] = "other_subject"
+        value["field_evidence"]["target"][0]["code_excerpt"] = "other_target"
+
+        result = build_beginner_behavior_contract(
+            ["value = normalize(value)"],
+            [claim(value)],
+            {},
+        )
+
+        self.assertIsNot(
+            result.status,
+            BehaviorStatus.DIRECTLY_OBSERVED,
+        )
+
+
     def test_confidence_does_not_change_status(self):
         inputs = []
         for confidence in ("HIGH", "WEAK"):
