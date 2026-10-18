@@ -302,11 +302,16 @@ Enter a local Git repository, a repository-relative file path, and an
 inclusive line range. The dashboard displays current code, evidence summary,
 limitations, change history, raw JSON, and a JSON download button.
 
+Use the language selector at the top of the dashboard to switch between
+English and Korean. Changing the display language preserves the current
+analysis result. JSON field names, error codes, confidence levels, and other
+machine-readable values remain unchanged.
+
 The initial dashboard is intended for local use.
 
 ## Testing
 
-The project currently passes `450 / 450` tests.
+The project currently passes `456 / 456` tests.
 
 The Holdout scorer-specific suite passes `18 / 18` tests.
 

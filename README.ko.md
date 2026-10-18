@@ -18,11 +18,12 @@ Why-Blame은 Git 이력, diff, 커밋 메시지, PR 및 Issue를 바탕으로
 
 - 최신 안정 릴리스: `v0.3.6`
 - 최신 웹 대시보드: `main` 브랜치
-- 전체 테스트: `450 / 450`
+- 전체 테스트: `456 / 456`
 - CI: Windows와 Ubuntu, Python 3.9·3.11·3.14에서 `6 / 6`
-- Claim precision: `1.000`
-- Supported recall: `1.000`
-- Unsafe presentation rate: `0.000`
+- Holdout v2 post-improvement:
+  - Claim precision: `1.000`
+  - Supported recall: `1.000`
+  - Unsafe presentation rate: `0.000`
 
 ## CLI 사용 방법
 
@@ -46,6 +47,11 @@ GitHub Release에서 wheel을 내려받아 설치할 수 있습니다.
     .\.venv-web\Scripts\python.exe -m streamlit run .\webapp\app.py
 
 브라우저가 열리지 않으면 http://localhost:8501 에 접속합니다.
+
+화면 상단의 언어 선택 상자에서 English와 한국어를 전환할 수 있습니다.
+분석 결과가 표시된 상태에서 언어를 바꿔도 현재 결과는 유지됩니다.
+화면의 제목과 안내 문구만 번역하며, JSON 필드명, 오류 코드, Confidence
+등급과 같은 내부 값은 호환성을 위해 변경하지 않습니다.
 
 ## 분석 결과 읽는 방법
 

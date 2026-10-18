@@ -3,6 +3,7 @@ from pathlib import Path
 
 import streamlit as st
 
+from webapp.i18n import SUPPORTED_LANGUAGES, translate
 from webapp.result_view import (
     ErrorView,
     ResultViewError,
@@ -20,31 +21,45 @@ st.set_page_config(
 )
 
 st.title("WHY-BLAME")
-st.subheader("Code History & Evidence Explorer")
-st.write(
-    "Explore code history and the evidence behind each explanation."
+
+current_language = st.session_state.get("ui_language", "en")
+
+language = st.selectbox(
+    translate(current_language, "language"),
+    options=tuple(SUPPORTED_LANGUAGES),
+    format_func=SUPPORTED_LANGUAGES.__getitem__,
+    key="ui_language",
 )
+
+
+def t(key, **values):
+    """Return UI text for the selected dashboard language."""
+    return translate(language, key, **values)
+
+
+st.subheader(t("subtitle"))
+st.write(t("description"))
 
 default_repository = str(Path.cwd())
 
 
 with st.form("analysis-form"):
     repository_path = st.text_input(
-        "Git repository path",
+        t("repository_path"),
         value=default_repository,
     )
 
     file_path = st.text_input(
-        "File path",
+        t("file_path"),
         value="service.py",
-        help="Use a path relative to the repository root."
+        help=t("file_path_help")
     )
 
     start_column, end_column = st.columns(2)
 
     with start_column:
         start_line = st.number_input(
-            "Start line",
+            t("start_line"),
             min_value=1,
             value=1,
             step=1,
@@ -52,14 +67,14 @@ with st.form("analysis-form"):
 
     with end_column:
         end_line = st.number_input(
-            "End line",
+            t("end_line"),
             min_value=1,
             value=1,
             step=1,
         )
 
     submitted = st.form_submit_button(
-        "Start analysis",
+        t("start_analysis"),
         type="primary",
         use_container_width=True,
     )
@@ -77,7 +92,7 @@ if submitted:
         st.error(str(exc))
     else:
         try:
-            with st.spinner("Analyzing Git history..."):
+            with st.spinner(t("analyzing")):
                 analysis = run_analysis(
                     target.repository,
                     target.relative_file,
@@ -108,24 +123,30 @@ if isinstance(stored_view, ErrorView):
 
     if stored_analysis is not None:
         st.caption(
-            f"Why-Blame exited with code {stored_analysis.exit_code}."
+            t(
+                "process_exit",
+                exit_code=stored_analysis.exit_code,
+            )
         )
 
 
 if isinstance(stored_view, SuccessView):
     st.divider()
-    st.header("Analysis result")
+    st.header(t("analysis_result"))
 
     target = stored_view.target
-    target_file = target.get("file", "Unknown file")
+    target_file = target.get("file", t("unknown_file"))
     target_start = target.get("start_line", "?")
     target_end = target.get("end_line", "?")
 
-    st.subheader("Target")
-    st.write("File:", target_file)
-    st.write("Lines:", f"{target_start}-{target_end}")
+    st.subheader(t("target"))
+    st.write(f"{t('file')}:", target_file)
+    st.write(
+        f"{t('lines')}:",
+        f"{target_start}-{target_end}",
+    )
 
-    st.subheader("Current code")
+    st.subheader(t("current_code"))
 
     if stored_view.current_lines:
         display_lines = list(
@@ -142,29 +163,29 @@ if isinstance(stored_view, SuccessView):
             line_numbers=True,
         )
     else:
-        st.info("No current source lines were returned.")
+        st.info(t("no_current_lines"))
 
-    st.subheader("Evidence summary")
+    st.subheader(t("evidence_summary"))
 
     if stored_view.stats:
         stats = stored_view.stats
         columns = st.columns(4)
 
         columns[0].metric(
-            "Confidence",
-            stats.get("confidence", "Not provided"),
+            t("confidence"),
+            stats.get("confidence", t("not_provided")),
         )
         columns[1].metric(
-            "Coverage",
-            stats.get("coverage", "Not provided"),
+            t("coverage"),
+            stats.get("coverage", t("not_provided")),
         )
         columns[2].metric(
-            "Evidence events",
-            stats.get("total_events", "Not provided"),
+            t("evidence_events"),
+            stats.get("total_events", t("not_provided")),
         )
         columns[3].metric(
-            "Rollbacks",
-            stats.get("reverts_count", "Not provided"),
+            t("rollbacks"),
+            stats.get("reverts_count", t("not_provided")),
         )
 
         limitations = stats.get("limitations", [])
@@ -177,19 +198,19 @@ if isinstance(stored_view, SuccessView):
                 )
             )
 
-        with st.expander("Detailed evidence statistics"):
+        with st.expander(t("detailed_statistics")):
             st.json(stats)
     else:
-        st.info("No summary statistics were returned.")
+        st.info(t("no_statistics"))
 
-    st.subheader("Change history")
+    st.subheader(t("change_history"))
 
     if stored_view.timeline:
         for index, event in enumerate(
             stored_view.timeline,
             start=1,
         ):
-            title = f"Evidence event {index}"
+            title = t("evidence_event", index=index)
 
             if isinstance(event, dict):
                 message = event.get("message")
@@ -204,19 +225,19 @@ if isinstance(stored_view, SuccessView):
                     metadata = st.columns(3)
 
                     metadata[0].metric(
-                        "Date",
-                        event.get("date", "Not provided"),
+                        t("date"),
+                        event.get("date", t("not_provided")),
                     )
                     metadata[1].metric(
-                        "Commit",
+                        t("commit"),
                         event.get(
                             "short_hash",
-                            "Not provided",
+                            t("not_provided"),
                         ),
                     )
                     metadata[2].metric(
-                        "Type",
-                        event.get("type", "Not provided"),
+                        t("type"),
+                        event.get("type", t("not_provided")),
                     )
 
                     diff_lines = event.get(
@@ -225,7 +246,9 @@ if isinstance(stored_view, SuccessView):
                     )
 
                     if diff_lines:
-                        st.markdown("**Diff evidence**")
+                        st.markdown(
+                            f"**{t('diff_evidence')}**"
+                        )
                         st.code(
                             "\n".join(diff_lines),
                             language="diff",
@@ -235,7 +258,7 @@ if isinstance(stored_view, SuccessView):
 
                     if refs:
                         st.markdown(
-                            "**References:** "
+                            f"**{t('references')}:** "
                             + ", ".join(
                                 f"#{reference}"
                                 for reference in refs
@@ -243,13 +266,13 @@ if isinstance(stored_view, SuccessView):
                         )
 
                     with st.expander(
-                        "Full event details"
+                        t("full_event_details")
                     ):
                         st.json(event)
                 else:
                     st.json(event)
     else:
-        st.info("No timeline events were returned.")
+        st.info(t("no_timeline"))
 
 
 if stored_analysis is not None:
@@ -259,11 +282,11 @@ if stored_analysis is not None:
         indent=2,
     )
 
-    with st.expander("Raw JSON"):
+    with st.expander(t("raw_json")):
         st.json(stored_analysis.document)
 
     st.download_button(
-        "Download JSON",
+        t("download_json"),
         data=raw_json,
         file_name="why-blame-result.json",
         mime="application/json",
