@@ -11,11 +11,13 @@ from benchmark.holdout_v2.run_current_main_snapshot import (
     RepositoryCheckout,
     SnapshotError,
     build_file_manifest,
+    checkout_product_worktree,
     clone_frozen_repository,
     decode_utf8_strict,
     ensure_new_output_directory,
     load_execution_specs,
     read_git_head,
+    remove_product_worktree,
     require_success,
     run_command,
     run_why_blame,
@@ -590,6 +592,80 @@ class TestCurrentMainSnapshotRunner(unittest.TestCase):
                 stored_metadata,
                 metadata,
             )
+
+
+    def test_checkout_product_worktree_uses_requested_commit(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source, unused_commit = (
+                self._create_local_git_repository(temp_dir)
+            )
+
+            (source / "main.py").write_text(
+                "print('product')\n",
+                encoding="utf-8",
+            )
+
+            require_success(
+                run_command(
+                    ["git", "add", "main.py"],
+                    source,
+                ),
+                "stage product main",
+            )
+
+            require_success(
+                run_command(
+                    ["git", "commit", "-m", "add product main"],
+                    source,
+                ),
+                "commit product main",
+            )
+
+            product_commit = read_git_head(source)
+            destination = Path(temp_dir) / "product-worktree"
+
+            checkout = checkout_product_worktree(
+                source,
+                destination,
+                product_commit,
+            )
+
+            self.assertEqual(
+                checkout.requested_commit,
+                product_commit,
+            )
+            self.assertEqual(
+                checkout.checked_out_commit,
+                product_commit,
+            )
+            self.assertTrue(
+                (destination / "main.py").is_file()
+            )
+
+            remove_product_worktree(
+                source,
+                destination,
+            )
+
+            self.assertFalse(destination.exists())
+
+    def test_checkout_product_worktree_rejects_existing_destination(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source, commit = (
+                self._create_local_git_repository(temp_dir)
+            )
+            destination = Path(temp_dir) / "product-worktree"
+            destination.mkdir()
+
+            with self.assertRaisesRegex(
+                SnapshotError,
+                "already exists",
+            ):
+                checkout_product_worktree(
+                    source,
+                    destination,
+                    commit,
+                )
 
 
 if __name__ == "__main__":

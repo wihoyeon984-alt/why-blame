@@ -825,3 +825,143 @@ def write_case_artifacts(
     )
 
     return metadata
+
+def checkout_product_worktree(
+    repository_root,
+    destination,
+    product_commit,
+    git_executable="git",
+):
+    """Create and verify a detached evaluated-product worktree."""
+
+    repository_root = Path(
+        repository_root
+    ).resolve()
+
+    destination = Path(
+        destination
+    ).resolve()
+
+    product_commit = str(
+        product_commit
+    ).lower()
+
+    if not repository_root.is_dir():
+        raise SnapshotError(
+            "runner repository does not exist: "
+            f"{repository_root}"
+        )
+
+    if destination.exists():
+        raise SnapshotError(
+            "product worktree destination already exists: "
+            f"{destination}"
+        )
+
+    if (
+        len(product_commit) != 40
+        or any(
+            character not in "0123456789abcdef"
+            for character in product_commit
+        )
+    ):
+        raise SnapshotError(
+            "product commit must be a full commit SHA"
+        )
+
+    object_check = run_command(
+        [
+            git_executable,
+            "cat-file",
+            "-e",
+            f"{product_commit}^{{commit}}",
+        ],
+        repository_root,
+    )
+
+    require_success(
+        object_check,
+        "verify evaluated product commit",
+    )
+
+    destination.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    worktree_result = run_command(
+        [
+            git_executable,
+            "worktree",
+            "add",
+            "--detach",
+            str(destination),
+            product_commit,
+        ],
+        repository_root,
+    )
+
+    require_success(
+        worktree_result,
+        "create evaluated product worktree",
+    )
+
+    checked_out_commit = read_git_head(
+        destination,
+        git_executable=git_executable,
+    )
+
+    if checked_out_commit != product_commit:
+        raise SnapshotError(
+            "evaluated product worktree commit mismatch"
+        )
+
+    main_path = destination / "main.py"
+
+    if not main_path.is_file():
+        raise SnapshotError(
+            "evaluated product main.py is missing"
+        )
+
+    return RepositoryCheckout(
+        repository_path=str(destination),
+        requested_commit=product_commit,
+        checked_out_commit=checked_out_commit,
+    )
+
+
+def remove_product_worktree(
+    repository_root,
+    destination,
+    git_executable="git",
+):
+    """Remove a temporary evaluated-product worktree."""
+
+    repository_root = Path(
+        repository_root
+    ).resolve()
+
+    destination = Path(
+        destination
+    ).resolve()
+
+    result = run_command(
+        [
+            git_executable,
+            "worktree",
+            "remove",
+            "--force",
+            str(destination),
+        ],
+        repository_root,
+    )
+
+    require_success(
+        result,
+        "remove evaluated product worktree",
+    )
+
+    if destination.exists():
+        raise SnapshotError(
+            "evaluated product worktree still exists"
+        )
