@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "case_id": "attrs_exp_001",
+  "ground_truth_commit": "501dd910dfd170f49bbcf7155b7e5eca2e22ddab",
+  "source_repository": "https://github.com/python-attrs/attrs.git",
+  "source_commit": "9b98a730bf71cabae9bcedb8a3aac72289c23733",
+  "source_worktree": "C:\\Users\\wihoy\\source\\repos\\attrs-holdout-source",
+  "target": "src/attr/converters.py:48-56",
+  "command": [
+    "C:\\Users\\wihoy\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+    "C:\\Users\\wihoy\\source\\repos\\why-blame\\main.py",
+    "src/attr/converters.py:48-56",
+    "--json"
+  ],
+  "cwd": "C:\\Users\\wihoy\\source\\repos\\attrs-holdout-source",
+  "started_at_utc": "2026-10-18T05:26:31.570371+00:00",
+  "completed_at_utc": "2026-10-18T05:26:33.374339+00:00",
+  "exit_code": 0,
+  "stdout_bytes": 18715,
+  "stderr_bytes": 0,
+  "stdout_sha256": "2c4c415bfc8a1b6eaebdc30be753872049c3e0a9f1580267bd8645f630edb135",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "python_version": "3.14.3 (tags/v3.14.3:323c59a, Feb  3 2026, 16:04:56) [MSC v.1944 64 bit (AMD64)]",
+  "stdout_decoded_encoding": "utf-8-sig",
+  "stderr_decoded_encoding": "utf-8-sig"
+}

@@ -144,15 +144,27 @@ class TestHoldoutV2ExpansionScorer(
         )
 
     def test_empty_expansion_cohort_is_rejected(self):
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(SCORER),
-            ],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cases_dir = root / "cases"
+            annotations_dir = root / "annotations"
+
+            cases_dir.mkdir()
+            annotations_dir.mkdir()
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCORER),
+                    "--cases-dir",
+                    str(cases_dir),
+                    "--annotations-dir",
+                    str(annotations_dir),
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
 
         self.assertNotEqual(
             result.returncode,
