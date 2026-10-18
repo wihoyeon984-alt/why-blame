@@ -1,5 +1,6 @@
-﻿import hashlib
+import hashlib
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -9,6 +10,8 @@ from benchmark.holdout_v2.run_current_main_snapshot import (
     build_file_manifest,
     ensure_new_output_directory,
     load_execution_specs,
+    require_success,
+    run_command,
     sha256_file,
 )
 
@@ -174,6 +177,84 @@ class TestCurrentMainSnapshotRunner(unittest.TestCase):
                 "candidate",
             ):
                 load_execution_specs(holdout_dir)
+
+
+    def test_run_command_preserves_exact_bytes(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            script = (
+                "import sys; "
+                "sys.stdout.buffer.write(b'out\\x00put'); "
+                "sys.stderr.buffer.write(b'error')"
+            )
+
+            result = run_command(
+                [sys.executable, "-c", script],
+                temp_dir,
+            )
+
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, b"out\x00put")
+            self.assertEqual(result.stderr, b"error")
+            self.assertEqual(result.command[0], sys.executable)
+            self.assertEqual(
+                Path(result.working_directory),
+                Path(temp_dir).resolve(),
+            )
+
+    def test_run_command_rejects_empty_command(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            with self.assertRaisesRegex(
+                SnapshotError,
+                "must not be empty",
+            ):
+                run_command([], temp_dir)
+
+    def test_run_command_rejects_missing_working_directory(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            missing = Path(temp_dir) / "missing"
+
+            with self.assertRaisesRegex(
+                SnapshotError,
+                "working directory",
+            ):
+                run_command(
+                    [sys.executable, "-c", "pass"],
+                    missing,
+                )
+
+    def test_require_success_returns_successful_result(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            result = run_command(
+                [sys.executable, "-c", "print('ok')"],
+                temp_dir,
+            )
+
+            self.assertIs(
+                require_success(result, "test"),
+                result,
+            )
+
+    def test_require_success_rejects_failed_command(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            script = (
+                "import sys; "
+                "sys.stderr.write('failed'); "
+                "raise SystemExit(7)"
+            )
+
+            result = run_command(
+                [sys.executable, "-c", script],
+                temp_dir,
+            )
+
+            with self.assertRaisesRegex(
+                SnapshotError,
+                "exit code 7",
+            ):
+                require_success(
+                    result,
+                    "test operation",
+                )
 
 
 if __name__ == "__main__":

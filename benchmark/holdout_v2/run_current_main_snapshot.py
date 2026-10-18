@@ -3,7 +3,26 @@
 from dataclasses import dataclass
 import hashlib
 import json
+import os
+import platform
+import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
+
+
+
+
+@dataclass(frozen=True)
+class CommandResult:
+    """Exact result captured from one subprocess."""
+
+    command: tuple
+    working_directory: str
+    exit_code: int
+    stdout: bytes
+    stderr: bytes
+    started_at_utc: str
+    finished_at_utc: str
 
 
 class SnapshotError(ValueError):
@@ -293,3 +312,90 @@ def load_execution_specs(holdout_dir):
         )
 
     return specs
+
+def run_command(
+    command,
+    working_directory,
+    environment=None,
+):
+    """Run a command and preserve exact stdout and stderr bytes."""
+
+    command = tuple(
+        str(item)
+        for item in command
+    )
+
+    if not command:
+        raise SnapshotError(
+            "command must not be empty"
+        )
+
+    working_directory = Path(
+        working_directory
+    ).resolve()
+
+    if not working_directory.is_dir():
+        raise SnapshotError(
+            "working directory does not exist: "
+            f"{working_directory}"
+        )
+
+    process_environment = os.environ.copy()
+
+    if environment:
+        process_environment.update(
+            {
+                str(key): str(value)
+                for key, value in environment.items()
+            }
+        )
+
+    started_at = datetime.now(timezone.utc)
+
+    try:
+        completed = subprocess.run(
+            list(command),
+            cwd=working_directory,
+            env=process_environment,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    except OSError as exc:
+        raise SnapshotError(
+            f"command could not start: {command[0]}"
+        ) from exc
+
+    finished_at = datetime.now(timezone.utc)
+
+    return CommandResult(
+        command=command,
+        working_directory=str(
+            working_directory
+        ),
+        exit_code=completed.returncode,
+        stdout=completed.stdout,
+        stderr=completed.stderr,
+        started_at_utc=started_at.isoformat(),
+        finished_at_utc=finished_at.isoformat(),
+    )
+
+
+def require_success(result, operation):
+    """Reject a failed command with a bounded diagnostic."""
+
+    if result.exit_code == 0:
+        return result
+
+    diagnostic = result.stderr.decode(
+        "utf-8",
+        errors="replace",
+    ).strip()
+
+    if len(diagnostic) > 500:
+        diagnostic = diagnostic[:500] + "..."
+
+    raise SnapshotError(
+        f"{operation} failed with exit code "
+        f"{result.exit_code}: {diagnostic}"
+    )
