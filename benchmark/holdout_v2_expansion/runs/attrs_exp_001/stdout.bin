@@ -1,0 +1,193 @@
+{
+  "schema_version": "1",
+  "target": {
+    "file": "src/attr/converters.py",
+    "start_line": 48,
+    "end_line": 56
+  },
+  "repository": {
+    "owner": "python-attrs",
+    "name": "attrs"
+  },
+  "current_lines": [
+    "    xtr = _AnnotationExtractor(converter)",
+    "",
+    "    t = xtr.get_first_param_type()",
+    "    if t:",
+    "        optional_converter.__annotations__[\"val\"] = t | None",
+    "",
+    "    rt = xtr.get_return_type()",
+    "    if rt:",
+    "        optional_converter.__annotations__[\"return\"] = rt | None"
+  ],
+  "timeline": [
+    {
+      "hash": "e09b1d642339d7d94ba58d7855da40e65ed1a88f",
+      "short_hash": "e09b1d6",
+      "date": "2020-12-13",
+      "message": "Infer type annotations from converters (#710)  * Infer annotations from converters  * Use semantic newlines  * Add 787.change.rst  * Don't let type annotations override converters  * Make pipe() infer type annotations  * Use PY2 instead of sys.versioninfo >= (3, 3)  * Avert crashing with a nullary converter  * Small doc change  * Add type inference for optional()  * Make pipe() annotations actually work  Co-authored-by: Hynek Schlawack <hs@ox.cx>",
+      "diff_lines": [
+        "+ if not PY2:",
+        "+ sig = None",
+        "+ try:",
+        "+ sig = inspect.signature(converter)",
+        "+ except (ValueError, TypeError):  # inspect failed",
+        "+ pass",
+        "+ if sig:",
+        "+ params = list(sig.parameters.values())",
+        "+ if params and params[0].annotation is not inspect.Parameter.empty:",
+        "+ optional_converter.__annotations__[\"val\"] = typing.Optional[",
+        "+ params[0].annotation",
+        "+ ]",
+        "+ if sig.return_annotation is not inspect.Signature.empty:",
+        "+ optional_converter.__annotations__[\"return\"] = typing.Optional[",
+        "+ sig.return_annotation",
+        "+ ]"
+      ],
+      "source": "\"\"\"\nCommonly useful converters.\n\"\"\"\n\nfrom __future__ import absolute_import, division, print_function\n\nfrom ._compat import PY2\nfrom ._make import NOTHING, Factory, pipe\n\n\nif not PY2:\n    import inspect\n    import typing\n\n\n__all__ = [\n    \"pipe\",\n    \"optional\",\n    \"default_if_none\",\n]\n\n\ndef optional(converter):\n    \"\"\"\n    A converter that allows an attribute to be optional. An optional attribute\n    is one which can be set to ``None``.\n\n    Type annotations will be inferred from the wrapped converter's, if it\n    has any.\n\n    :param callable converter: the converter that is used for non-``None``\n        values.\n\n    .. versionadded:: 17.1.0\n    \"\"\"\n\n    def optional_converter(val):\n        if val is None:\n            return None\n        return converter(val)\n\n    if not PY2:\n        sig = None\n        try:\n            sig = inspect.signature(converter)\n        except (ValueError, TypeError):  # inspect failed\n            pass\n        if sig:\n            params = list(sig.parameters.values())\n            if params and params[0].annotation is not inspect.Parameter.empty:\n                optional_converter.__annotations__[\"val\"] = typing.Optional[\n                    params[0].annotation\n                ]\n            if sig.return_annotation is not inspect.Signature.empty:\n                optional_converter.__annotations__[\"return\"] = typing.Optional[\n                    sig.return_annotation\n                ]\n\n    return optional_converter\n\n\ndef default_if_none(default=NOTHING, factory=None):\n    \"\"\"\n    A converter that allows to replace ``None`` values by *default* or the\n    result of *factory*.\n\n    :param default: Value to be used if ``None`` is passed. Passing an instance\n       of `attr.Factory` is supported, however the ``takes_self`` option\n       is *not*.\n    :param callable factory: A callable that takes not parameters whose result\n       is used if ``None`` is passed.\n\n    :raises TypeError: If **neither** *default* or *factory* is passed.\n    :raises TypeError: If **both** *default* and *factory* are passed.\n    :raises ValueError: If an instance of `attr.Factory` is passed with\n       ``takes_self=True``.\n\n    .. versionadded:: 18.2.0\n    \"\"\"\n    if default is NOTHING and factory is None:\n        raise TypeError(\"Must pass either `default` or `factory`.\")\n\n    if default is not NOTHING and factory is not None:\n        raise TypeError(\n            \"Must pass either `default` or `factory` but not both.\"\n        )\n\n    if factory is not None:\n        default = Factory(factory)\n\n    if isinstance(default, Factory):\n        if default.takes_self:\n            raise ValueError(\n                \"`takes_self` is not supported by default_if_none.\"\n            )\n\n        def default_if_none_converter(val):\n            if val is not None:\n                return val\n\n            return default.factory()\n\n    else:\n\n        def default_if_none_converter(val):\n            if val is not None:\n                return val\n\n            return default\n\n    return default_if_none_converter\n",
+      "refs": [
+        "710"
+      ],
+      "is_revert": false,
+      "type": "\ud83c\udf31 FIRST OBSERVED",
+      "ref_details": [
+        "PR #710 ('Infer type annotations from converters')"
+      ],
+      "ref_items": [
+        {
+          "status": "SUCCESS",
+          "number": 710,
+          "type": "PR",
+          "title": "Infer type annotations from converters",
+          "body_summary": "- [x] Added **tests** for changed code. - [x] New features have been added to our [Hypothesis testing strategy](https://github.com/python-attrs/attrs/blob/master/tests/strategie...",
+          "labels": [],
+          "state": "closed",
+          "url": "https://github.com/python-attrs/attrs/pull/710",
+          "error_message": ""
+        }
+      ]
+    },
+    {
+      "hash": "656ce11bc2e495419146f2f196c16769890908ba",
+      "short_hash": "656ce11",
+      "date": "2022-03-14",
+      "message": "Deduplicate annotation extraction (#912)  * Deduplicate annotation extraction  * slots baby  * Add docstrings  * Ensure empty pipe returns same object",
+      "diff_lines": [
+        "- if not PY2:",
+        "- sig = None",
+        "- try:",
+        "- sig = inspect.signature(converter)",
+        "- except (ValueError, TypeError):  # inspect failed",
+        "- pass",
+        "- if sig:",
+        "- params = list(sig.parameters.values())",
+        "- if params and params[0].annotation is not inspect.Parameter.empty:",
+        "- optional_converter.__annotations__[\"val\"] = typing.Optional[",
+        "- params[0].annotation",
+        "- ]",
+        "- if sig.return_annotation is not inspect.Signature.empty:",
+        "- optional_converter.__annotations__[\"return\"] = typing.Optional[",
+        "- sig.return_annotation",
+        "- ]",
+        "+ xtr = _AnnotationExtractor(converter)",
+        "+ ",
+        "+ t = xtr.get_first_param_type()",
+        "+ if t:",
+        "+ optional_converter.__annotations__[\"val\"] = typing.Optional[t]",
+        "+ ",
+        "+ rt = xtr.get_return_type()",
+        "+ if rt:",
+        "+ optional_converter.__annotations__[\"return\"] = typing.Optional[rt]"
+      ],
+      "source": "# SPDX-License-Identifier: MIT\n\n\"\"\"\nCommonly useful converters.\n\"\"\"\n\nfrom __future__ import absolute_import, division, print_function\n\nfrom ._compat import PY2, _AnnotationExtractor\nfrom ._make import NOTHING, Factory, pipe\n\n\nif not PY2:\n    import typing\n\n\n__all__ = [\n    \"default_if_none\",\n    \"optional\",\n    \"pipe\",\n    \"to_bool\",\n]\n\n\ndef optional(converter):\n    \"\"\"\n    A converter that allows an attribute to be optional. An optional attribute\n    is one which can be set to ``None``.\n\n    Type annotations will be inferred from the wrapped converter's, if it\n    has any.\n\n    :param callable converter: the converter that is used for non-``None``\n        values.\n\n    .. versionadded:: 17.1.0\n    \"\"\"\n\n    def optional_converter(val):\n        if val is None:\n            return None\n        return converter(val)\n\n    xtr = _AnnotationExtractor(converter)\n\n    t = xtr.get_first_param_type()\n    if t:\n        optional_converter.__annotations__[\"val\"] = typing.Optional[t]\n\n    rt = xtr.get_return_type()\n    if rt:\n        optional_converter.__annotations__[\"return\"] = typing.Optional[rt]\n\n    return optional_converter\n\n\ndef default_if_none(default=NOTHING, factory=None):\n    \"\"\"\n    A converter that allows to replace ``None`` values by *default* or the\n    result of *factory*.\n\n    :param default: Value to be used if ``None`` is passed. Passing an instance\n       of `attrs.Factory` is supported, however the ``takes_self`` option\n       is *not*.\n    :param callable factory: A callable that takes no parameters whose result\n       is used if ``None`` is passed.\n\n    :raises TypeError: If **neither** *default* or *factory* is passed.\n    :raises TypeError: If **both** *default* and *factory* are passed.\n    :raises ValueError: If an instance of `attrs.Factory` is passed with\n       ``takes_self=True``.\n\n    .. versionadded:: 18.2.0\n    \"\"\"\n    if default is NOTHING and factory is None:\n        raise TypeError(\"Must pass either `default` or `factory`.\")\n\n    if default is not NOTHING and factory is not None:\n        raise TypeError(\n            \"Must pass either `default` or `factory` but not both.\"\n        )\n\n    if factory is not None:\n        default = Factory(factory)\n\n    if isinstance(default, Factory):\n        if default.takes_self:\n            raise ValueError(\n                \"`takes_self` is not supported by default_if_none.\"\n            )\n\n        def default_if_none_converter(val):\n            if val is not None:\n                return val\n\n            return default.factory()\n\n    else:\n\n        def default_if_none_converter(val):\n            if val is not None:\n                return val\n\n            return default\n\n    return default_if_none_converter\n\n\ndef to_bool(val):\n    \"\"\"\n    Convert \"boolean\" strings (e.g., from env. vars.) to real booleans.\n\n    Values mapping to :code:`True`:\n\n    - :code:`True`\n    - :code:`\"true\"` / :code:`\"t\"`\n    - :code:`\"yes\"` / :code:`\"y\"`\n    - :code:`\"on\"`\n    - :code:`\"1\"`\n    - :code:`1`\n\n    Values mapping to :code:`False`:\n\n    - :code:`False`\n    - :code:`\"false\"` / :code:`\"f\"`\n    - :code:`\"no\"` / :code:`\"n\"`\n    - :code:`\"off\"`\n    - :code:`\"0\"`\n    - :code:`0`\n\n    :raises ValueError: for any other value.\n\n    .. versionadded:: 21.3.0\n    \"\"\"\n    if isinstance(val, str):\n        val = val.lower()\n    truthy = {True, \"true\", \"t\", \"yes\", \"y\", \"on\", \"1\", 1}\n    falsy = {False, \"false\", \"f\", \"no\", \"n\", \"off\", \"0\", 0}\n    try:\n        if val in truthy:\n            return True\n        if val in falsy:\n            return False\n    except TypeError:\n        # Raised when \"val\" is not hashable (e.g., lists)\n        pass\n    raise ValueError(\"Cannot convert value to bool: {}\".format(val))\n",
+      "refs": [
+        "912"
+      ],
+      "is_revert": false,
+      "type": "\u2728 FEATURE",
+      "ref_details": [
+        "PR #912 ('Deduplicate annotation extraction')"
+      ],
+      "ref_items": [
+        {
+          "status": "SUCCESS",
+          "number": 912,
+          "type": "PR",
+          "title": "Deduplicate annotation extraction",
+          "body_summary": "This has been in my todo list forever, because it's been three non-trivial repeating blocks throughout the code base. It's a bit more complicated than just functions, because in...",
+          "labels": [],
+          "state": "closed",
+          "url": "https://github.com/python-attrs/attrs/pull/912",
+          "error_message": ""
+        }
+      ]
+    },
+    {
+      "hash": "9b98a730bf71cabae9bcedb8a3aac72289c23733",
+      "short_hash": "9b98a73",
+      "date": "2026-08-02",
+      "message": "Drop Python 3.9 (#1603)",
+      "diff_lines": [
+        "- optional_converter.__annotations__[\"val\"] = typing.Optional[t]",
+        "+ optional_converter.__annotations__[\"val\"] = t | None",
+        "- optional_converter.__annotations__[\"return\"] = typing.Optional[rt]",
+        "+ optional_converter.__annotations__[\"return\"] = rt | None"
+      ],
+      "source": "# SPDX-License-Identifier: MIT\n\n\"\"\"\nCommonly useful converters.\n\"\"\"\n\nfrom ._compat import _AnnotationExtractor\nfrom ._make import NOTHING, Converter, Factory, pipe\n\n\n__all__ = [\n    \"default_if_none\",\n    \"optional\",\n    \"pipe\",\n    \"to_bool\",\n]\n\n\ndef optional(converter):\n    \"\"\"\n    A converter that allows an attribute to be optional. An optional attribute\n    is one which can be set to `None`.\n\n    Type annotations will be inferred from the wrapped converter's, if it has\n    any.\n\n    Args:\n        converter (typing.Callable):\n            the converter that is used for non-`None` values.\n\n    .. versionadded:: 17.1.0\n    \"\"\"\n\n    if isinstance(converter, Converter):\n\n        def optional_converter(val, inst, field):\n            if val is None:\n                return None\n            return converter(val, inst, field)\n\n    else:\n\n        def optional_converter(val):\n            if val is None:\n                return None\n            return converter(val)\n\n    xtr = _AnnotationExtractor(converter)\n\n    t = xtr.get_first_param_type()\n    if t:\n        optional_converter.__annotations__[\"val\"] = t | None\n\n    rt = xtr.get_return_type()\n    if rt:\n        optional_converter.__annotations__[\"return\"] = rt | None\n\n    if isinstance(converter, Converter):\n        return Converter(optional_converter, takes_self=True, takes_field=True)\n\n    return optional_converter\n\n\ndef default_if_none(default=NOTHING, factory=None):\n    \"\"\"\n    A converter that allows to replace `None` values by *default* or the result\n    of *factory*.\n\n    Args:\n        default:\n            Value to be used if `None` is passed. Passing an instance of\n            `attrs.Factory` is supported, however the ``takes_self`` option is\n            *not*.\n\n        factory (typing.Callable):\n            A callable that takes no parameters whose result is used if `None`\n            is passed.\n\n    Raises:\n        TypeError: If **neither** *default* or *factory* is passed.\n\n        TypeError: If **both** *default* and *factory* are passed.\n\n        ValueError:\n            If an instance of `attrs.Factory` is passed with\n            ``takes_self=True``.\n\n    .. versionadded:: 18.2.0\n    \"\"\"\n    if default is NOTHING and factory is None:\n        msg = \"Must pass either `default` or `factory`.\"\n        raise TypeError(msg)\n\n    if default is not NOTHING and factory is not None:\n        msg = \"Must pass either `default` or `factory` but not both.\"\n        raise TypeError(msg)\n\n    if factory is not None:\n        default = Factory(factory)\n\n    if isinstance(default, Factory):\n        if default.takes_self:\n            msg = \"`takes_self` is not supported by default_if_none.\"\n            raise ValueError(msg)\n\n        def default_if_none_converter(val):\n            if val is not None:\n                return val\n\n            return default.factory()\n\n    else:\n\n        def default_if_none_converter(val):\n            if val is not None:\n                return val\n\n            return default\n\n    return default_if_none_converter\n\n\ndef to_bool(val):\n    \"\"\"\n    Convert \"boolean\" strings (for example, from environment variables) to real\n    booleans.\n\n    Values mapping to `True`:\n\n    - ``True``\n    - ``\"true\"`` / ``\"t\"``\n    - ``\"yes\"`` / ``\"y\"``\n    - ``\"on\"``\n    - ``\"1\"``\n    - ``1``\n\n    Values mapping to `False`:\n\n    - ``False``\n    - ``\"false\"`` / ``\"f\"``\n    - ``\"no\"`` / ``\"n\"``\n    - ``\"off\"``\n    - ``\"0\"``\n    - ``0``\n\n    Raises:\n        ValueError: For any other value.\n\n    .. versionadded:: 21.3.0\n    \"\"\"\n    if isinstance(val, str):\n        val = val.lower()\n\n    if val in (True, \"true\", \"t\", \"yes\", \"y\", \"on\", \"1\", 1):\n        return True\n    if val in (False, \"false\", \"f\", \"no\", \"n\", \"off\", \"0\", 0):\n        return False\n\n    msg = f\"Cannot convert value to bool: {val!r}\"\n    raise ValueError(msg)\n",
+      "refs": [
+        "1603"
+      ],
+      "is_revert": false,
+      "type": "\ud83d\udce6 UPDATE",
+      "ref_details": [
+        "PR #1603 ('Drop Python 3.9')"
+      ],
+      "ref_items": [
+        {
+          "status": "SUCCESS",
+          "number": 1603,
+          "type": "PR",
+          "title": "Drop Python 3.9",
+          "body_summary": "``` \u276f uvx pypistats python_minor \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510 \u2502 category \u2502 percent \u2502     downloads \u2502 \u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524 \u2502 3.12     \u2502  29.58% \u2502 1,35...",
+          "labels": [],
+          "state": "closed",
+          "url": "https://github.com/python-attrs/attrs/pull/1603",
+          "error_message": ""
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "score": 12,
+    "grade": "VERY HIGH",
+    "coverage": "100%",
+    "consistency": "HIGH",
+    "ambiguity": "MODERATE (\ub2e4\ub2e8\uacc4 \ubcc0\uacbd \uc774\ub825)",
+    "confidence": "VERY HIGH",
+    "inconsistent_pairs": [],
+    "total_events": 3,
+    "reverts_count": 0,
+    "has_diff": true,
+    "has_refs": true,
+    "has_message": true,
+    "has_context": true,
+    "strength": "VERY HIGH [12/12\uc810]",
+    "availability": "HIGH",
+    "source_reliability": "HIGH",
+    "history_ambiguity": "MEDIUM",
+    "is_blocked": false,
+    "has_rollback": false,
+    "limitations": [],
+    "report": {
+      "availability": "HIGH",
+      "consistency": "HIGH",
+      "source_reliability": "HIGH",
+      "history_ambiguity": "MEDIUM",
+      "overall_confidence": "VERY HIGH",
+      "is_blocked": false,
+      "has_rollback": false,
+      "rollback_commits": [],
+      "limitations": []
+    }
+  }
+}
