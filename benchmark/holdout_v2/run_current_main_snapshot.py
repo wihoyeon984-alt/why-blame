@@ -25,6 +25,17 @@ class CommandResult:
     finished_at_utc: str
 
 
+
+
+@dataclass(frozen=True)
+class RepositoryCheckout:
+    """Verified checkout of one frozen external repository."""
+
+    repository_path: str
+    requested_commit: str
+    checked_out_commit: str
+
+
 class SnapshotError(ValueError):
     """Raised when a snapshot cannot be created safely."""
 
@@ -398,4 +409,121 @@ def require_success(result, operation):
     raise SnapshotError(
         f"{operation} failed with exit code "
         f"{result.exit_code}: {diagnostic}"
+    )
+
+def read_git_head(repository_path, git_executable="git"):
+    """Read the exact HEAD commit of a Git repository."""
+
+    repository_path = Path(repository_path).resolve()
+
+    result = run_command(
+        [
+            git_executable,
+            "rev-parse",
+            "HEAD",
+        ],
+        repository_path,
+    )
+
+    require_success(
+        result,
+        "read Git HEAD",
+    )
+
+    try:
+        commit = result.stdout.decode(
+            "ascii",
+            errors="strict",
+        ).strip()
+    except UnicodeDecodeError as exc:
+        raise SnapshotError(
+            "Git HEAD output is not ASCII"
+        ) from exc
+
+    if len(commit) != 40:
+        raise SnapshotError(
+            f"Git HEAD is not a full commit SHA: {commit}"
+        )
+
+    if any(
+        character not in "0123456789abcdefABCDEF"
+        for character in commit
+    ):
+        raise SnapshotError(
+            f"Git HEAD is not hexadecimal: {commit}"
+        )
+
+    return commit.lower()
+
+
+def clone_frozen_repository(
+    spec,
+    destination,
+    git_executable="git",
+):
+    """Clone and verify one frozen repository commit."""
+
+    destination = Path(destination).resolve()
+
+    if destination.exists():
+        raise SnapshotError(
+            "repository destination already exists: "
+            f"{destination}"
+        )
+
+    destination.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    clone_result = run_command(
+        [
+            git_executable,
+            "clone",
+            "--no-checkout",
+            spec.repository_url,
+            str(destination),
+        ],
+        destination.parent,
+    )
+
+    require_success(
+        clone_result,
+        f"clone repository for {spec.case_id}",
+    )
+
+    checkout_result = run_command(
+        [
+            git_executable,
+            "checkout",
+            "--detach",
+            spec.repository_commit,
+        ],
+        destination,
+    )
+
+    require_success(
+        checkout_result,
+        f"checkout frozen commit for {spec.case_id}",
+    )
+
+    checked_out_commit = read_git_head(
+        destination,
+        git_executable=git_executable,
+    )
+
+    requested_commit = (
+        spec.repository_commit.lower()
+    )
+
+    if checked_out_commit != requested_commit:
+        raise SnapshotError(
+            "checked-out commit does not match "
+            f"the frozen case: {spec.case_id}"
+        )
+
+    return RepositoryCheckout(
+        repository_path=str(destination),
+        requested_commit=requested_commit,
+        checked_out_commit=checked_out_commit,
     )

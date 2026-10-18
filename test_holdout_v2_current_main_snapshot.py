@@ -6,10 +6,13 @@ import unittest
 from pathlib import Path
 
 from benchmark.holdout_v2.run_current_main_snapshot import (
+    ExecutionSpec,
     SnapshotError,
     build_file_manifest,
+    clone_frozen_repository,
     ensure_new_output_directory,
     load_execution_specs,
+    read_git_head,
     require_success,
     run_command,
     sha256_file,
@@ -254,6 +257,160 @@ class TestCurrentMainSnapshotRunner(unittest.TestCase):
                 require_success(
                     result,
                     "test operation",
+                )
+
+
+    def _create_local_git_repository(self, root):
+        source = Path(root) / "source"
+        source.mkdir()
+
+        require_success(
+            run_command(
+                ["git", "init"],
+                source,
+            ),
+            "initialize test repository",
+        )
+
+        require_success(
+            run_command(
+                [
+                    "git",
+                    "config",
+                    "user.name",
+                    "Snapshot Test",
+                ],
+                source,
+            ),
+            "configure test user name",
+        )
+
+        require_success(
+            run_command(
+                [
+                    "git",
+                    "config",
+                    "user.email",
+                    "snapshot@example.invalid",
+                ],
+                source,
+            ),
+            "configure test user email",
+        )
+
+        tracked = source / "tracked.txt"
+        tracked.write_text(
+            "frozen content\n",
+            encoding="utf-8",
+        )
+
+        require_success(
+            run_command(
+                ["git", "add", "tracked.txt"],
+                source,
+            ),
+            "stage test file",
+        )
+
+        require_success(
+            run_command(
+                ["git", "commit", "-m", "frozen commit"],
+                source,
+            ),
+            "create test commit",
+        )
+
+        commit = read_git_head(source)
+
+        return source, commit
+
+    def test_read_git_head_returns_full_commit(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source, commit = (
+                self._create_local_git_repository(
+                    temp_dir
+                )
+            )
+
+            self.assertEqual(
+                read_git_head(source),
+                commit,
+            )
+            self.assertEqual(len(commit), 40)
+
+    def test_clone_frozen_repository_checks_out_requested_commit(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source, commit = (
+                self._create_local_git_repository(
+                    temp_dir
+                )
+            )
+
+            spec = ExecutionSpec(
+                case_id="sample_001",
+                repository_url=str(source),
+                repository_commit=commit,
+                target_file="tracked.txt",
+                start_line=1,
+                end_line=1,
+            )
+
+            destination = (
+                Path(temp_dir)
+                / "checkout"
+            )
+
+            checkout = clone_frozen_repository(
+                spec,
+                destination,
+            )
+
+            self.assertEqual(
+                checkout.requested_commit,
+                commit,
+            )
+            self.assertEqual(
+                checkout.checked_out_commit,
+                commit,
+            )
+            self.assertEqual(
+                Path(checkout.repository_path),
+                destination.resolve(),
+            )
+            self.assertEqual(
+                (destination / "tracked.txt").read_text(
+                    encoding="utf-8"
+                ),
+                "frozen content\n",
+            )
+
+    def test_clone_frozen_repository_rejects_existing_destination(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source, commit = (
+                self._create_local_git_repository(
+                    temp_dir
+                )
+            )
+
+            destination = Path(temp_dir) / "checkout"
+            destination.mkdir()
+
+            spec = ExecutionSpec(
+                case_id="sample_001",
+                repository_url=str(source),
+                repository_commit=commit,
+                target_file="tracked.txt",
+                start_line=1,
+                end_line=1,
+            )
+
+            with self.assertRaisesRegex(
+                SnapshotError,
+                "already exists",
+            ):
+                clone_frozen_repository(
+                    spec,
+                    destination,
                 )
 
 
