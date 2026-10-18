@@ -44,18 +44,45 @@ def t(key, **values):
     return translate(language, key, **values)
 
 
-def render_easy_explanation(beginner_evidence):
+def render_easy_explanation(
+    beginner_evidence,
+    beginner_behavior,
+    target,
+):
     sections = build_easy_explanation_sections(
         beginner_evidence,
+        beginner_behavior,
         language,
+        target,
     )
 
     if not sections["available"]:
         st.info(sections["fallback"])
         return
 
+    if sections["behavior_available"]:
+        st.subheader(t("easy_behavior_question"))
+        st.write(sections["behavior_status"])
+
+        for step in sections["behavior_steps"]:
+            st.caption(step["observation_label"])
+            st.write(step["statement"])
+            if step["code_excerpt"]:
+                st.code(step["code_excerpt"], language=None)
+            for limitation in step["limitations"]:
+                st.caption(limitation)
+
+        for item in sections["behavior_unknown_items"]:
+            st.write("- " + item)
+
+        for item in sections["behavior_limitations"]:
+            st.write("- " + item)
+    else:
+        st.subheader(t("easy_behavior_question"))
+        st.info(sections["behavior_fallback"])
+
     st.subheader(sections["target_question"])
-    st.info(t("easy_target_not_repeated"))
+    st.write(sections["target_label"])
 
     st.subheader(sections["reason_question"])
     st.write(sections["reason_status"])
@@ -320,7 +347,9 @@ if isinstance(stored_view, SuccessView):
 
     with easy_tab:
         render_easy_explanation(
-            stored_view.beginner_evidence
+            stored_view.beginner_evidence,
+            stored_view.beginner_behavior,
+            stored_view.target,
         )
 
     with developer_tab:

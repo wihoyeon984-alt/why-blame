@@ -121,9 +121,69 @@ TEXT = {
             "This source is only partially available and was not used alone "
             "to reach a conclusion."
         ),
-        "easy_no_evidence": "No structured evidence items were recorded.",
+        "easy_no_evidence": (
+            "This analysis did not find material that can explain the "
+            "reason for the change."
+        ),
         "easy_history_origin": "What was observed in history",
-        "easy_no_limitations": "No additional limitations were recorded.",
+        "easy_no_limitations": (
+            "No separate limitation codes were recorded. However, this "
+            "analysis cannot establish or guarantee unrecorded developer "
+            "intent or behavior outside the selected code range."
+        ),
+        "easy_target_unavailable": (
+            "The analysis target information could not be confirmed."
+        ),
+        "easy_behavior_question": "What was confirmed in this code?",
+        "easy_behavior_fallback": (
+            "This result does not include structured information for "
+            "explaining the current code behavior."
+        ),
+        "easy_behavior_status_direct": (
+            "This behavior was directly confirmed in the selected code."
+        ),
+        "easy_behavior_status_partial": (
+            "Only part of this behavior was confirmed in the current code. "
+            "Unverified parts are not presented as a complete behavior."
+        ),
+        "easy_behavior_status_not_established": (
+            "A complete beginner-facing behavior could not be established "
+            "from the selected code."
+        ),
+        "easy_behavior_status_withheld": (
+            "The behavior explanation was withheld because the evidence "
+            "was insufficient or inconsistent."
+        ),
+        "easy_behavior_observation_direct": (
+            "Directly confirmed in the selected code."
+        ),
+        "easy_behavior_observation_partial": (
+            "Only partly confirmed in the selected code."
+        ),
+        "easy_behavior_unknown_outside_range": (
+            "Behavior outside the selected code range is not guaranteed "
+            "by this analysis."
+        ),
+        "easy_behavior_unknown_information": (
+            "Some information could not be established from the selected "
+            "code."
+        ),
+        "easy_behavior_limitation_withheld": (
+            "The behavior explanation was withheld because the evidence "
+            "was insufficient or inconsistent."
+        ),
+        "easy_behavior_limitation_partial": (
+            "Part of the behavior could not be confirmed from the current "
+            "code."
+        ),
+        "easy_behavior_limitation_not_established": (
+            "Part of the behavior could not be confirmed from the current "
+            "code."
+        ),
+        "easy_behavior_limitation_unknown": (
+            "Part of the behavior could not be confirmed from the current "
+            "code."
+        ),
         "process_exit": "Why-Blame exited with code {exit_code}.",
         "error_repository_not_found": (
             "The repository path must be an existing directory."
@@ -278,9 +338,62 @@ TEXT = {
         "easy_truncated_notice": (
             "일부만 표시된 자료입니다. 이 내용만으로 결론을 내리지 않았습니다."
         ),
-        "easy_no_evidence": "구조화된 근거 항목이 기록되지 않았습니다.",
+        "easy_no_evidence": (
+            "이번 분석에서는 변경 이유를 설명할 수 있는 자료를 "
+            "확인하지 못했습니다."
+        ),
         "easy_history_origin": "이력에서 확인된 내용",
-        "easy_no_limitations": "추가로 기록된 제한사항이 없습니다.",
+        "easy_no_limitations": (
+            "별도의 제한사항 코드는 기록되지 않았습니다. 다만 기록되지 "
+            "않은 개발자의 의도와 선택한 코드 범위 밖의 동작은 이 분석으로 "
+            "확인하거나 보장할 수 없습니다."
+        ),
+        "easy_target_unavailable": (
+            "분석 대상 정보를 확인할 수 없습니다."
+        ),
+        "easy_behavior_question": "이 코드에서 무엇을 확인했나요?",
+        "easy_behavior_fallback": (
+            "이 분석 결과에는 현재 코드 동작을 설명하기 위한 구조화된 "
+            "정보가 없습니다."
+        ),
+        "easy_behavior_status_direct": (
+            "현재 선택한 코드에서 직접 확인한 동작입니다."
+        ),
+        "easy_behavior_status_partial": (
+            "현재 코드에서 동작의 일부만 확인했습니다. 확인되지 않은 부분을 "
+            "포함해 전체 동작으로 단정하지 않습니다."
+        ),
+        "easy_behavior_status_not_established": (
+            "현재 선택한 코드에서 초보자용으로 설명할 수 있는 완전한 동작을 "
+            "확인하지 못했습니다."
+        ),
+        "easy_behavior_status_withheld": (
+            "근거가 부족하거나 서로 맞지 않아 코드 동작 설명을 보류했습니다."
+        ),
+        "easy_behavior_observation_direct": (
+            "선택한 코드에서 직접 확인했습니다."
+        ),
+        "easy_behavior_observation_partial": (
+            "선택한 코드에서 일부만 확인했습니다."
+        ),
+        "easy_behavior_unknown_outside_range": (
+            "선택한 코드 범위 밖의 동작은 이 분석으로 보장할 수 없습니다."
+        ),
+        "easy_behavior_unknown_information": (
+            "현재 코드에서 확인하지 못한 정보가 있습니다."
+        ),
+        "easy_behavior_limitation_withheld": (
+            "근거가 부족하거나 서로 맞지 않아 코드 동작 설명을 보류했습니다."
+        ),
+        "easy_behavior_limitation_partial": (
+            "현재 코드만으로는 동작의 일부를 확인할 수 없습니다."
+        ),
+        "easy_behavior_limitation_not_established": (
+            "현재 코드만으로는 동작의 일부를 확인할 수 없습니다."
+        ),
+        "easy_behavior_limitation_unknown": (
+            "현재 코드만으로는 동작의 일부를 확인할 수 없습니다."
+        ),
         "process_exit": "Why-Blame이 종료 코드 {exit_code}(으)로 종료되었습니다.",
         "error_repository_not_found": (
             "저장소 경로에 존재하는 디렉터리를 지정해야 합니다."
