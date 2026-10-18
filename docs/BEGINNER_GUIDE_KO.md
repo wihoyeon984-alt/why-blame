@@ -1,4 +1,4 @@
-# Why-Blame 처음 사용하기
+﻿# Why-Blame 처음 사용하기
 
 이 문서는 프로그래밍과 Git을 막 배우기 시작한 사람을 위한 안내서입니다. 모든 기능을 한 번에 이해하려 하지 말고, **설치 → 첫 분석 → 결과 읽기** 순서로 따라 해 보세요.
 
@@ -55,6 +55,26 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -e .
 ```
+
+### Python 대화형 셸이 열린 경우
+
+`.venv`의 Python 실행 파일만 다음처럼 실행하면 Python 대화형 셸이
+열리고 화면에 `>>>`가 표시됩니다.
+
+```powershell
+.\.venv\Scripts\python.exe
+```
+
+이 화면에서는 PowerShell 명령을 실행할 수 없습니다. 다음 명령을
+입력해 Python을 종료하고 PowerShell로 돌아오세요.
+
+```python
+exit()
+```
+
+Python 버전을 확인할 때는 `--version`, 개발 버전을 설치할 때는
+`-m pip install -e .`을 Python 실행 파일 뒤에 붙여야 합니다.
+
 
 이 방식은 현재 내려받은 저장소의 소스 코드를 설치합니다. 따라서 **최신 개발 버전**으로 실행하는 방법입니다. 안정 릴리스 버전이 필요한 경우에는 위쪽의 릴리스 안내를 사용하세요.
 
