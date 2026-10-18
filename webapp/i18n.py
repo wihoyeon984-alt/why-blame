@@ -47,6 +47,83 @@ TEXT = {
         "no_timeline": "No timeline events were returned.",
         "raw_json": "Raw JSON",
         "download_json": "Download JSON",
+        "easy_explanation": "Easy explanation",
+        "developer_details": "Developer details",
+        "easy_explanation_fallback": (
+            "This result does not contain structured evidence for an easy "
+            "explanation. You can inspect the original analysis under "
+            "Developer details."
+        ),
+        "easy_target_question": "Where is the selected code?",
+        "easy_target_not_repeated": (
+            "The selected target is shown in the Developer details tab."
+        ),
+        "easy_reason_question": (
+            "Can the reason for the change be found in the recorded evidence?"
+        ),
+        "easy_evidence_question": "What sources were checked?",
+        "easy_unknown_question": (
+            "What cannot be established from the recorded evidence?"
+        ),
+        "easy_limitations_question": "Analysis limitations",
+        "easy_reason_explicit_text": (
+            "The body explanation in a related record was checked. However, "
+            "its content does not guarantee the author's full intent."
+        ),
+        "easy_reason_title_only": (
+            "The title of a related record was checked, but a specific "
+            "change reason cannot be established from a title alone."
+        ),
+        "easy_reason_not_recorded": (
+            "A specific change reason cannot be established from the "
+            "recorded evidence."
+        ),
+        "easy_reason_withheld": (
+            "The explanation was withheld because the evidence was "
+            "insufficient or inconsistent."
+        ),
+        "easy_channel_target_code": "selected code",
+        "easy_channel_code_diff": "code difference",
+        "easy_channel_commit_title": "commit title",
+        "easy_channel_pr_title": "pull request title",
+        "easy_channel_pr_body": "pull request body",
+        "easy_channel_issue_title": "issue title",
+        "easy_channel_issue_body": "issue body",
+        "easy_support_behavior": "code behavior",
+        "easy_support_reason": "change context",
+        "easy_support_none": "record only",
+        "easy_unknown_developer_intent": (
+            "The developer's full intent was not recorded."
+        ),
+        "easy_unknown_change_reason": (
+            "The specific change reason was not recorded."
+        ),
+        "easy_unknown_truncated_context": (
+            "Some reference context was only partially available."
+        ),
+        "easy_unknown_information": (
+            "Some information could not be established from this analysis."
+        ),
+        "easy_limitation_history_partial": (
+            "Only part of the relevant history may be available."
+        ),
+        "easy_limitation_rollback_history": (
+            "Rollback history makes the sequence harder to interpret."
+        ),
+        "easy_unknown_limitation": (
+            "Some analysis limitations could not be described in detail."
+        ),
+        "easy_origin_observed": (
+            "A first appearance was found in the inspected Git history. "
+            "Earlier history may be missing because of file moves or splits."
+        ),
+        "easy_truncated_notice": (
+            "This source is only partially available and was not used alone "
+            "to reach a conclusion."
+        ),
+        "easy_no_evidence": "No structured evidence items were recorded.",
+        "easy_history_origin": "What was observed in history",
+        "easy_no_limitations": "No additional limitations were recorded.",
         "process_exit": "Why-Blame exited with code {exit_code}.",
         "error_repository_not_found": (
             "The repository path must be an existing directory."
@@ -131,6 +208,79 @@ TEXT = {
         "no_timeline": "변경 이력 이벤트가 반환되지 않았습니다.",
         "raw_json": "원본 JSON",
         "download_json": "JSON 다운로드",
+        "easy_explanation": "쉬운 설명",
+        "developer_details": "개발자 상세",
+        "easy_explanation_fallback": (
+            "이 분석 결과에는 쉬운 설명을 만들기 위한 구조화된 근거가 "
+            "없습니다. 개발자 상세에서 원본 분석 결과를 확인할 수 있습니다."
+        ),
+        "easy_target_question": "선택한 코드는 어디인가요?",
+        "easy_target_not_repeated": (
+            "선택한 대상은 개발자 상세 탭에서 확인할 수 있습니다."
+        ),
+        "easy_reason_question": (
+            "변경 이유를 기록에서 확인할 수 있나요?"
+        ),
+        "easy_evidence_question": "어떤 자료를 확인했나요?",
+        "easy_unknown_question": (
+            "확인된 기록에서는 무엇을 알 수 없나요?"
+        ),
+        "easy_limitations_question": "분석의 제한사항",
+        "easy_reason_explicit_text": (
+            "관련 기록의 본문 설명을 확인했습니다. 다만 기록의 내용이 "
+            "실제 작성자의 전체 의도를 보장하지는 않습니다."
+        ),
+        "easy_reason_title_only": (
+            "관련 기록의 제목은 확인했지만, 제목만으로 구체적인 변경 "
+            "이유를 확정할 수 없습니다."
+        ),
+        "easy_reason_not_recorded": (
+            "확인된 기록에서는 구체적인 변경 이유를 알 수 없습니다."
+        ),
+        "easy_reason_withheld": (
+            "근거가 부족하거나 서로 맞지 않아 변경 이유 설명을 보류했습니다."
+        ),
+        "easy_channel_target_code": "선택한 코드",
+        "easy_channel_code_diff": "코드 차이",
+        "easy_channel_commit_title": "커밋 제목",
+        "easy_channel_pr_title": "풀 리퀘스트 제목",
+        "easy_channel_pr_body": "풀 리퀘스트 본문",
+        "easy_channel_issue_title": "이슈 제목",
+        "easy_channel_issue_body": "이슈 본문",
+        "easy_support_behavior": "코드 동작",
+        "easy_support_reason": "변경 맥락",
+        "easy_support_none": "기록 자체",
+        "easy_unknown_developer_intent": (
+            "개발자의 전체 의도는 기록되지 않았습니다."
+        ),
+        "easy_unknown_change_reason": (
+            "확인된 기록에서는 구체적인 변경 이유를 알 수 없습니다."
+        ),
+        "easy_unknown_truncated_context": (
+            "참조 자료의 일부 맥락만 확인할 수 있었습니다."
+        ),
+        "easy_unknown_information": (
+            "이 분석에서 확인하지 못한 정보가 있습니다."
+        ),
+        "easy_limitation_history_partial": (
+            "관련 이력의 일부만 확인할 수 있을 수 있습니다."
+        ),
+        "easy_limitation_rollback_history": (
+            "되돌리기 이력으로 변경 순서를 해석하기 어렵습니다."
+        ),
+        "easy_unknown_limitation": (
+            "일부 분석 제한사항을 자세히 설명할 수 없습니다."
+        ),
+        "easy_origin_observed": (
+            "확인된 Git 이력에서 처음 나타난 기록이 있습니다. "
+            "파일 이동이나 분리 이전 기록은 포함되지 않을 수 있습니다."
+        ),
+        "easy_truncated_notice": (
+            "일부만 표시된 자료입니다. 이 내용만으로 결론을 내리지 않았습니다."
+        ),
+        "easy_no_evidence": "구조화된 근거 항목이 기록되지 않았습니다.",
+        "easy_history_origin": "이력에서 확인된 내용",
+        "easy_no_limitations": "추가로 기록된 제한사항이 없습니다.",
         "process_exit": "Why-Blame이 종료 코드 {exit_code}(으)로 종료되었습니다.",
         "error_repository_not_found": (
             "저장소 경로에 존재하는 디렉터리를 지정해야 합니다."
