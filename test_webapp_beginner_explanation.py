@@ -323,6 +323,28 @@ class BeginnerExplanationTests(unittest.TestCase):
             statement,
         )
 
+    def test_korean_behavior_statement_is_localized(self):
+        result = build_easy_explanation_sections(
+            None,
+            self.behavior_contract(
+                steps=[
+                    {
+                        "statement": "value is used.",
+                        "code_excerpt": "value",
+                        "is_directly_observed": True,
+                        "limitation_codes": [],
+                    }
+                ]
+            ),
+            "ko",
+        )
+
+        self.assertNotIn(
+            "is used",
+            result["behavior_steps"][0]["statement"],
+        )
+
+
     def test_existing_evidence_is_preserved_with_behavior(self):
         result = build_easy_explanation_sections(
             evidence_contract(
