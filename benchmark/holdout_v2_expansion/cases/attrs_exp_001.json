@@ -1,0 +1,53 @@
+{
+  "schema_version": 2,
+  "case_id": "attrs_exp_001",
+  "repository": {
+    "url": "https://github.com/python-attrs/attrs.git",
+    "commit": "9b98a730bf71cabae9bcedb8a3aac72289c23733"
+  },
+  "frozen": true,
+  "claims": {
+    "claim_001": {
+      "type": "BEHAVIOR",
+      "label": "SUPPORTED",
+      "text": "When a first parameter type is available, optional() assigns t | None to the val annotation of the generated converter.",
+      "evidence": [
+        {
+          "channel": "DIFF",
+          "ref": "9b98a730bf71cabae9bcedb8a3aac72289c23733",
+          "relation": "SUPPORTS",
+          "note": "The frozen diff replaces typing.Optional[t] with t | None for optional_converter.__annotations__['val']."
+        }
+      ],
+      "rationale": "The annotation assignment is directly observable in the frozen production diff."
+    },
+    "claim_002": {
+      "type": "BEHAVIOR",
+      "label": "SUPPORTED",
+      "text": "When a return type is available, optional() assigns rt | None to the return annotation of the generated converter.",
+      "evidence": [
+        {
+          "channel": "DIFF",
+          "ref": "9b98a730bf71cabae9bcedb8a3aac72289c23733",
+          "relation": "SUPPORTS",
+          "note": "The frozen diff replaces typing.Optional[rt] with rt | None for optional_converter.__annotations__['return']."
+        }
+      ],
+      "rationale": "The return annotation assignment is directly observable in the frozen production diff."
+    },
+    "claim_003": {
+      "type": "BEHAVIOR",
+      "label": "UNSUPPORTED",
+      "text": "The change modifies how optional() handles None values at runtime.",
+      "evidence": [],
+      "rationale": "The frozen diff changes type annotation syntax only. The None branches and wrapped converter calls are unchanged."
+    },
+    "claim_004": {
+      "type": "CAUSE",
+      "label": "UNSUPPORTED",
+      "text": "The change was introduced primarily to improve runtime performance.",
+      "evidence": [],
+      "rationale": "The frozen diff and commit title concern dropping Python 3.9 and modernizing type annotation syntax; they do not establish runtime performance as the primary motive."
+    }
+  }
+}
