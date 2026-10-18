@@ -8,6 +8,9 @@ from github_client import fetch_ref_info, fetch_commit_prs
 from timeline import build_timeline
 from viewer import render_card
 from json_renderer import render_json, render_json_error
+from webapp.beginner_evidence import (
+    build_beginner_evidence_contract,
+)
 
 
 USAGE = """사용법:
@@ -368,6 +371,20 @@ def main():
     )
 
     if json_output:
+        try:
+            beginner_evidence = (
+                build_beginner_evidence_contract(
+                    timeline,
+                    stats,
+                )
+            )
+        except (ValueError, TypeError, KeyError, AttributeError) as exc:
+            render_json_error(
+                "BEGINNER_EVIDENCE_FAILED",
+                str(exc),
+            )
+            sys.exit(1)
+
         render_json(
             file_name,
             start_line,
@@ -376,6 +393,7 @@ def main():
             current_lines,
             timeline,
             stats,
+            beginner_evidence=beginner_evidence,
         )
         return
 

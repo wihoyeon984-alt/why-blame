@@ -11,6 +11,16 @@ from json_renderer import (
     render_json_error,
 )
 from timeline import ConfidenceReport
+from webapp.beginner_evidence import (
+    BeginnerEvidenceContract,
+    BeginnerEvidenceItem,
+    EvidenceChannel,
+    EvidenceScope,
+    EvidenceSupport,
+    HistoryCompleteness,
+    OriginStatus,
+    ReasonStatus,
+)
 
 
 KOREAN_CODE = "\ud55c\uae00 \ucf54\ub4dc"
@@ -19,6 +29,26 @@ FIRST_OBSERVED = "\U0001f331 FIRST OBSERVED"
 
 
 class JsonRendererTests(unittest.TestCase):
+    def make_beginner_evidence(self):
+        item = BeginnerEvidenceItem(
+            evidence_id="pr-title-1",
+            source_channel=EvidenceChannel.PR_TITLE,
+            supports=EvidenceSupport.REASON,
+            scope=EvidenceScope.HISTORY_ONLY,
+            text="Fix linked behavior",
+            is_truncated=False,
+            source_url="https://example.test/pr/1",
+        )
+
+        return BeginnerEvidenceContract(
+            reason_status=ReasonStatus.TITLE_ONLY,
+            evidence_items=(item,),
+            unknown_items=("unrecorded_developer_intent",),
+            limitation_codes=("history_partial",),
+            origin_status=OriginStatus.NOT_ESTABLISHED,
+            history_completeness=HistoryCompleteness.UNKNOWN,
+        )
+
     def make_stats(self):
         report = ConfidenceReport(
             availability="MODERATE",
@@ -81,6 +111,114 @@ class JsonRendererTests(unittest.TestCase):
                 "overall_confidence"
             ],
             "HIGH",
+        )
+
+    def test_beginner_evidence_is_omitted_when_not_provided(self):
+        document = build_json_document(
+            "service.py",
+            10,
+            12,
+            None,
+            [],
+            [],
+            self.make_stats(),
+        )
+
+        self.assertNotIn("beginner_evidence", document)
+
+    def test_beginner_evidence_contract_is_json_compatible(self):
+        document = build_json_document(
+            "service.py",
+            10,
+            12,
+            None,
+            [],
+            [],
+            self.make_stats(),
+            beginner_evidence=self.make_beginner_evidence(),
+        )
+
+        evidence = document["beginner_evidence"]
+        self.assertIsInstance(evidence, dict)
+        self.assertIsInstance(evidence["evidence_items"], list)
+
+    def test_beginner_evidence_enums_are_serialized_as_strings(self):
+        document = build_json_document(
+            "service.py",
+            10,
+            12,
+            None,
+            [],
+            [],
+            self.make_stats(),
+            beginner_evidence=self.make_beginner_evidence(),
+        )
+
+        evidence = document["beginner_evidence"]
+        self.assertEqual(evidence["reason_status"], "title_only")
+        self.assertEqual(
+            evidence["evidence_items"][0]["source_channel"],
+            "pr_title",
+        )
+
+    def test_beginner_evidence_tuple_is_serialized_as_list(self):
+        document = build_json_document(
+            "service.py",
+            10,
+            12,
+            None,
+            [],
+            [],
+            self.make_stats(),
+            beginner_evidence=self.make_beginner_evidence(),
+        )
+
+        evidence = document["beginner_evidence"]
+        self.assertIsInstance(evidence["unknown_items"], list)
+        self.assertIsInstance(evidence["limitation_codes"], list)
+
+    def test_existing_build_json_document_call_is_unchanged(self):
+        document = build_json_document(
+            "service.py",
+            10,
+            12,
+            None,
+            [],
+            [],
+            self.make_stats(),
+        )
+
+        self.assertEqual(
+            set(document),
+            {
+                "schema_version",
+                "target",
+                "repository",
+                "current_lines",
+                "timeline",
+                "stats",
+            },
+        )
+
+    def test_render_json_preserves_beginner_evidence(self):
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            render_json(
+                "service.py",
+                10,
+                10,
+                None,
+                [],
+                [],
+                self.make_stats(),
+                beginner_evidence=self.make_beginner_evidence(),
+            )
+
+        document = json.loads(output.getvalue())
+        self.assertEqual(
+            document["beginner_evidence"]["reason_status"],
+            "title_only",
         )
 
     def test_build_json_document_allows_missing_repository(self):

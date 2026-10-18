@@ -1,5 +1,6 @@
 import json
 from dataclasses import fields, is_dataclass
+from enum import Enum
 
 
 SCHEMA_VERSION = "1"
@@ -7,6 +8,9 @@ SCHEMA_VERSION = "1"
 
 def _to_json_value(value):
     """Convert supported project values into JSON-compatible values."""
+    if isinstance(value, Enum):
+        return value.value
+
     if is_dataclass(value) and not isinstance(value, type):
         return {
             field.name: _to_json_value(
@@ -47,6 +51,7 @@ def build_json_document(
     current_lines,
     timeline,
     stats,
+    beginner_evidence=None,
 ):
     repository = None
 
@@ -57,7 +62,7 @@ def build_json_document(
             "name": repo_name,
         }
 
-    return {
+    document = {
         "schema_version": SCHEMA_VERSION,
         "target": {
             "file": file_name,
@@ -76,6 +81,13 @@ def build_json_document(
         ),
     }
 
+    if beginner_evidence is not None:
+        document["beginner_evidence"] = _to_json_value(
+            beginner_evidence
+        )
+
+    return document
+
 
 def render_json(
     file_name,
@@ -85,6 +97,7 @@ def render_json(
     current_lines,
     timeline,
     stats,
+    beginner_evidence=None,
 ):
     document = build_json_document(
         file_name,
@@ -94,6 +107,7 @@ def render_json(
         current_lines,
         timeline,
         stats,
+        beginner_evidence=beginner_evidence,
     )
 
     print(

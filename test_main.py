@@ -2,7 +2,7 @@ import io
 import json
 import unittest
 from contextlib import ExitStack
-from unittest.mock import patch
+from unittest.mock import patch, sentinel
 
 import main
 
@@ -226,6 +226,13 @@ class MainCliTests(unittest.TestCase):
             mocked_card = stack.enter_context(
                 patches[6]
             )
+            beginner_evidence_patch = stack.enter_context(
+                patch.object(
+                    main,
+                    "build_beginner_evidence_contract",
+                    return_value=sentinel.json_mode_beginner_evidence,
+                )
+            )
 
             self.run_main(
                 [
@@ -240,6 +247,11 @@ class MainCliTests(unittest.TestCase):
             10,
             ("owner", "repo"),
             current_lines,
+            timeline,
+            stats,
+            beginner_evidence=sentinel.json_mode_beginner_evidence,
+        )
+        beginner_evidence_patch.assert_called_once_with(
             timeline,
             stats,
         )
@@ -778,6 +790,13 @@ class MainCliTests(unittest.TestCase):
             mocked_card = stack.enter_context(
                 patches[8]
             )
+            beginner_evidence_patch = stack.enter_context(
+                patch.object(
+                    main,
+                    "build_beginner_evidence_contract",
+                    return_value=sentinel.last_line_beginner_evidence,
+                )
+            )
 
             self.run_main(
                 ["service.py:3", "--json"]
@@ -789,6 +808,11 @@ class MainCliTests(unittest.TestCase):
             3,
             ("owner", "repo"),
             current_lines,
+            timeline,
+            stats,
+            beginner_evidence=sentinel.last_line_beginner_evidence,
+        )
+        beginner_evidence_patch.assert_called_once_with(
             timeline,
             stats,
         )
