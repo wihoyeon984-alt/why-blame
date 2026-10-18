@@ -1,4 +1,4 @@
-﻿# Holdout v2 Expansion
+# Holdout v2 Expansion
 
 This directory contains new evaluation cases that are intentionally isolated
 from the frozen Holdout v2 baseline and post-improvement comparison.
@@ -78,3 +78,24 @@ Adding an expansion case must not:
 - add inferred reasons to historical annotations;
 - change the public CLI JSON schema;
 - select cases primarily to improve an aggregate metric.
+
+## Scoring
+
+Run the isolated expansion scorer with:
+
+```powershell
+python .\benchmark\holdout_v2_expansion\score_expansion.py
+```
+
+The command reads only:
+
+- benchmark/holdout_v2_expansion/cases
+- benchmark/holdout_v2_expansion/annotations
+
+The command fails when the expansion cohort is empty, when case and annotation
+IDs disagree, or when frozen Holdout v2 directories are supplied.
+
+The expansion scorer reuses the existing Holdout v2 schema validation,
+confidence metrics, and WITHHELD reason-coverage report. Expansion results
+must not be compared with the frozen post-improvement summary as if they were
+part of the same cohort.
