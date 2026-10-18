@@ -18,12 +18,197 @@ Why-Blame은 Git 이력, diff, 커밋 메시지, PR 및 Issue를 바탕으로
 
 - 최신 안정 릴리스: `v0.3.6`
 - 최신 웹 대시보드: `main` 브랜치
-- 전체 테스트: `456 / 456`
+- 전체 테스트: `474 / 474`
 - CI: Windows와 Ubuntu, Python 3.9·3.11·3.14에서 `6 / 6`
 - Holdout v2 post-improvement:
   - Claim precision: `1.000`
   - Supported recall: `1.000`
   - Unsafe presentation rate: `0.000`
+
+## 5분 Quick Start
+
+아래 절차는 Windows PowerShell 기준입니다. PowerShell 실행 정책 때문에
+가상환경을 활성화하지 못해도 괜찮습니다. 가상환경의 Python과 실행 파일을
+직접 사용합니다.
+
+### 1. 준비하기
+
+다음 프로그램이 필요합니다.
+
+- Python 3.9 이상
+- Git
+- GitHub CLI `gh`
+
+설치 상태를 확인합니다.
+
+```powershell
+python --version
+git --version
+gh --version
+```
+
+### 2. 저장소 내려받기
+
+```powershell
+git clone https://github.com/wihoyeon984-alt/why-blame.git
+cd .\why-blame
+```
+
+이미 저장소를 내려받았다면 Why-Blame 저장소의 최상위 폴더로 이동합니다.
+
+### 3. 가상환경 만들기
+
+```powershell
+python -m venv .venv
+```
+
+가상환경을 활성화할 필요는 없습니다. 이후 명령에서는 `.venv`의 Python과
+실행 파일을 직접 사용합니다.
+
+### 4. 안정 버전 다운로드
+
+GitHub Release에서 `v0.3.6` wheel을 현재 폴더로 다운로드합니다.
+
+```powershell
+gh release download v0.3.6 `
+    --repo wihoyeon984-alt/why-blame `
+    --pattern "why_blame-0.3.6-py3-none-any.whl"
+```
+
+### 5. Why-Blame 설치
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install `
+    .\why_blame-0.3.6-py3-none-any.whl
+```
+
+이미 같은 버전이 설치되어 있다면 다음 안내가 표시될 수 있습니다.
+
+```text
+why-blame is already installed with the same version
+```
+
+이는 오류가 아닙니다.
+
+### 6. 설치 확인
+
+```powershell
+.\.venv\Scripts\why-blame.exe --version
+```
+
+정상 결과:
+
+```text
+why-blame 0.3.6
+```
+
+### 7. 첫 분석 실행
+
+Why-Blame 저장소에 실제로 존재하는 코드 범위를 분석합니다.
+
+```powershell
+.\.venv\Scripts\why-blame.exe main.py:106-134
+```
+
+이 예제에서는 다음 변경을 확인할 수 있습니다.
+
+- CLI JSON 출력 기능이 처음 추가된 커밋
+- 손상된 CLI 오류 메시지를 정상 한국어로 복구한 커밋
+- 관련 PR과 실제 diff
+- Confidence와 Coverage
+- 현재 근거로 확인할 수 없는 한계
+
+JSON 결과가 필요하면 `--json`을 추가합니다.
+
+```powershell
+.\.venv\Scripts\why-blame.exe `
+    main.py:106-134 `
+    --json
+```
+
+### 8. 결과 읽기
+
+- `CURRENT CODE`: 지정한 범위의 현재 코드
+- `WHY`: 근거로 확인할 수 있는 변경 과정
+- `HISTORY`: 관련 커밋, diff, PR 및 Issue
+- `COVERAGE`: 분석 범위에 연결된 근거의 범위
+- `CONFIDENCE`: 현재 설명을 뒷받침하는 근거의 강도
+- `LIMITATION`: 현재 근거만으로 확인할 수 없는 내용
+
+`Coverage 100%`는 개발자의 실제 의도가 100% 입증됐다는 뜻이 아닙니다.
+분석 범위의 근거 이벤트가 결과에 연결됐다는 뜻입니다.
+
+Confidence 역시 Why-Blame 전체의 정확도나 모든 코드에 대한 성공률이
+아닙니다.
+
+### 9. 과거 diff에 `???`가 표시되는 경우
+
+첫 분석 예제에는 다음과 같은 과거 diff가 표시될 수 있습니다.
+
+```diff
+- "--json ??? ? ?? ??? ? ????."
++ "--json 옵션은 한 번만 지정할 수 있습니다."
+```
+
+이 `???`는 현재 프로그램의 오류가 아닙니다. 과거 커밋에 실제로 존재했던
+손상 문자열과 이를 복구한 후속 변경을 Git 이력에서 그대로 보여 주는
+것입니다.
+
+### 10. 다른 저장소 분석하기
+
+다른 저장소를 분석할 때는 해당 Git 저장소의 최상위 폴더로 이동한 뒤,
+실제로 존재하고 Git에 커밋된 파일을 지정해야 합니다.
+
+추적 중인 파일은 다음 명령으로 확인할 수 있습니다.
+
+```powershell
+git ls-files
+```
+
+목록에 표시된 실제 파일과 줄 번호를 사용하십시오. 문서에 적힌 설명용
+경로나 파일 이름을 그대로 실행하면 안 됩니다.
+
+### 11. 오래된 설치 때문에 실행되지 않는 경우
+
+다음 오류가 발생하면 이전에 설치한 오래된 Why-Blame이 실행되고 있을 수
+있습니다.
+
+```text
+ModuleNotFoundError: No module named 'json_renderer'
+```
+
+명령 위치와 전역 설치 상태를 확인합니다.
+
+```powershell
+Get-Command why-blame -All
+python -m pip show why-blame
+```
+
+오래된 전역 설치를 제거합니다.
+
+```powershell
+python -m pip uninstall -y why-blame
+```
+
+그다음 전역 명령 대신 가상환경의 실행 파일을 사용합니다.
+
+```powershell
+.\.venv\Scripts\why-blame.exe --version
+```
+
+### 12. 다운로드 파일 정리
+
+설치가 끝난 뒤 wheel을 삭제해도 가상환경에 설치된 Why-Blame은 계속
+사용할 수 있습니다.
+
+```powershell
+Remove-Item `
+    .\why_blame-0.3.6-py3-none-any.whl `
+    -Force
+```
+
+Why-Blame의 설명은 최종 판단을 대신하지 않습니다. 중요한 코드 변경을
+검토할 때는 표시된 커밋, diff, PR과 Issue 원문을 함께 확인하십시오.
 
 ## CLI 사용 방법
 
