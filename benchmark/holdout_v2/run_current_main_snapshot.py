@@ -527,3 +527,301 @@ def clone_frozen_repository(
         requested_commit=requested_commit,
         checked_out_commit=checked_out_commit,
     )
+
+def decode_utf8_strict(data, artifact_name):
+    """Decode artifact bytes as strict UTF-8."""
+
+    if not isinstance(data, bytes):
+        raise SnapshotError(
+            f"{artifact_name} must be bytes"
+        )
+
+    try:
+        return data.decode(
+            "utf-8",
+            errors="strict",
+        )
+    except UnicodeDecodeError as exc:
+        raise SnapshotError(
+            f"{artifact_name} is not valid UTF-8"
+        ) from exc
+
+
+def run_why_blame(
+    spec,
+    repository_path,
+    python_executable,
+    main_path,
+):
+    """Run the evaluated Why-Blame product for one frozen case."""
+
+    repository_path = Path(
+        repository_path
+    ).resolve()
+
+    python_executable = Path(
+        python_executable
+    ).resolve()
+
+    main_path = Path(main_path).resolve()
+
+    if not repository_path.is_dir():
+        raise SnapshotError(
+            "repository path does not exist: "
+            f"{repository_path}"
+        )
+
+    if not python_executable.is_file():
+        raise SnapshotError(
+            "Python executable does not exist: "
+            f"{python_executable}"
+        )
+
+    if not main_path.is_file():
+        raise SnapshotError(
+            "evaluated main.py does not exist: "
+            f"{main_path}"
+        )
+
+    target_path = (
+        repository_path
+        / spec.target_file
+    ).resolve()
+
+    try:
+        target_path.relative_to(
+            repository_path
+        )
+    except ValueError as exc:
+        raise SnapshotError(
+            f"target escapes repository: {spec.case_id}"
+        ) from exc
+
+    if not target_path.is_file():
+        raise SnapshotError(
+            f"target file does not exist: {spec.case_id}"
+        )
+
+    result = run_command(
+        [
+            str(python_executable),
+            str(main_path),
+            spec.target,
+        ],
+        repository_path,
+        environment={
+            "PYTHONUTF8": "1",
+            "PYTHONIOENCODING": "utf-8",
+        },
+    )
+
+    require_success(
+        result,
+        f"Why-Blame analysis for {spec.case_id}",
+    )
+
+    decode_utf8_strict(
+        result.stdout,
+        "stdout",
+    )
+
+    decode_utf8_strict(
+        result.stderr,
+        "stderr",
+    )
+
+    return result
+
+
+def write_case_artifacts(
+    output_directory,
+    spec,
+    checkout,
+    result,
+    evaluated_product_commit,
+    snapshot_runner_commit,
+):
+    """Write exact bytes, UTF-8 text, and metadata for one case."""
+
+    output_directory = ensure_new_output_directory(
+        output_directory
+    )
+
+    evaluated_product_commit = str(
+        evaluated_product_commit
+    ).lower()
+
+    snapshot_runner_commit = str(
+        snapshot_runner_commit
+    ).lower()
+
+    for name, commit in (
+        (
+            "evaluated_product_commit",
+            evaluated_product_commit,
+        ),
+        (
+            "snapshot_runner_commit",
+            snapshot_runner_commit,
+        ),
+    ):
+        if (
+            len(commit) != 40
+            or any(
+                character
+                not in "0123456789abcdef"
+                for character in commit
+            )
+        ):
+            raise SnapshotError(
+                f"{name} must be a full commit SHA"
+            )
+
+    stdout_text = decode_utf8_strict(
+        result.stdout,
+        "stdout",
+    )
+
+    stderr_text = decode_utf8_strict(
+        result.stderr,
+        "stderr",
+    )
+
+    stdout_binary_path = (
+        output_directory
+        / "stdout.bin"
+    )
+    stderr_binary_path = (
+        output_directory
+        / "stderr.bin"
+    )
+    stdout_text_path = (
+        output_directory
+        / "stdout.txt"
+    )
+    stderr_text_path = (
+        output_directory
+        / "stderr.txt"
+    )
+    metadata_path = (
+        output_directory
+        / "metadata.json"
+    )
+
+    stdout_binary_path.write_bytes(
+        result.stdout
+    )
+
+    stderr_binary_path.write_bytes(
+        result.stderr
+    )
+
+    stdout_text_path.write_text(
+        stdout_text,
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    stderr_text_path.write_text(
+        stderr_text,
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    metadata = {
+        "schema_version": 1,
+        "evaluation_type": (
+            "current_main_snapshot"
+        ),
+        "case_id": spec.case_id,
+        "evaluated_product_commit": (
+            evaluated_product_commit
+        ),
+        "snapshot_runner_commit": (
+            snapshot_runner_commit
+        ),
+        "repository": {
+            "url": spec.repository_url,
+            "requested_commit": (
+                checkout.requested_commit
+            ),
+            "checked_out_commit": (
+                checkout.checked_out_commit
+            ),
+        },
+        "target": {
+            "file": spec.target_file,
+            "start_line": spec.start_line,
+            "end_line": spec.end_line,
+            "argument": spec.target,
+        },
+        "execution": {
+            "command": list(
+                result.command
+            ),
+            "working_directory": (
+                result.working_directory
+            ),
+            "started_at_utc": (
+                result.started_at_utc
+            ),
+            "finished_at_utc": (
+                result.finished_at_utc
+            ),
+            "exit_code": (
+                result.exit_code
+            ),
+            "stdout_encoding": "utf-8",
+            "stderr_encoding": "utf-8",
+            "decode_errors": "strict",
+            "python_version": (
+                platform.python_version()
+            ),
+            "platform": (
+                platform.platform()
+            ),
+        },
+        "artifacts": {
+            "stdout_binary_file": (
+                "stdout.bin"
+            ),
+            "stderr_binary_file": (
+                "stderr.bin"
+            ),
+            "stdout_text_file": (
+                "stdout.txt"
+            ),
+            "stderr_text_file": (
+                "stderr.txt"
+            ),
+            "stdout_bytes": len(
+                result.stdout
+            ),
+            "stderr_bytes": len(
+                result.stderr
+            ),
+            "stdout_sha256": (
+                hashlib.sha256(
+                    result.stdout
+                ).hexdigest().upper()
+            ),
+            "stderr_sha256": (
+                hashlib.sha256(
+                    result.stderr
+                ).hexdigest().upper()
+            ),
+        },
+    }
+
+    metadata_path.write_text(
+        json.dumps(
+            metadata,
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    return metadata
