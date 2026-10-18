@@ -122,5 +122,67 @@ class TestHoldoutV2Annotation(unittest.TestCase):
             self.load_data(data)
 
 
+    def test_withheld_reason_is_optional_for_existing_annotations(self):
+        data = make_annotation()
+        data["claims"]["claim_001"]["status"] = "WITHHELD"
+
+        annotation = self.load_data(data)
+
+        self.assertEqual(
+            annotation.claims["claim_001"].withheld_reason,
+            "",
+        )
+
+    def test_loads_valid_withheld_reason(self):
+        data = make_annotation()
+        data["claims"]["claim_001"]["status"] = "WITHHELD"
+        data["claims"]["claim_001"]["withheld_reason"] = (
+            "INSUFFICIENT_EVIDENCE"
+        )
+
+        annotation = self.load_data(data)
+
+        self.assertEqual(
+            annotation.claims["claim_001"].withheld_reason,
+            "INSUFFICIENT_EVIDENCE",
+        )
+
+    def test_rejects_unknown_withheld_reason(self):
+        data = make_annotation()
+        data["claims"]["claim_001"]["status"] = "WITHHELD"
+        data["claims"]["claim_001"]["withheld_reason"] = (
+            "UNKNOWN_REASON"
+        )
+
+        with self.assertRaisesRegex(
+            AnnotationError,
+            "invalid withheld_reason",
+        ):
+            self.load_data(data)
+
+    def test_rejects_empty_withheld_reason(self):
+        data = make_annotation()
+        data["claims"]["claim_001"]["status"] = "WITHHELD"
+        data["claims"]["claim_001"]["withheld_reason"] = ""
+
+        with self.assertRaisesRegex(
+            AnnotationError,
+            "must be a non-empty string",
+        ):
+            self.load_data(data)
+
+    def test_rejects_withheld_reason_for_presented_claim(self):
+        data = make_annotation()
+        data["claims"]["claim_001"]["withheld_reason"] = (
+            "NOT_OBSERVED"
+        )
+
+        with self.assertRaisesRegex(
+            AnnotationError,
+            "requires WITHHELD status",
+        ):
+            self.load_data(data)
+
+
 if __name__ == "__main__":
     unittest.main()
