@@ -12,6 +12,14 @@ CLI_PATH = PROJECT_ROOT / "main.py"
 class DashboardRunError(RuntimeError):
     """Raised when the dashboard cannot consume CLI output."""
 
+    def __init__(
+        self,
+        message,
+        code="ANALYSIS_FAILED",
+    ):
+        super().__init__(message)
+        self.code = code
+
 
 @dataclass(frozen=True)
 class AnalysisResult:
@@ -57,40 +65,47 @@ def run_analysis(
         )
     except subprocess.TimeoutExpired as exc:
         raise DashboardRunError(
-            "Why-Blame analysis timed out."
+            "Why-Blame analysis timed out.",
+            code="ANALYSIS_TIMEOUT"
         ) from exc
     except OSError as exc:
         raise DashboardRunError(
-            "Why-Blame analysis could not be started."
+            "Why-Blame analysis could not be started.",
+            code="ANALYSIS_START_FAILED"
         ) from exc
 
     if result.stderr:
         raise DashboardRunError(
-            "Why-Blame unexpectedly wrote to stderr."
+            "Why-Blame unexpectedly wrote to stderr.",
+            code="UNEXPECTED_STDERR"
         )
 
     try:
         output = result.stdout.decode("ascii")
     except UnicodeDecodeError as exc:
         raise DashboardRunError(
-            "Why-Blame output was not ASCII-safe."
+            "Why-Blame output was not ASCII-safe.",
+            code="OUTPUT_NOT_ASCII_SAFE"
         ) from exc
 
     try:
         document = json.loads(output)
     except json.JSONDecodeError as exc:
         raise DashboardRunError(
-            "Why-Blame did not return valid JSON."
+            "Why-Blame did not return valid JSON.",
+            code="INVALID_JSON"
         ) from exc
 
     if not isinstance(document, dict):
         raise DashboardRunError(
-            "Why-Blame JSON must be an object."
+            "Why-Blame JSON must be an object.",
+            code="JSON_NOT_OBJECT"
         )
 
     if document.get("schema_version") != "1":
         raise DashboardRunError(
-            "Unsupported Why-Blame JSON schema."
+            "Unsupported Why-Blame JSON schema.",
+            code="UNSUPPORTED_SCHEMA"
         )
 
     return AnalysisResult(
