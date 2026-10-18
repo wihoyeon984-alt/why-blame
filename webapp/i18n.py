@@ -48,6 +48,49 @@ TEXT = {
         "raw_json": "Raw JSON",
         "download_json": "Download JSON",
         "process_exit": "Why-Blame exited with code {exit_code}.",
+        "error_repository_not_found": (
+            "The repository path must be an existing directory."
+        ),
+        "error_not_a_git_repository": (
+            "The repository path must be a Git work tree."
+        ),
+        "error_file_path_required": "The file path is required.",
+        "error_absolute_file_path": (
+            "The file path must be relative to the repository."
+        ),
+        "error_path_outside_repository": (
+            "The file path must stay inside the repository."
+        ),
+        "error_file_not_found": "The requested file does not exist.",
+        "error_start_line_not_integer": (
+            "The start line must be an integer."
+        ),
+        "error_end_line_not_integer": (
+            "The end line must be an integer."
+        ),
+        "error_nonpositive_line": "Line numbers must be at least 1.",
+        "error_reversed_line_range": (
+            "The start line cannot exceed the end line."
+        ),
+        "error_analysis_timeout": "Why-Blame analysis timed out.",
+        "error_analysis_start_failed": (
+            "Why-Blame analysis could not be started."
+        ),
+        "error_unexpected_stderr": (
+            "Why-Blame unexpectedly wrote to stderr."
+        ),
+        "error_output_not_ascii_safe": (
+            "Why-Blame output was not ASCII-safe."
+        ),
+        "error_invalid_json": (
+            "Why-Blame did not return valid JSON."
+        ),
+        "error_json_not_object": (
+            "Why-Blame JSON must be an object."
+        ),
+        "error_unsupported_schema": (
+            "Unsupported Why-Blame JSON schema."
+        ),
     },
     "ko": {
         "language": "언어",
@@ -89,6 +132,51 @@ TEXT = {
         "raw_json": "원본 JSON",
         "download_json": "JSON 다운로드",
         "process_exit": "Why-Blame이 종료 코드 {exit_code}(으)로 종료되었습니다.",
+        "error_repository_not_found": (
+            "저장소 경로에 존재하는 디렉터리를 지정해야 합니다."
+        ),
+        "error_not_a_git_repository": (
+            "선택한 경로는 Git 작업 트리가 아닙니다."
+        ),
+        "error_file_path_required": "파일 경로를 입력해야 합니다.",
+        "error_absolute_file_path": (
+            "파일 경로는 저장소 기준 상대 경로여야 합니다."
+        ),
+        "error_path_outside_repository": (
+            "파일 경로는 저장소 내부에 있어야 합니다."
+        ),
+        "error_file_not_found": "요청한 파일이 존재하지 않습니다.",
+        "error_start_line_not_integer": (
+            "시작 줄은 정수여야 합니다."
+        ),
+        "error_end_line_not_integer": (
+            "끝 줄은 정수여야 합니다."
+        ),
+        "error_nonpositive_line": "줄 번호는 1 이상이어야 합니다.",
+        "error_reversed_line_range": (
+            "시작 줄은 끝 줄보다 클 수 없습니다."
+        ),
+        "error_analysis_timeout": (
+            "Why-Blame 분석 시간이 제한을 초과했습니다."
+        ),
+        "error_analysis_start_failed": (
+            "Why-Blame 분석을 시작할 수 없습니다."
+        ),
+        "error_unexpected_stderr": (
+            "Why-Blame이 예기치 않은 진단 출력을 생성했습니다."
+        ),
+        "error_output_not_ascii_safe": (
+            "Why-Blame 출력을 안전하게 해석할 수 없습니다."
+        ),
+        "error_invalid_json": (
+            "Why-Blame이 올바른 JSON을 반환하지 않았습니다."
+        ),
+        "error_json_not_object": (
+            "Why-Blame JSON 결과는 객체여야 합니다."
+        ),
+        "error_unsupported_schema": (
+            "지원하지 않는 Why-Blame JSON 스키마입니다."
+        ),
     },
 }
 
@@ -106,3 +194,18 @@ def translate(language, key, **values):
     )
     message = TEXT[selected_language][key]
     return message.format(**values)
+
+
+def translate_error(language, error):
+    """Translate a coded UI error and preserve unknown messages."""
+    code = getattr(error, "code", None)
+
+    if not isinstance(code, str) or not code:
+        return str(error)
+
+    key = "error_" + code.lower()
+
+    try:
+        return translate(language, key)
+    except KeyError:
+        return str(error)

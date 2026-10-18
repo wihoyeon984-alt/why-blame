@@ -3,7 +3,11 @@ from pathlib import Path
 
 import streamlit as st
 
-from webapp.i18n import SUPPORTED_LANGUAGES, translate
+from webapp.i18n import (
+    SUPPORTED_LANGUAGES,
+    translate,
+    translate_error,
+)
 from webapp.result_view import (
     ErrorView,
     ResultViewError,
@@ -89,7 +93,7 @@ if submitted:
             int(end_line),
         )
     except ValidationError as exc:
-        st.error(str(exc))
+        st.error(translate_error(language, exc))
     else:
         try:
             with st.spinner(t("analyzing")):
@@ -107,7 +111,7 @@ if submitted:
             DashboardRunError,
             ResultViewError,
         ) as exc:
-            st.error(str(exc))
+            st.error(translate_error(language, exc))
         else:
             st.session_state["analysis"] = analysis
             st.session_state["result_view"] = view
