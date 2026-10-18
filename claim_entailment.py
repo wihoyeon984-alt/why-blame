@@ -41,11 +41,11 @@ def evaluate_field_entailment(
     if CONFLICTING in levels:
         return CONFLICTING
 
-    if DIRECT in levels:
-        return DIRECT
-
     if PARTIAL in levels:
         return PARTIAL
+
+    if DIRECT in levels:
+        return DIRECT
 
     if INFERRED in levels:
         return INFERRED

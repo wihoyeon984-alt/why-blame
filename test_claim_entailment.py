@@ -91,6 +91,39 @@ class TestClaimEntailment(unittest.TestCase):
             CONFLICTING,
         )
 
+    def test_direct_and_partial_evidence_on_same_field_is_partial(self):
+        semantics = make_behavior_semantics(
+            action="ENCODE",
+            source_event="abc123",
+        )
+
+        semantics = attach_field_evidence(
+            semantics,
+            "action",
+            source="DIFF",
+            ref="abc123",
+            level=DIRECT,
+        )
+
+        semantics = attach_field_evidence(
+            semantics,
+            "action",
+            source="PR",
+            ref="#10",
+            level=PARTIAL,
+        )
+
+        result = evaluate_field_entailment(
+            semantics,
+            "action",
+        )
+
+        self.assertEqual(
+            result,
+            PARTIAL,
+        )
+
+
     def test_all_direct_fields_make_direct_claim(self):
         semantics = make_behavior_semantics(
             action="ENCODE",
