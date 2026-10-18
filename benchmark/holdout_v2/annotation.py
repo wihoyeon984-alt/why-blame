@@ -19,6 +19,14 @@ VALID_CLAIM_STATUSES = {
 }
 
 
+VALID_WITHHELD_REASONS = {
+    "INSUFFICIENT_EVIDENCE",
+    "CONFLICTING_EVIDENCE",
+    "NOT_OBSERVED",
+    "OUTSIDE_SUPPORTED_SCOPE",
+}
+
+
 class AnnotationError(ValueError):
     pass
 
@@ -27,6 +35,7 @@ class AnnotationError(ValueError):
 class ClaimAnnotation:
     status: str
     raw_evidence: str
+    withheld_reason: str = ""
 
 
 @dataclass(frozen=True)
@@ -206,9 +215,36 @@ def load_annotation(path: Path) -> Annotation:
             f"{claim_id}.raw_evidence",
         )
 
+        if "withheld_reason" in claim_data:
+            withheld_reason = _require_nonempty_string(
+                claim_data.get("withheld_reason"),
+                f"{claim_id}.withheld_reason",
+            )
+        else:
+            withheld_reason = ""
+
+        if (
+            withheld_reason
+            and status != "WITHHELD"
+        ):
+            raise AnnotationError(
+                f"{claim_id}: withheld_reason requires "
+                "WITHHELD status"
+            )
+
+        if (
+            withheld_reason
+            and withheld_reason
+            not in VALID_WITHHELD_REASONS
+        ):
+            raise AnnotationError(
+                f"{claim_id}: invalid withheld_reason"
+            )
+
         claims[claim_id] = ClaimAnnotation(
             status=status,
             raw_evidence=raw_evidence,
+            withheld_reason=withheld_reason,
         )
 
     return Annotation(
