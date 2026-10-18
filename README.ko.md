@@ -40,6 +40,43 @@ Why-Blame은 Git 이력, diff, 커밋 메시지, PR 및 Issue를 바탕으로
 > 성능이 보장된다는 뜻이 아니며, Why-Blame의 일반 정확도가 100%임을
 > 의미하지 않습니다.
 
+## 4단계 빠른 실행
+
+Why-Blame 저장소를 이미 내려받았고 GitHub CLI `gh`를 사용할 수 있다면,
+다음 네 단계로 설치하고 첫 분석을 실행할 수 있습니다. 처음 설치하거나
+문제가 발생한 경우에는 #5분-quick-start를 참고하십시오.
+
+### 1. 가상환경 만들기
+
+```powershell
+python -m venv .venv
+```
+
+### 2. 안정 버전 다운로드하기
+
+```powershell
+gh release download v0.3.6 `
+    --repo wihoyeon984-alt/why-blame `
+    --pattern "why_blame-0.3.6-py3-none-any.whl"
+```
+
+### 3. 가상환경에 설치하기
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install `
+    .\why_blame-0.3.6-py3-none-any.whl
+```
+
+### 4. 설치 확인 후 첫 분석 실행하기
+
+```powershell
+.\.venv\Scripts\why-blame.exe --version
+.\.venv\Scripts\why-blame.exe main.py:106-134
+```
+
+정상 설치되면 `why-blame 0.3.6`이 표시되고, 이어서 지정한 코드 범위의
+변경 이력과 근거 평가가 출력됩니다.
+
 ## 5분 Quick Start
 
 아래 절차는 Windows PowerShell 기준입니다. PowerShell 실행 정책 때문에
