@@ -64,17 +64,19 @@ class TestHoldoutV2ExpansionStructure(unittest.TestCase):
             expansion.parents,
         )
 
-    def test_expansion_starts_without_case_artifacts(self):
+    def test_expansion_has_no_template_artifacts(self):
         for directory in (
             self.root / "cases",
             self.root / "annotations",
         ):
-            json_files = list(
-                directory.glob("*.json")
-            )
+            template_files = [
+                path
+                for path in directory.glob("*.json")
+                if "TEMPLATE" in path.name.upper()
+            ]
 
             with self.subTest(directory=directory):
-                self.assertEqual(json_files, [])
+                self.assertEqual(template_files, [])
 
 
 if __name__ == "__main__":

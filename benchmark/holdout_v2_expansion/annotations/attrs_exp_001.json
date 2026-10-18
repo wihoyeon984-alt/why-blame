@@ -1,0 +1,33 @@
+{
+  "schema_version": 2,
+  "case_id": "attrs_exp_001",
+  "execution": {
+    "completed": true,
+    "failure_stage": "",
+    "failure_type": ""
+  },
+  "confidence": {
+    "level": "VERY_HIGH",
+    "source": "final_output"
+  },
+  "claims": {
+    "claim_001": {
+      "status": "PRESENTED",
+      "raw_evidence": "Commit 9b98a73 reports \"optional_converter.__annotations__[\\\"val\\\"] = t | None\" in the captured diff."
+    },
+    "claim_002": {
+      "status": "PRESENTED",
+      "raw_evidence": "Commit 9b98a73 reports \"optional_converter.__annotations__[\\\"return\\\"] = rt | None\" in the captured diff."
+    },
+    "claim_003": {
+      "status": "WITHHELD",
+      "raw_evidence": "The captured source includes the existing None branches, while commit 9b98a73 changes only the val and return annotation expressions.",
+      "withheld_reason": "INSUFFICIENT_EVIDENCE"
+    },
+    "claim_004": {
+      "status": "WITHHELD",
+      "raw_evidence": "The captured commit is titled \"Drop Python 3.9\" and contains no observed statement establishing runtime performance as the primary motive.",
+      "withheld_reason": "NOT_OBSERVED"
+    }
+  }
+}
