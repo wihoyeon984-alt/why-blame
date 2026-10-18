@@ -14,6 +14,11 @@
     "claim_001": {
       "status": "PRESENTED",
       "raw_evidence": "Exact supporting output"
+    },
+    "claim_002": {
+      "status": "WITHHELD",
+      "raw_evidence": "No direct support was observed in the captured output.",
+      "withheld_reason": "NOT_OBSERVED"
     }
   }
 }
