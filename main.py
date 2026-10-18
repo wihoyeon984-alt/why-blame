@@ -108,7 +108,7 @@ def parse_output_mode(args):
 
     if json_count > 1:
         raise ValueError(
-            "--json ??? ? ?? ??? ? ????."
+            "--json 옵션은 한 번만 지정할 수 있습니다."
         )
 
     json_output = json_count == 1
@@ -127,8 +127,8 @@ def parse_output_mode(args):
         for arg in remaining_args
     ):
         raise ValueError(
-            "--json ??? ?? ?? ??? ??? "
-            "?? ??? ? ????."
+            "--json 옵션은 --help 또는 --version "
+            "옵션과 함께 사용할 수 없습니다."
         )
 
     return remaining_args, True
@@ -177,7 +177,7 @@ def main():
                 exc,
             )
         else:
-            print(f"??: {exc}")
+            print(f"오류: {exc}")
             print()
             print_usage()
 
@@ -222,7 +222,7 @@ def main():
                 message,
             )
         else:
-            print(f"??: {message}")
+            print(f"오류: {message}")
 
         sys.exit(1)
     except (UnicodeDecodeError, OSError) as exc:
@@ -240,7 +240,7 @@ def main():
                 message,
             )
         else:
-            print(f"??: {message}")
+            print(f"오류: {message}")
 
         sys.exit(1)
 
@@ -265,7 +265,7 @@ def main():
                 message,
             )
         else:
-            print(f"??: {message}")
+            print(f"오류: {message}")
 
         sys.exit(1)
 
@@ -317,7 +317,7 @@ def main():
                 message,
             )
         else:
-            print(f"??: {message}")
+            print(f"오류: {message}")
 
         sys.exit(1)
 
