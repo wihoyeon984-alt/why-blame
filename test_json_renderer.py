@@ -21,6 +21,11 @@ from webapp.beginner_evidence import (
     OriginStatus,
     ReasonStatus,
 )
+from webapp.beginner_behavior import (
+    BehaviorStatus,
+    BeginnerBehaviorContract,
+    BeginnerBehaviorStep,
+)
 
 
 KOREAN_CODE = "\ud55c\uae00 \ucf54\ub4dc"
@@ -64,6 +69,24 @@ class JsonRendererTests(unittest.TestCase):
             "limitations": [],
             "report": report,
         }
+
+    def make_beginner_behavior(self):
+        step = BeginnerBehaviorStep(
+            step_id="behavior-1",
+            statement="value is used.",
+            code_excerpt="value",
+            source_event="commit-1",
+            is_directly_observed=True,
+            limitation_codes=(),
+        )
+        return BeginnerBehaviorContract(
+            status=BehaviorStatus.DIRECTLY_OBSERVED,
+            steps=(step,),
+            unknown_items=(
+                "code_outside_observed_range_not_guaranteed",
+            ),
+            limitation_codes=(),
+        )
 
     def test_build_json_document_preserves_structure(self):
         document = build_json_document(
@@ -220,6 +243,88 @@ class JsonRendererTests(unittest.TestCase):
             document["beginner_evidence"]["reason_status"],
             "title_only",
         )
+
+    def test_beginner_behavior_is_omitted_when_not_provided(self):
+        document = build_json_document(
+            "service.py",
+            10,
+            12,
+            None,
+            [],
+            [],
+            self.make_stats(),
+        )
+
+        self.assertNotIn("beginner_behavior", document)
+
+    def test_beginner_behavior_contract_is_json_compatible(self):
+        document = build_json_document(
+            "service.py",
+            10,
+            12,
+            None,
+            [],
+            [],
+            self.make_stats(),
+            beginner_evidence=self.make_beginner_evidence(),
+            beginner_behavior=self.make_beginner_behavior(),
+        )
+
+        behavior = document["beginner_behavior"]
+        self.assertEqual(
+            behavior["status"],
+            "DIRECTLY_OBSERVED",
+        )
+        self.assertIsInstance(behavior["steps"], list)
+        self.assertEqual(
+            document["beginner_evidence"]["reason_status"],
+            "title_only",
+        )
+
+    def test_beginner_behavior_tuple_and_enum_are_serialized(self):
+        document = build_json_document(
+            "service.py",
+            10,
+            12,
+            None,
+            [],
+            [],
+            self.make_stats(),
+            beginner_behavior=self.make_beginner_behavior(),
+        )
+
+        behavior = document["beginner_behavior"]
+        self.assertEqual(
+            behavior["steps"][0]["limitation_codes"],
+            [],
+        )
+        self.assertEqual(
+            behavior["steps"][0]["source_event"],
+            "commit-1",
+        )
+
+    def test_render_json_preserves_beginner_behavior(self):
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            render_json(
+                "service.py",
+                10,
+                10,
+                None,
+                [],
+                [],
+                self.make_stats(),
+                beginner_evidence=self.make_beginner_evidence(),
+                beginner_behavior=self.make_beginner_behavior(),
+            )
+
+        document = json.loads(output.getvalue())
+        self.assertEqual(
+            document["beginner_behavior"]["status"],
+            "DIRECTLY_OBSERVED",
+        )
+        self.assertIn("beginner_evidence", document)
 
     def test_build_json_document_allows_missing_repository(self):
         document = build_json_document(

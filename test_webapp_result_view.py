@@ -60,6 +60,7 @@ class WebappResultViewTests(unittest.TestCase):
             "HIGH",
         )
         self.assertIsNone(view.beginner_evidence)
+        self.assertIsNone(view.beginner_behavior)
 
     def test_beginner_evidence_dict_is_preserved(self):
         document = self.make_success_document()
@@ -86,6 +87,52 @@ class WebappResultViewTests(unittest.TestCase):
                     "beginner evidence",
                 ):
                     build_result_view(document)
+
+    def test_beginner_behavior_dict_is_preserved(self):
+        document = self.make_success_document()
+        document["beginner_behavior"] = {
+            "status": "NOT_ESTABLISHED",
+            "unknown_items": [
+                "code_outside_observed_range_not_guaranteed"
+            ],
+        }
+
+        view = build_result_view(document)
+
+        self.assertIs(
+            view.beginner_behavior,
+            document["beginner_behavior"],
+        )
+
+    def test_beginner_behavior_none_is_allowed(self):
+        document = self.make_success_document()
+        document["beginner_behavior"] = None
+
+        view = build_result_view(document)
+
+        self.assertIsNone(view.beginner_behavior)
+
+    def test_invalid_beginner_behavior_is_rejected(self):
+        for value in ([], "invalid", 42):
+            document = self.make_success_document()
+            document["beginner_behavior"] = value
+
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(
+                    ResultViewError,
+                    "beginner behavior",
+                ):
+                    build_result_view(document)
+
+    def test_beginner_evidence_and_behavior_are_preserved(self):
+        document = self.make_success_document()
+        document["beginner_evidence"] = {"reason_status": "not_recorded"}
+        document["beginner_behavior"] = {"status": "WITHHELD"}
+
+        view = build_result_view(document)
+
+        self.assertIs(view.beginner_evidence, document["beginner_evidence"])
+        self.assertIs(view.beginner_behavior, document["beginner_behavior"])
 
 
     def test_rejects_unknown_schema(self):

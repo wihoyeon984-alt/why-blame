@@ -52,6 +52,7 @@ def build_json_document(
     timeline,
     stats,
     beginner_evidence=None,
+    beginner_behavior=None,
 ):
     repository = None
 
@@ -86,6 +87,11 @@ def build_json_document(
             beginner_evidence
         )
 
+    if beginner_behavior is not None:
+        document["beginner_behavior"] = _to_json_value(
+            beginner_behavior
+        )
+
     return document
 
 
@@ -98,6 +104,7 @@ def render_json(
     timeline,
     stats,
     beginner_evidence=None,
+    beginner_behavior=None,
 ):
     document = build_json_document(
         file_name,
@@ -108,6 +115,7 @@ def render_json(
         timeline,
         stats,
         beginner_evidence=beginner_evidence,
+        beginner_behavior=beginner_behavior,
     )
 
     print(

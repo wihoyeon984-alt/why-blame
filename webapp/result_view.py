@@ -19,6 +19,7 @@ class SuccessView:
     timeline: list
     stats: dict
     beginner_evidence: dict | None = None
+    beginner_behavior: dict | None = None
 
 
 def build_error_view(document):
@@ -54,6 +55,7 @@ def build_success_view(document):
     timeline = document.get("timeline")
     stats = document.get("stats")
     beginner_evidence = document.get("beginner_evidence")
+    beginner_behavior = document.get("beginner_behavior")
 
     if not isinstance(target, dict):
         raise ResultViewError(
@@ -83,6 +85,14 @@ def build_success_view(document):
             "The beginner evidence object is invalid."
         )
 
+    if (
+        beginner_behavior is not None
+        and not isinstance(beginner_behavior, dict)
+    ):
+        raise ResultViewError(
+            "The beginner behavior object is invalid."
+        )
+
     return SuccessView(
         target=target,
         repository=document.get("repository"),
@@ -90,6 +100,7 @@ def build_success_view(document):
         timeline=timeline,
         stats=stats,
         beginner_evidence=beginner_evidence,
+        beginner_behavior=beginner_behavior,
     )
 
 

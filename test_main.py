@@ -233,6 +233,13 @@ class MainCliTests(unittest.TestCase):
                     return_value=sentinel.json_mode_beginner_evidence,
                 )
             )
+            beginner_behavior_patch = stack.enter_context(
+                patch.object(
+                    main,
+                    "build_beginner_behavior_from_analysis",
+                    return_value=sentinel.json_mode_beginner_behavior,
+                )
+            )
 
             self.run_main(
                 [
@@ -250,9 +257,15 @@ class MainCliTests(unittest.TestCase):
             timeline,
             stats,
             beginner_evidence=sentinel.json_mode_beginner_evidence,
+            beginner_behavior=sentinel.json_mode_beginner_behavior,
         )
         beginner_evidence_patch.assert_called_once_with(
             timeline,
+            stats,
+        )
+        beginner_behavior_patch.assert_called_once_with(
+            timeline,
+            current_lines,
             stats,
         )
         mocked_card.assert_not_called()
@@ -797,6 +810,13 @@ class MainCliTests(unittest.TestCase):
                     return_value=sentinel.last_line_beginner_evidence,
                 )
             )
+            beginner_behavior_patch = stack.enter_context(
+                patch.object(
+                    main,
+                    "build_beginner_behavior_from_analysis",
+                    return_value=sentinel.last_line_beginner_behavior,
+                )
+            )
 
             self.run_main(
                 ["service.py:3", "--json"]
@@ -811,9 +831,15 @@ class MainCliTests(unittest.TestCase):
             timeline,
             stats,
             beginner_evidence=sentinel.last_line_beginner_evidence,
+            beginner_behavior=sentinel.last_line_beginner_behavior,
         )
         beginner_evidence_patch.assert_called_once_with(
             timeline,
+            stats,
+        )
+        beginner_behavior_patch.assert_called_once_with(
+            timeline,
+            current_lines,
             stats,
         )
         mocked_card.assert_not_called()
