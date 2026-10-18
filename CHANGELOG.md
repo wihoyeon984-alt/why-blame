@@ -30,7 +30,7 @@ All notable changes to Why-Blame are documented in this file.
 
 ### Changed
 
-- 실제 변경 내용을 한 문장으로 설명
+- Update the package version and installation documentation for the v0.3.4 release.
 
 ### Validation
 
@@ -42,7 +42,7 @@ All notable changes to Why-Blame are documented in this file.
 
 ### Changed
 
-- 실제 릴리스 변경 요약
+- Update the package version and installation documentation for the v0.3.3 release.
 
 ### Validation
 
