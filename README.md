@@ -55,6 +55,24 @@ Safety Gate
 Safe Rendering
 ```
 
+## Current Development Status
+
+This section describes the current state of the latest `main` branch.
+
+- Test suite: `574 / 574`
+- CI: `6 / 6`
+- Development branch: `main`
+
+The documentation below includes multiple evaluation sources:
+
+- Current development branch status
+- Stable release validation snapshots
+- Holdout v1 frozen benchmark results
+- Holdout v2 frozen benchmark results
+- External generalization evaluation reports
+
+These sections were produced from different evaluation sets and points in time and should not be interpreted as a single measurement.
+
 ## Empirical Validation
 
 Why-Blame includes a frozen **Holdout v1** benchmark:
@@ -139,11 +157,11 @@ case-level results and evaluation methodology.
 
 ## Latest release
 
-The latest stable release is
-[why-blame v0.3.6](https://github.com/wihoyeon984-alt/why-blame/releases/tag/v0.3.6).
+The latest stable release is why-blame v0.3.6.
+
+The metrics below were recorded at release time and do not represent the current `main` branch.
 
 Release-time validation snapshot for v0.3.6:
-
 - 278 unit tests passed
 - 10/10 holdout cases completed
 - 87.5% strict supported recall
