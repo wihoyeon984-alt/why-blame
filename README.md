@@ -95,6 +95,39 @@ Supported-claim recovery improved from `22 / 32` to `25 / 32`.
 
 E2E completion improved from `0 / 10` to `10 / 10`, while `unsafe_presented`
 remained zero.
+
+### External Generalization Evaluation
+
+Why-Blame was also evaluated on external open-source repositories
+outside the frozen Holdout datasets.
+
+Completed evaluations:
+
+- requests
+- rich
+- click
+
+Observed capabilities:
+
+- Git history reconstruction
+- Linked PR recovery
+- PR context recovery
+- Long-term code evolution reconstruction
+- Evidence conflict detection
+- Conservative withholding when evidence is insufficient
+- Suppression of unsupported WHY generation
+
+Evaluation reports:
+
+- `benchmark/generalization/requests_001/REPORT.md`
+- `benchmark/generalization/rich_001/REPORT.md`
+- `benchmark/generalization/click_001/REPORT.md`
+
+A consolidated summary is available in:
+
+- `benchmark/generalization/REPORT.md`
+
+
 ### Known Trade-off
 
 The current result is not uniformly better on every metric.
