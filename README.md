@@ -307,7 +307,7 @@ The initial dashboard is intended for local use.
 
 ## Testing
 
-The project currently passes `488 / 488` tests.
+The project currently passes `574 / 574` tests.
 
 
 The Holdout scorer-specific suite passes `18 / 18` tests.
